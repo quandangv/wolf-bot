@@ -1,7 +1,8 @@
 # TODO
-- Create automated tests
 
 # DOING
+- Check authorities before executing commands
 
 # DONE
 - Detach core from discord API
+- Create automated tests

@@ -114,7 +114,6 @@ def initialize(admins):
 
   @cmd('admin')
   async def start_immediate(message, args):
-    guild = message.channel.guild
     members = [ member.mention async for member in get_available_members() ]
     await confirm(message, tr('start').format(join_with_and(members)))
 
