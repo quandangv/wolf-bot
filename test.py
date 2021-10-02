@@ -12,8 +12,12 @@ def tr(key):
     if key.startswith(prefix):
       key = key[len(prefix):]
       return True
+  if key == '_and':
+    return ''
   if strip_prefix('cmd_'):
-    return [ key, key + '_desc' ]
+    return [ key, key + '_desc ', key + '_alias' ]
+  if strip_prefix('role_'):
+    return [ key, key + '_desc ', key + '_alias' ]
   sample_result = getattr(lang, key)
   if isinstance(sample_result, tuple):
     sample_result = sample_result[0]
@@ -66,7 +70,20 @@ Unexpected response: {}.
 def expect_response(author, message, channel, response):
   low_expect_response(core.process_message(Message(author, message, channel)), response)
 
-expect_response(anne, '!help', 'game', "[game] confirm(@anne) help_list(!help`, `!start_immediate`, `!add_role) ")
-expect_response(carl, '!help', 'game', "[game] confirm(@carl) help_list(!help) ")
-expect_response(anne, '!start_immediate', 'game', "[game] confirm(@anne) start(@anne, @bob, @carl, _and @david) ")
-expect_response(carl, '!start_immediate', 'game', "[game] question(@carl) require_admin ")
+expect_response(anne, '!help', 'game', "[game] confirm(@anne) help_list(!help`, `!start_immediate`, `!add_role`, `!list_roles) ")
+expect_response(carl, '!help', 'game', "[game] confirm(@carl) help_list(!help`, `!list_roles) ")
+
+expect_response(anne, '!help help', 'game', "[game] confirm(@anne) help_desc ")
+expect_response(carl, '!help start_immediate', 'game', "[game] confirm(@carl) start_immediate_desc ")
+expect_response(carl, '!help blabla', 'game', "[game] confused(`blabla`) ")
+expect_response(anne, '!help_alias help', 'game', "[game] confirm(@anne) help_desc ")
+expect_response(anne, '!help help_alias', 'game', "[game] confirm(@anne) alias(help_alias, help) help_desc ")
+
+expect_response(anne, '!add_role', 'game', "[game] question(@anne) add_nothing(!) ")
+expect_response(carl, '!add_role', 'game', "[game] question(@carl) require_admin ")
+
+expect_response(anne, '!add_role villager', 'game', "[game] confirm(@anne) add_success(villager) ")
+expect_response(anne, '!add_role villager_alias', 'game', "[game] confirm(@anne) add_success(villager) ")
+expect_response(anne, '!add_role guard', 'game', "[game] confirm(@anne) add_success(guard) ")
+expect_response(anne, '!add_role wolf', 'game', "[game] confirm(@anne) add_success(wolf) ")
+expect_response(anne, '!list_roles', 'game', "[game] confirm(@anne) list_roles(villager, villager, guard, wolf) ")

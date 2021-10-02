@@ -71,8 +71,6 @@ async def get_available_members():
     if is_available(member.id) and member.id != client.user.id:
       yield member
 
-############################ ROLES #############################
-
 ########################## EXECUTION ###########################
 
 core.initialize(ADMINS)

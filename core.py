@@ -32,7 +32,7 @@ def action(func):
 
 class Command:
   def make_alias(self, alias):
-    return Command(self.name, self.func, self.auth,
+    return Command().decorate(self.name, self.func,
         tr('alias').format(alias, self.name) + self.description)
 
   def is_listed(self, _):
@@ -42,6 +42,7 @@ class Command:
     self.name = name
     self.func = func
     self.description = description
+    return self
 
 class AdminCommand(Command):
   def is_listed(self, player):
@@ -53,7 +54,7 @@ class AdminCommand(Command):
         await question(message, tr('require_admin'))
       else:
         await func(message, args)
-    super().decorate(name, check_admin, description)
+    return super().decorate(name, check_admin, description)
 
 
 class SetupCommand(AdminCommand):
@@ -70,8 +71,7 @@ def cmd(base):
     [name, description, *aliases] = tr('cmd_' + func.__name__)
     description = description.format(BOT_PREFIX + name)
 
-    base.decorate(name, func, description)
-    commands[name] = base
+    commands[name] = base.decorate(name, func, description)
     main_commands.append(name)
     for alias in aliases:
       if alias not in commands:
@@ -81,7 +81,15 @@ def cmd(base):
     return func
   return decorator
 
-#def role(func):
+def role(base):
+  [base.name, base.description, *aliases] = tr('role_' + base.__name__.lower())
+  roles[base.name] = base
+  for alias in aliases:
+    if alias not in roles:
+      roles[alias] = base
+    else:
+      print("ERROR: Can't create alias {} to role {}!".format(alias, base.name))
+  return base
 
 async def confirm(message, text):
   await send_post(message.channel, tr('confirm').format(message.author.mention) + str(text))
@@ -114,9 +122,9 @@ def initialize(admins):
   async def help(message, args):
     if args:
       if args in commands:
-        await confirm(message, commands[args][2])
+        await confirm(message, commands[args].description)
       else:
-        await confirm(message, tr('help_notfound').format(args))
+        await confused(message.channel, args)
     else:
       player = get_player(message.author.id)
       command_list = [ BOT_PREFIX + cmd for cmd in main_commands
@@ -134,9 +142,26 @@ def initialize(admins):
     if not args:
       await question(message, tr('add_nothing').format(BOT_PREFIX))
     elif args in roles:
-      played_roles.append(args)
+      name = roles[args].name
+      played_roles.append(name)
+      await confirm(message, tr('add_success').format(name))
     else:
       await confused(message.channel, args)
+
+  @cmd(Command())
+  async def list_roles(message, args):
+    await confirm(message, tr('list_roles').format(join_with_and(played_roles)))
+
+############################ ROLES #############################
+
+  @role
+  class Villager: pass
+
+  @role
+  class Guard(Villager): pass
+
+  @role
+  class Wolf(Villager): pass
 
 ########################### EVENTS #############################
 
@@ -152,6 +177,7 @@ async def process_message(message):
       args = ''
     else:
       [cmd, args] = arr
+    cmd = cmd.lower()
     if cmd in commands:
       player = get_player(message.author.id)
       await commands[cmd].func(message, args)
