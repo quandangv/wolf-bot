@@ -56,6 +56,7 @@ loop = asyncio.get_event_loop()
 
 def low_expect_response(coroutine, response):
   loop.run_until_complete(coroutine)
+
   assert len(posts) == 1, "Expected a single response. Actual: " + str(posts)
   assert posts[0] == response, r"""
 Unexpected response: {}.
@@ -66,5 +67,6 @@ def expect_response(author, message, channel, response):
   low_expect_response(core.process_message(Message(author, message, channel)), response)
 
 expect_response(anne, '!help', 'game', "[game] confirm(@anne) help_list(!help`, `!start_immediate`, `!add_role) ")
+expect_response(carl, '!help', 'game', "[game] confirm(@carl) help_list(!help) ")
 expect_response(anne, '!start_immediate', 'game', "[game] confirm(@anne) start(@anne, @bob, @carl, _and @david) ")
-#expect_response(carl, '!help', 'game', "[game] confirm(@anne) help_list(!help`, `!start_immediate) ")
+expect_response(carl, '!start_immediate', 'game', "[game] question(@carl) require_admin ")

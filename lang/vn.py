@@ -1,7 +1,8 @@
 confirm = ( "{}, ", "Okie {}, ", "{} Ờ, ", "{} Okayla, ", "Okay {}, ", "{} Uhm, " )
-question = ( "{}, ", "{} ơi, ", "{} à, ", "Ủa {}, ", "{} Hả, " )
+question = ( "{}, ", "{} ơi, ", "{} à, ", "Ủa {}, ", "{} Hả, ", "Ây {}, " )
 confused = ( "`{}` là gì dạ ?", "`{}` không tồn tại", "`{}` ăn được hăm ?" )
 alias = "`{}` là tên gọi khác của lệnh `{}`.\n"
+require_admin = "bạn không phải là admin nên không được dùng lệnh đó nha"
 help_list = ( "các lệnh được thực hiện là `{}`.", "ngoài cắn người, bạn còn có thể dùng lệnh `{}`. (giỡn thoi nha)", "hãy thử một trong các lệnh `{}`" )
 start = ( "bắt đầu trò chơi với {}", "trò chơi gồm {} sẽ được bắt đầu ngay bây giờ", "{} chơi ha", "trò chơi bắt đầu! Đêm nay sói sẽ xuất hiện giữa {}" )
 _and = "và"

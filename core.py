@@ -6,7 +6,6 @@ main_commands = []
 players = {}
 played_roles = []
 
-ADMIN_AUTH = [ 'common', 'admin', 'setup']
 BOT_PREFIX = '!'
 
 ############################ ACTIONS ###########################
@@ -32,12 +31,6 @@ def action(func):
 ########################### CLASSES ############################
 
 class Command:
-  def __init__(self, name, func, auth, description):
-    self.name = name
-    self.func = func
-    self.auth = auth
-    self.description = description
-
   def make_alias(self, alias):
     return Command(self.name, self.func, self.auth,
         tr('alias').format(alias, self.name) + self.description)
@@ -45,25 +38,44 @@ class Command:
   def is_listed(self, _):
     return True
 
+  def decorate(self, name, func, description):
+    self.name = name
+    self.func = func
+    self.description = description
+
 class AdminCommand(Command):
   def is_listed(self, player):
-    return 'admin' in player.auth
+    return player.is_admin
+
+  def decorate(self, name, func, description):
+    async def check_admin(message, args):
+      if not players[message.author.id].is_admin:
+        await question(message, tr('require_admin'))
+      else:
+        await func(message, args)
+    super().decorate(name, check_admin, description)
+
+
+class SetupCommand(AdminCommand):
+  pass
 
 class Player:
-  def __init__(self, auth):
-    self.auth = auth
+  def __init__(self, is_admin):
+    self.is_admin = is_admin
 
 ########################### UTILS ##############################
 
-def cmd(authority):
+def cmd(base):
   def decorator(func):
     [name, description, *aliases] = tr('cmd_' + func.__name__)
     description = description.format(BOT_PREFIX + name)
-    command = commands[name] = Command(name, func, authority, description)
+
+    base.decorate(name, func, description)
+    commands[name] = base
     main_commands.append(name)
     for alias in aliases:
       if alias not in commands:
-        commands[alias] = command.make_alias(alias)
+        commands[alias] = base.make_alias(alias)
       else:
         print("ERROR: Can't create alias {} to command {}!".format(alias, name))
     return func
@@ -83,7 +95,7 @@ async def confused(channel, msg):
 def get_player(id):
   if id in players:
     return players[id]
-  players[id] = player = Player([ 'common' ])
+  players[id] = player = Player(False)
   return player
 
 def join_with_and(arr):
@@ -94,11 +106,11 @@ def join_with_and(arr):
 def initialize(admins):
   random.seed()
   for admin in admins:
-    players[admin] = Player(ADMIN_AUTH)
+    players[admin] = Player(True)
 
 ########################## COMMANDS ############################
 
-  @cmd('common')
+  @cmd(Command())
   async def help(message, args):
     if args:
       if args in commands:
@@ -112,12 +124,12 @@ def initialize(admins):
       ]
       await confirm(message, tr('help_list').format('`, `'.join(command_list)))
 
-  @cmd('admin')
+  @cmd(AdminCommand())
   async def start_immediate(message, args):
     members = [ member.mention async for member in get_available_members() ]
     await confirm(message, tr('start').format(join_with_and(members)))
 
-  @cmd('setup')
+  @cmd(SetupCommand())
   async def add_role(message, args):
     if not args:
       await question(message, tr('add_nothing').format(BOT_PREFIX))
