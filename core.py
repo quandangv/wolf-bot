@@ -3,6 +3,7 @@ import random
 commands = {}
 roles = {}
 main_commands = []
+
 players = {}
 played_roles = []
 
@@ -15,6 +16,8 @@ def tr(key): raise missing_action_error('tr')
 async def send_post(channel, text): raise missing_action_error('send_post')
 async def get_available_members(): raise missing_action_error('get_available_members')
 
+def shuffle_copy(arr): return random.sample(arr, k=len(arr))
+
 def missing_action_error(name):
   return NotImplementedError("Action `{}` not implemented! Implement it using the @action decorator"
       .format(name))
@@ -25,7 +28,8 @@ def action(func):
     if name == text:
       globals()[name] = func
       return True
-  if not(accept_name('send_post') or accept_name('get_available_members') or accept_name('tr')):
+  if not(accept_name('send_post') or accept_name('get_available_members')
+      or accept_name('tr') or accept_name('shuffle_copy')):
     raise ValueError("Action not used: {}".format(name))
 
 ########################### CLASSES ############################
@@ -61,8 +65,9 @@ class SetupCommand(AdminCommand):
   pass
 
 class Player:
-  def __init__(self, is_admin):
+  def __init__(self, is_admin, discord):
     self.is_admin = is_admin
+    self.discord = discord
 
 ########################### UTILS ##############################
 
@@ -100,21 +105,24 @@ async def question(message, text):
 async def confused(channel, msg):
   await send_post(channel, tr('confused').format('`' + msg + '`'))
 
-def get_player(id):
+def get_player(id, discord):
   if id in players:
     return players[id]
-  players[id] = player = Player(False)
+  players[id] = player = Player(False, discord)
   return player
 
 def join_with_and(arr):
   return arr[0] if len(arr) == 1 else ", ".join(arr[:-1]) + ", " + tr('_and') + arr[-1]
+
+def player_count():
+  return len(played_roles)
 
 ############################ INIT ##############################
 
 def initialize(admins):
   random.seed()
   for admin in admins:
-    players[admin] = Player(True)
+    players[admin.id] = Player(True, admin)
 
 ########################## COMMANDS ############################
 
@@ -126,16 +134,11 @@ def initialize(admins):
       else:
         await confused(message.channel, args)
     else:
-      player = get_player(message.author.id)
+      player = get_player(message.author.id, message.author)
       command_list = [ BOT_PREFIX + cmd for cmd in main_commands
           if commands[cmd].is_listed(player)
       ]
       await confirm(message, tr('help_list').format('`, `'.join(command_list)))
-
-  @cmd(AdminCommand())
-  async def start_immediate(message, args):
-    members = [ member.mention async for member in get_available_members() ]
-    await confirm(message, tr('start').format(join_with_and(members)))
 
   @cmd(SetupCommand())
   async def add_role(message, args):
@@ -150,7 +153,26 @@ def initialize(admins):
 
   @cmd(Command())
   async def list_roles(message, args):
-    await confirm(message, tr('list_roles').format(join_with_and(played_roles)))
+    await confirm(message, tr('list_roles').format(join_with_and(played_roles), player_count()))
+
+  @cmd(AdminCommand())
+  async def start_immediate(message, args):
+    players = [ Player(member.id, member) async for member in get_available_members() ]
+    current_count = len(players)
+    needed_count = player_count()
+    if current_count > needed_count:
+      await question(message, tr('start_needless').format(current_count, needed_count))
+    elif current_count < needed_count:
+      await question(message, tr('start_needmore').format(current_count, needed_count))
+    else:
+      await confirm(message, tr('start').format(join_with_and(
+        [player.discord.mention for player in players]
+      )))
+      for idx, role in enumerate(shuffle_copy(played_roles)):
+        player = players[idx]
+        player.role = roles[role]
+        await send_post(player.discord.dm_channel, tr('role').format(role))
+      
 
 ############################ ROLES #############################
 
@@ -179,7 +201,7 @@ async def process_message(message):
       [cmd, args] = arr
     cmd = cmd.lower()
     if cmd in commands:
-      player = get_player(message.author.id)
+      player = get_player(message.author.id, message.author)
       await commands[cmd].func(message, args)
     else:
       await confused(message.channel, BOT_PREFIX + cmd)

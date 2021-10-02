@@ -19,6 +19,8 @@ MAX_MESSAGE_LEN = 2000
 async def on_ready():
   print("We have logged in as {0.user}".format(client))
   debug_channel = client.get_channel(DEBUG_CHANNEL)
+  build = client.get_channel(GAME_CHANNEL).guild
+  core.initialize([guild.get_member(id) for id in ADMINS])
 
 @client.event
 async def on_message(message):
@@ -60,7 +62,6 @@ async def send_post(channel, text):
 
 @core.action
 async def get_available_members():
-  guild = client.get_channel(GAME_CHANNEL).guild
   def is_available(id):
     """Properly retrieve the online status of a member.
     The status property of member objects may contain incorrect value."""
@@ -73,6 +74,5 @@ async def get_available_members():
 
 ########################## EXECUTION ###########################
 
-core.initialize(ADMINS)
 client.run(TOKEN)
 
