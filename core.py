@@ -13,7 +13,6 @@ BOT_PREFIX = '!'
 
 # These functions must be provided to the module by the @action decorator
 def tr(key): raise missing_action_error('tr')
-async def send_post(channel, text): raise missing_action_error('send_post')
 async def get_available_members(): raise missing_action_error('get_available_members')
 
 def shuffle_copy(arr): return random.sample(arr, k=len(arr))
@@ -28,8 +27,7 @@ def action(func):
     if name == text:
       globals()[name] = func
       return True
-  if not(accept_name('send_post') or accept_name('get_available_members')
-      or accept_name('tr') or accept_name('shuffle_copy')):
+  if not(accept_name('get_available_members') or accept_name('tr') or accept_name('shuffle_copy')):
     raise ValueError("Action not used: {}".format(name))
 
 ########################### CLASSES ############################
@@ -97,13 +95,13 @@ def role(base):
   return base
 
 async def confirm(message, text):
-  await send_post(message.channel, tr('confirm').format(message.author.mention) + str(text))
+  await message.channel.send(tr('confirm').format(message.author.mention) + str(text))
 
 async def question(message, text):
-  await send_post(message.channel, tr('question').format(message.author.mention) + str(text))
+  await message.channel.send(tr('question').format(message.author.mention) + str(text))
 
 async def confused(channel, msg):
-  await send_post(channel, tr('confused').format('`' + msg + '`'))
+  await channel.send(tr('confused').format('`' + msg + '`'))
 
 def get_player(id, discord):
   if id in players:
@@ -171,7 +169,7 @@ def initialize(admins):
       for idx, role in enumerate(shuffle_copy(played_roles)):
         player = players[idx]
         player.role = roles[role]
-        await send_post(player.discord.dm_channel, tr('role').format(role))
+        await player.discord.dm_channel.send(tr('role').format(role))
       
 
 ############################ ROLES #############################

@@ -24,9 +24,10 @@ def tr(key):
   arg_count = sample_result.count('{') - sample_result.count('{{') * 2
   return (key if arg_count == 0 else '{}({})'.format(key, ', '.join(['{}'] * arg_count))) + ' '
 
-@core.action
-async def send_post(channel, text):
-  posts.append('[{}] {}'.format(channel, text))
+def generate_send(channel_name):
+  async def send(text):
+    posts.append('[{}] {}'.format(channel_name, text))
+  return send
 
 @core.action
 async def get_available_members():
@@ -37,17 +38,23 @@ async def get_available_members():
 def shuffle_copy(arr):
   return arr[::-1]
 
+class Channel:
+  def __init__(self, name):
+    self.name = name
+    self.send = generate_send(name)
+
 class Message:
-  def __init__(self, author, content, channel):
+  def __init__(self, author, content, channel_name):
     self.content = content
-    self.channel = channel
     self.author = author
+    self.channel = Channel(channel_name)
 
 class Member:
   def __init__(self, id, name):
     self.id = id
     self.name = name
-    self.dm_channel = self.mention = '@' + name
+    self.mention = '@' + name
+    self.dm_channel = Channel(self.mention)
 
 anne = Member(0, 'anne')
 bob = Member(1, 'bob')
