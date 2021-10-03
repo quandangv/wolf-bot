@@ -6,6 +6,7 @@ main_commands = []
 
 players = {}
 played_roles = []
+tmp_channels = {}
 
 BOT_PREFIX = '!'
 
@@ -14,6 +15,8 @@ BOT_PREFIX = '!'
 # These functions must be provided to the module by the @action decorator
 def tr(key): raise missing_action_error('tr')
 async def get_available_members(): raise missing_action_error('get_available_members')
+async def create_channel(name, *players): raise missing_action_error('create_channel')
+async def add_member(channel, player): raise missing_action_error('add_member')
 
 def shuffle_copy(arr): return random.sample(arr, k=len(arr))
 
@@ -27,8 +30,10 @@ def action(func):
     if name == text:
       globals()[name] = func
       return True
-  if not(accept_name('get_available_members') or accept_name('tr') or accept_name('shuffle_copy')):
+  if not(accept_name('get_available_members') or accept_name('tr') or accept_name('add_member')
+      or accept_name('shuffle_copy') or accept_name('create_channel')):
     raise ValueError("Action not used: {}".format(name))
+  return func
 
 ########################### CLASSES ############################
 
@@ -63,9 +68,9 @@ class SetupCommand(AdminCommand):
   pass
 
 class Player:
-  def __init__(self, is_admin, discord):
+  def __init__(self, is_admin, extern):
     self.is_admin = is_admin
-    self.discord = discord
+    self.extern = extern
 
 ########################### UTILS ##############################
 
@@ -103,10 +108,10 @@ async def question(message, text):
 async def confused(channel, msg):
   await channel.send(tr('confused').format('`' + msg + '`'))
 
-def get_player(id, discord):
+def get_player(id, extern):
   if id in players:
     return players[id]
-  players[id] = player = Player(False, discord)
+  players[id] = player = Player(False, extern)
   return player
 
 def join_with_and(arr):
@@ -164,12 +169,22 @@ def initialize(admins):
       await question(message, tr('start_needmore').format(current_count, needed_count))
     else:
       await confirm(message, tr('start').format(join_with_and(
-        [player.discord.mention for player in players]
+        [player.extern.mention for player in players]
       )))
+      for channel in tmp_channels:
+        channel.delete()
+      tmp_channels.clear()
+
       for idx, role in enumerate(shuffle_copy(played_roles)):
         player = players[idx]
-        player.role = roles[role]
-        await player.discord.dm_channel.send(tr('role').format(role))
+        player.role = roles[role]()
+        await player.extern.dm_channel.send(tr('role').format(role))
+        if hasattr(player.role, 'on_start'):
+          await player.role.on_start(player)
+
+      for channel in tmp_channels.values():
+        await channel.send(tr('channel_greeting').format(channel.name,
+            join_with_and([member.extern.mention for member in channel.members])))
       
 
 ############################ ROLES #############################
@@ -181,7 +196,12 @@ def initialize(admins):
   class Guard(Villager): pass
 
   @role
-  class Wolf(Villager): pass
+  class Wolf:
+    async def on_start(self, player):
+      if not 'wolf' in tmp_channels:
+        tmp_channels['wolf'] = await create_channel(tr('wolf'), player)
+      else:
+        await add_member(tmp_channels['wolf'], player)
 
 ########################### EVENTS #############################
 

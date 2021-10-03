@@ -1,8 +1,11 @@
 # TODO
+- Should delete temporary rooms at the end of the game, not the start
+- Commands for roles to use their ability
 
 # DOING
-- Check authorities before executing commands
 
 # DONE
 - Detach core from discord API
 - Create automated tests
+- Check authorities before executing commands
+- Create room for wolves
