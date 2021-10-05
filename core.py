@@ -98,16 +98,7 @@ class Player:
     self.extern = extern
     self.role = None
 
-########################### UTILS ##############################
-
-def name_channel(channel):
-  if is_dm_channel(channel):
-    return 'dm'
-  if is_public_channel(channel):
-    return 'public'
-  for id, c in tmp_channels.items():
-    if channel == c:
-      return id
+########################## DECORATORS ##########################
 
 def cmd(base):
   def decorator(func):
@@ -142,6 +133,28 @@ def role(base):
     else:
       print("ERROR: Can't create alias {} to role {}!".format(alias, base.name))
   return base
+
+def single_arg_cmd(message_key):
+  def decorator(func):
+    async def result(*arr):
+      args = arr[-1].strip()
+      if not args:
+        return await question(arr[-2], tr(message_key).format(BOT_PREFIX))
+      await func(*arr[:-1], args)
+    result.__name__ = func.__name__
+    return result
+  return decorator
+
+############################# UTILS ############################
+
+def name_channel(channel):
+  if is_dm_channel(channel):
+    return 'dm'
+  if is_public_channel(channel):
+    return 'public'
+  for id, c in tmp_channels.items():
+    if channel == c:
+      return id
 
 async def confirm(message, text):
   await message.channel.send(tr('confirm').format(message.author.mention) + str(text))
@@ -195,11 +208,9 @@ def initialize(admins):
       await confirm(message, tr('help_list').format('`, `'.join(command_list)))
 
   @cmd(SetupCommand())
+  @single_arg_cmd('add_nothing')
   async def add_role(message, args):
-    args = args.strip()
-    if not args:
-      await question(message, tr('add_nothing').format(BOT_PREFIX))
-    elif args in roles:
+    if args in roles:
       name = roles[args].name
       played_roles.append(name)
       await confirm(message, tr('add_success').format(name))
@@ -255,12 +266,11 @@ def initialize(admins):
   class Thief(Villager):
     def __init__(self):
       self.used = False
+
+    @single_arg_cmd('thief_swap_nothing')
     async def swap(self, message, args):
       if self.used:
         return await question(message, tr('ability_used').format(BOT_PREFIX + get_command_name('swap')))
-      args = args.strip()
-      if not args:
-        return await question(message, tr('thief_swap_nothing').format(BOT_PREFIX))
       me = get_player(message.author)
       if me.extern.name == args:
         return await question(message, tr('thief_swapself'))

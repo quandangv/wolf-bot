@@ -1,12 +1,12 @@
 # TODO
 - Should delete temporary rooms at the end of the game, not the start
-- Use Guild.members instead of Guild.fetch_members
 
 # DOING
 - Commands for roles to use their ability
 - Focus on one-night mode
 
 # DONE
+- Use Guild.members instead of Guild.fetch_members
 - In get_player, get member id from the extern argument
 - Detach core from discord API
 - Create automated tests
