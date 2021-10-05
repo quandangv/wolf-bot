@@ -9,6 +9,7 @@ played_roles = []
 tmp_channels = {}
 
 BOT_PREFIX = '!'
+CREATE_NORMALIZED_ALIASES = True
 
 ############################ ACTIONS ###########################
 
@@ -92,6 +93,15 @@ def cmd(base):
 def role(base):
   [base.name, base.description, base.greeting, *aliases] = tr('role_' + base.__name__.lower())
   roles[base.name] = base
+  if CREATE_NORMALIZED_ALIASES:
+    import unidecode
+    length = len(aliases)
+    for idx in range(length):
+      alias = aliases[idx]
+      normalized = unidecode.unidecode(alias)
+      if normalized != alias:
+        aliases.append(normalized)
+
   for alias in aliases:
     if alias not in roles:
       roles[alias] = base

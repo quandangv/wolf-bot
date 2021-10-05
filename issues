@@ -11,3 +11,4 @@
 - Check authorities before executing commands
 - Create room for wolves
 - Greetings for each roles and each group
+- Support normalized aliases
