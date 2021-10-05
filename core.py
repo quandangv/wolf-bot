@@ -15,7 +15,7 @@ CREATE_NORMALIZED_ALIASES = True
 
 # These functions must be provided to the module by the @action decorator
 def tr(key): raise missing_action_error('tr')
-async def get_available_members(): raise missing_action_error('get_available_members')
+def get_available_members(): raise missing_action_error('get_available_members')
 async def create_channel(name, *players): raise missing_action_error('create_channel')
 async def add_member(channel, player): raise missing_action_error('add_member')
 def is_dm_channel(channel): raise missing_action_error('is_dm_channel')
@@ -152,7 +152,8 @@ async def question(message, text):
 async def confused(channel, msg):
   await channel.send(tr('confused').format('`' + msg + '`'))
 
-def get_player(id, extern):
+def get_player(extern):
+  id = extern.id
   if id in players:
     return players[id]
   players[id] = player = Player(False, extern)
@@ -187,7 +188,7 @@ def initialize(admins):
       else:
         await confused(message.channel, args)
     else:
-      player = get_player(message.author.id, message.author)
+      player = get_player(message.author)
       command_list = [ BOT_PREFIX + cmd for cmd in main_commands
           if commands[cmd].is_listed(player, message.channel)
       ]
@@ -211,7 +212,7 @@ def initialize(admins):
 
   @cmd(AdminCommand())
   async def start_immediate(message, args):
-    members = [ member async for member in get_available_members() ]
+    members = get_available_members()
     current_count = len(members)
     needed_count = player_count()
     if current_count > needed_count:
@@ -227,7 +228,7 @@ def initialize(admins):
       tmp_channels.clear()
 
       for idx, role in enumerate(shuffle_copy(played_roles)):
-        player = get_player(members[idx].id, members[idx])
+        player = get_player(members[idx])
         player.role = roles[role]()
         await player.extern.dm_channel.send(tr('role').format(role) + player.role.greeting.format(BOT_PREFIX))
         if hasattr(player.role, 'on_start'):
@@ -260,7 +261,7 @@ def initialize(admins):
       args = args.strip()
       if not args:
         return await question(message, tr('thief_swap_nothing').format(BOT_PREFIX))
-      me = get_player(message.author.id, message.author)
+      me = get_player(message.author)
       if me.extern.name == args:
         return await question(message, tr('thief_swapself'))
       for player in players.values():
@@ -297,7 +298,7 @@ async def process_message(message):
       [cmd, args] = arr
     cmd = cmd.lower()
     if cmd in commands:
-      player = get_player(message.author.id, message.author)
+      player = get_player(message.author)
       await commands[cmd].func(message, args)
     else:
       await confused(message.channel, BOT_PREFIX + cmd)

@@ -61,16 +61,15 @@ async def send_post(channel, text):
     await send_post(channel, text[MAX_MESSAGE_LEN:])
 
 @core.action
-async def get_available_members():
+def get_available_members():
   def is_available(id):
     """Properly retrieve the online status of a member.
     The status property of member objects may contain incorrect value."""
     member = guild.get_member(id)
     return member.status in {discord.Status.online, discord.Status.idle} if member else False
 
-  async for member in guild.fetch_members():
-    if is_available(member.id) and member.id != client.user.id:
-      yield member
+  return [member for member in guild.members:
+    if is_available(member.id) and member.id != client.user.id ]
 
 ########################## EXECUTION ###########################
 

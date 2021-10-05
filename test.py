@@ -52,9 +52,8 @@ def tr(key):
   return (key if arg_count == 0 else '{}({})'.format(key, ', '.join(['{}'] * arg_count))) + ' '
 
 @core.action
-async def get_available_members():
-  for member in members:
-    yield member
+def get_available_members():
+  return members
 
 @core.action
 def shuffle_copy(arr):
