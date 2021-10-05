@@ -18,6 +18,8 @@ def tr(key): raise missing_action_error('tr')
 async def get_available_members(): raise missing_action_error('get_available_members')
 async def create_channel(name, *players): raise missing_action_error('create_channel')
 async def add_member(channel, player): raise missing_action_error('add_member')
+def is_dm_channel(channel): raise missing_action_error('is_dm_channel')
+def is_public_channel(channel): raise missing_action_error('is_public_channel')
 
 def shuffle_copy(arr): return random.sample(arr, k=len(arr))
 
@@ -32,38 +34,60 @@ def action(func):
       globals()[name] = func
       return True
   if not(accept_name('get_available_members') or accept_name('tr') or accept_name('add_member')
-      or accept_name('shuffle_copy') or accept_name('create_channel')):
+      or accept_name('shuffle_copy') or accept_name('create_channel')
+      or accept_name('is_dm_channel') or accept_name('is_public_channel')):
     raise ValueError("Action not used: {}".format(name))
   return func
 
 ########################### CLASSES ############################
 
 class Command:
-  def make_alias(self, alias):
-    return Command().decorate(self.name, self.func,
-        tr('alias').format(alias, self.name) + self.description)
-
-  def is_listed(self, _):
-    return True
-
   def decorate(self, name, func, description):
     self.name = name
     self.func = func
     self.description = description
     return self
 
+  def make_alias(self, alias):
+    return Command().decorate(self.name, self.func,
+        tr('alias').format(alias, self.name) + self.description)
+
+  def is_listed(self, _, __):
+    return True
+
 class AdminCommand(Command):
-  def is_listed(self, player):
+  def is_listed(self, player, _):
     return player.is_admin
 
   def decorate(self, name, func, description):
-    async def check_admin(message, args):
+    async def check(message, args):
       if not players[message.author.id].is_admin:
         await question(message, tr('require_admin'))
       else:
         await func(message, args)
-    return super().decorate(name, check_admin, description)
+    return super().decorate(name, check, description)
 
+class RoleCommand(Command):
+  def __init__(self, required_channel):
+    self.required_channel = required_channel
+
+  def is_listed(self, player, channel):
+    return name_channel(channel) == self.required_channel and player.role and hasattr(player.role, self.name)
+
+  def decorate(self, name, _, description):
+    async def check(message, args):
+      if name_channel(message.channel) != self.required_channel:
+        await question(message, tr(self.required_channel + '_only').format(BOT_PREFIX + name))
+        return
+      player = players[message.author.id]
+      if not player:
+        await question(message, tr('self_notfound'))
+        return
+      if not hasattr(player.role, name):
+        await question(message, tr('wrong_role').format(BOT_PREFIX + name))
+      else:
+        await getattr(player.role, name)(message, args)
+    return super().decorate(name, check, description)
 
 class SetupCommand(AdminCommand):
   pass
@@ -72,8 +96,18 @@ class Player:
   def __init__(self, is_admin, extern):
     self.is_admin = is_admin
     self.extern = extern
+    self.role = None
 
 ########################### UTILS ##############################
+
+def name_channel(channel):
+  if is_dm_channel(channel):
+    return 'dm'
+  if is_public_channel(channel):
+    return 'public'
+  for id, c in tmp_channels.items():
+    if channel == c:
+      return id
 
 def cmd(base):
   def decorator(func):
@@ -130,6 +164,9 @@ def join_with_and(arr):
 def player_count():
   return len(played_roles)
 
+def get_command_name(name):
+  return tr('cmd_' + name)[0]
+
 ############################ INIT ##############################
 
 def initialize(admins):
@@ -138,6 +175,9 @@ def initialize(admins):
     players[admin.id] = Player(True, admin)
 
 ########################## COMMANDS ############################
+
+  @cmd(RoleCommand('dm'))
+  def swap(): pass
 
   @cmd(Command())
   async def help(message, args):
@@ -149,12 +189,13 @@ def initialize(admins):
     else:
       player = get_player(message.author.id, message.author)
       command_list = [ BOT_PREFIX + cmd for cmd in main_commands
-          if commands[cmd].is_listed(player)
+          if commands[cmd].is_listed(player, message.channel)
       ]
       await confirm(message, tr('help_list').format('`, `'.join(command_list)))
 
   @cmd(SetupCommand())
   async def add_role(message, args):
+    args = args.strip()
     if not args:
       await question(message, tr('add_nothing').format(BOT_PREFIX))
     elif args in roles:
@@ -170,8 +211,8 @@ def initialize(admins):
 
   @cmd(AdminCommand())
   async def start_immediate(message, args):
-    players = [ Player(member.id, member) async for member in get_available_members() ]
-    current_count = len(players)
+    members = [ member async for member in get_available_members() ]
+    current_count = len(members)
     needed_count = player_count()
     if current_count > needed_count:
       await question(message, tr('start_needless').format(current_count, needed_count))
@@ -179,24 +220,27 @@ def initialize(admins):
       await question(message, tr('start_needmore').format(current_count, needed_count))
     else:
       await confirm(message, tr('start').format(join_with_and(
-        [player.extern.mention for player in players]
+        [member.mention for member in members]
       )))
-      for channel in tmp_channels:
+      for channel in tmp_channels.values():
         channel.delete()
       tmp_channels.clear()
 
       for idx, role in enumerate(shuffle_copy(played_roles)):
-        player = players[idx]
+        player = get_player(members[idx].id, members[idx])
         player.role = roles[role]()
-        await player.extern.dm_channel.send(tr('role').format(role) + player.role.greeting)
+        await player.extern.dm_channel.send(tr('role').format(role) + player.role.greeting.format(BOT_PREFIX))
         if hasattr(player.role, 'on_start'):
           await player.role.on_start(player)
 
-      for channel_id in tmp_channels:
-        channel = tmp_channels[channel_id]
-        await channel.send(tr(channel_id + '_channel').format(
+      for id, channel in tmp_channels.items():
+        await channel.send(tr(id + '_channel').format(
             join_with_and([member.extern.mention for member in channel.members])))
-      
+
+  @cmd(AdminCommand())
+  async def reveal_all(message, args):
+    await confirm(message, join_with_and([ player.extern.name + ':' + player.role.name
+        for player in players.values() if player.role ]))
 
 ############################ ROLES #############################
 
@@ -205,6 +249,29 @@ def initialize(admins):
 
   @role
   class Seer(Villager): pass
+
+  @role
+  class Thief(Villager):
+    def __init__(self):
+      self.used = False
+    async def swap(self, message, args):
+      if self.used:
+        return await question(message, tr('ability_used').format(BOT_PREFIX + get_command_name('swap')))
+      args = args.strip()
+      if not args:
+        return await question(message, tr('thief_swap_nothing').format(BOT_PREFIX))
+      me = get_player(message.author.id, message.author)
+      if me.extern.name == args:
+        return await question(message, tr('thief_swapself'))
+      for player in players.values():
+        if player.extern.name == args:
+          if not player.role:
+            return await question(message, tr('thief_norole').format(args))
+          else:
+            me.role, player.role = player.role, me.role
+            self.used = True
+            return await confirm(message, tr('thief_success').format(args))
+      await question(message, tr('username_notfound').format(args))
 
   @role
   class Wolf:

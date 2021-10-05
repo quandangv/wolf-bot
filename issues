@@ -1,9 +1,11 @@
 # TODO
 - Should delete temporary rooms at the end of the game, not the start
-- Commands for roles to use their ability
-- Focus on one-night mode
+- Use Guild.members instead of Guild.fetch_members
+- In get_player, get member id from the extern argument
 
 # DOING
+- Commands for roles to use their ability
+- Focus on one-night mode
 
 # DONE
 - Detach core from discord API
@@ -11,4 +13,4 @@
 - Check authorities before executing commands
 - Create room for wolves
 - Greetings for each roles and each group
-- Support normalized aliases
+- Generate normalized aliases

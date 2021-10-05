@@ -17,6 +17,14 @@ def low_create_channel(name, *players):
   return channel
 
 @core.action
+def is_dm_channel(channel):
+  return channel.name.startswith('@')
+
+@core.action
+def is_public_channel(channel):
+  return channel.name == 'game'
+
+@core.action
 async def create_channel(name, *players):
   return low_create_channel(name, *players)
 
@@ -84,6 +92,7 @@ david = Member(3, 'david')
 elsa = Member(4, 'elsa')
 
 game = low_create_channel('game')
+bot_dm = low_create_channel('@bot')
 
 members = [ anne, bob, carl, david, elsa ]
 admins = [ anne ]
@@ -113,7 +122,7 @@ Expected: {}.
 def expect_response(author, message, channel, response):
   low_expect_response(core.process_message(Message(author, message, channel)), response)
 
-expect_response(anne, '!help', game, '[game] confirm(@anne) help_list(!help`, `!add_role`, `!list_roles`, `!start_immediate) ')
+expect_response(anne, '!help', game, '[game] confirm(@anne) help_list(!help`, `!add_role`, `!list_roles`, `!start_immediate`, `!reveal_all) ')
 expect_response(carl, '!help', game, '[game] confirm(@carl) help_list(!help`, `!list_roles) ')
 
 expect_response(anne, '!help help', game, '[game] confirm(@anne) help_desc ')
@@ -125,11 +134,19 @@ expect_response(anne, '!help help_alias', game, '[game] confirm(@anne) alias(hel
 expect_response(anne, '!add_role', game, '[game] question(@anne) add_nothing(!) ')
 expect_response(carl, '!add_role', game, '[game] question(@carl) require_admin ')
 
-expect_response(anne, '!add_role villager', game, '[game] confirm(@anne) add_success(villager) ')
+expect_response(anne, '!add_role thief', game, '[game] confirm(@anne) add_success(thief) ')
 expect_response(anne, '!add_role villager_alias', game, '[game] confirm(@anne) add_success(villager) ')
 expect_response(anne, '!add_role seer', game, '[game] confirm(@anne) add_success(seer) ')
 expect_response(anne, '!start_immediate', game, '[game] question(@anne) start_needless(5, 3) ')
 expect_response(anne, '!add_role wolf', game, '[game] confirm(@anne) add_success(wolf) ')
 expect_response(anne, '!add_role wolf', game, '[game] confirm(@anne) add_success(wolf) ')
-expect_response(anne, '!list_roles', game, '[game] confirm(@anne) list_roles(villager, villager, seer, wolf, wolf, 5) ')
-expect_response(anne, '!start_immediate', game, ['[game] confirm(@anne) start(@anne, @bob, @carl, @david, @elsa) ', '[@anne] role(wolf) wolf_greeting', '[@bob] role(wolf) wolf_greeting', '[@carl] role(seer) seer_greeting', '[@david] role(villager) villager_greeting', '[@elsa] role(villager) villager_greeting', '[wolf ] wolf_channel(@anne, @bob) '])
+expect_response(anne, '!list_roles', game, '[game] confirm(@anne) list_roles(thief, villager, seer, wolf, wolf, 5) ')
+expect_response(anne, '!start_immediate', game, ['[game] confirm(@anne) start(@anne, @bob, @carl, @david, @elsa) ', '[@anne] role(wolf) wolf_greeting', '[@bob] role(wolf) wolf_greeting', '[@carl] role(seer) seer_greeting', '[@david] role(villager) villager_greeting', '[@elsa] role(thief) thief_greeting', '[wolf ] wolf_channel(@anne, @bob) '])
+expect_response(anne, '!swap', game, '[game] question(@anne) dm_only(!swap) ')
+expect_response(elsa, '!swap', game, '[game] question(@elsa) dm_only(!swap) ')
+expect_response(elsa, '!swap', bot_dm, '[@bot] question(@elsa) thief_swap_nothing(!) ')
+expect_response(elsa, '!swap lolbla', bot_dm, '[@bot] question(@elsa) username_notfound(lolbla) ')
+expect_response(elsa, '!swap elsa', bot_dm, '[@bot] question(@elsa) thief_swapself ')
+expect_response(elsa, '!swap anne', bot_dm, '[@bot] confirm(@elsa) thief_success(anne) ')
+expect_response(anne, '!swap carl', bot_dm, '[@bot] question(@anne) ability_used(!swap) ')
+expect_response(anne, '!reveal_all', bot_dm, '[@bot] confirm(@anne) anne:thief, carl:seer, bob:wolf, david:villager, elsa:wolf')
