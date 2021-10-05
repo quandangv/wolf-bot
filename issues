@@ -1,6 +1,7 @@
 # TODO
 - Should delete temporary rooms at the end of the game, not the start
 - Commands for roles to use their ability
+- Focus on one-night mode
 
 # DOING
 
@@ -9,3 +10,4 @@
 - Create automated tests
 - Check authorities before executing commands
 - Create room for wolves
+- Greetings for each roles and each group

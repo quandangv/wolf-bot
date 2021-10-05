@@ -90,7 +90,7 @@ def cmd(base):
   return decorator
 
 def role(base):
-  [base.name, base.description, *aliases] = tr('role_' + base.__name__.lower())
+  [base.name, base.description, base.greeting, *aliases] = tr('role_' + base.__name__.lower())
   roles[base.name] = base
   for alias in aliases:
     if alias not in roles:
@@ -178,12 +178,13 @@ def initialize(admins):
       for idx, role in enumerate(shuffle_copy(played_roles)):
         player = players[idx]
         player.role = roles[role]()
-        await player.extern.dm_channel.send(tr('role').format(role))
+        await player.extern.dm_channel.send(tr('role').format(role) + player.role.greeting)
         if hasattr(player.role, 'on_start'):
           await player.role.on_start(player)
 
-      for channel in tmp_channels.values():
-        await channel.send(tr('channel_greeting').format(channel.name,
+      for channel_id in tmp_channels:
+        channel = tmp_channels[channel_id]
+        await channel.send(tr(channel_id + '_channel').format(
             join_with_and([member.extern.mention for member in channel.members])))
       
 
@@ -193,7 +194,7 @@ def initialize(admins):
   class Villager: pass
 
   @role
-  class Guard(Villager): pass
+  class Seer(Villager): pass
 
   @role
   class Wolf:

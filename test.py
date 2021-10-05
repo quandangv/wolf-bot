@@ -36,7 +36,7 @@ def tr(key):
   if strip_prefix('cmd_'):
     return [ key, key + '_desc ', key + '_alias' ]
   if strip_prefix('role_'):
-    return [ key, key + '_desc ', key + '_alias' ]
+    return [ key, key + '_desc ', key + '_greeting', key + '_alias' ]
   sample_result = getattr(lang, key)
   if isinstance(sample_result, tuple):
     sample_result = sample_result[0]
@@ -127,9 +127,9 @@ expect_response(carl, '!add_role', game, '[game] question(@carl) require_admin '
 
 expect_response(anne, '!add_role villager', game, '[game] confirm(@anne) add_success(villager) ')
 expect_response(anne, '!add_role villager_alias', game, '[game] confirm(@anne) add_success(villager) ')
-expect_response(anne, '!add_role guard', game, '[game] confirm(@anne) add_success(guard) ')
+expect_response(anne, '!add_role seer', game, '[game] confirm(@anne) add_success(seer) ')
 expect_response(anne, '!start_immediate', game, '[game] question(@anne) start_needless(5, 3) ')
 expect_response(anne, '!add_role wolf', game, '[game] confirm(@anne) add_success(wolf) ')
 expect_response(anne, '!add_role wolf', game, '[game] confirm(@anne) add_success(wolf) ')
-expect_response(anne, '!list_roles', game, '[game] confirm(@anne) list_roles(villager, villager, guard, wolf, wolf, 5) ')
-expect_response(anne, '!start_immediate', game, ['[game] confirm(@anne) start(@anne, @bob, @carl, @david, @elsa) ', '[@anne] role(wolf) ', '[@bob] role(wolf) ', '[@carl] role(guard) ', '[@david] role(villager) ', '[@elsa] role(villager) ', '[wolf ] channel_greeting(wolf , @anne, @bob) '])
+expect_response(anne, '!list_roles', game, '[game] confirm(@anne) list_roles(villager, villager, seer, wolf, wolf, 5) ')
+expect_response(anne, '!start_immediate', game, ['[game] confirm(@anne) start(@anne, @bob, @carl, @david, @elsa) ', '[@anne] role(wolf) wolf_greeting', '[@bob] role(wolf) wolf_greeting', '[@carl] role(seer) seer_greeting', '[@david] role(villager) villager_greeting', '[@elsa] role(villager) villager_greeting', '[wolf ] wolf_channel(@anne, @bob) '])
