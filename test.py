@@ -147,7 +147,7 @@ expect_response(elsa, '!swap', bot_dm, '[@bot] question(@elsa) thief_swap_nothin
 expect_response(elsa, '!swap lolbla', bot_dm, '[@bot] question(@elsa) player_notfound(lolbla) ')
 expect_response(elsa, '!swap elsa', bot_dm, '[@bot] question(@elsa) thief_self ')
 expect_response(elsa, '!swap anne', bot_dm, '[@bot] confirm(@elsa) thief_success(anne) ')
-expect_response(anne, '!swap carl', bot_dm, '[@bot] question(@anne) ability_used(!swap) ')
+expect_response(anne, '!swap carl', bot_dm, '[@bot] question(@anne) wrong_role(!swap) ')
 expect_response(anne, '!reveal_all', bot_dm, '[@bot] confirm(@anne) anne:thief, carl:seer, bob:wolf, david:villager, elsa:wolf')
 expect_response(carl, '!see carl', bot_dm, '[@bot] question(@carl) seer_self ')
 expect_response(carl, '!see anne', bot_dm, '[@bot] confirm(@carl) see_success(@anne, thief) ')

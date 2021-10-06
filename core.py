@@ -5,6 +5,7 @@ roles = {}
 main_commands = []
 
 players = {}
+real_roles = {}
 played_roles = []
 tmp_channels = {}
 
@@ -97,6 +98,7 @@ class Player:
     self.is_admin = is_admin
     self.extern = extern
     self.role = None
+    self.real_role = None
 
 ########################## DECORATORS ##########################
 
@@ -259,7 +261,7 @@ def initialize(admins):
 
       for idx, role in enumerate(shuffle_copy(played_roles)):
         player = get_player(members[idx])
-        player.role = roles[role]()
+        player.real_role = player.role = roles[role]()
         await player.extern.dm_channel.send(tr('role').format(role) + player.role.greeting.format(BOT_PREFIX))
         if hasattr(player.role, 'on_start'):
           await player.role.on_start(player)
@@ -270,7 +272,7 @@ def initialize(admins):
 
   @cmd(AdminCommand())
   async def reveal_all(message, args):
-    await confirm(message, join_with_and([ player.extern.name + ':' + player.role.name
+    await confirm(message, join_with_and([ player.extern.name + ':' + player.real_role.name
         for player in players.values() if player.role ]))
 
 ############################ ROLES #############################
@@ -290,7 +292,7 @@ def initialize(admins):
       player = await find_player(message, args)
       if player:
         self.used = True
-        return await confirm(message, tr('see_success').format(player.extern.mention, player.role.name))
+        return await confirm(message, tr('see_success').format(player.extern.mention, player.real_role.name))
 
   @role
   class Thief(Villager):
@@ -305,7 +307,7 @@ def initialize(admins):
         return await question(message, tr('thief_self'))
       player = await find_player(message, args)
       if player:
-        me.role, player.role = player.role, me.role
+        me.real_role, player.real_role = player.real_role, me.real_role
         self.used = True
         return await confirm(message, tr('thief_success').format(args))
 
