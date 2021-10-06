@@ -1,11 +1,11 @@
 # TODO
 - Should delete temporary rooms at the end of the game, not the start
-- differentiate get_player from get_or_create_player
 
 # DOING
 - Add more roles
 
 # DONE
+- differentiate get_player from get_or_create_player
 - Focus on one-night mode
 - Commands for roles to use their ability
 - Use Guild.members instead of Guild.fetch_members

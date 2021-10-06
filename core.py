@@ -102,7 +102,7 @@ class RoleCommand(Command):
       if not hasattr(player.role, name):
         await question(message, tr('wrong_role').format(BOT_PREFIX + name))
       else:
-        await getattr(player.role, name)(message, args)
+        await getattr(player.role, name)(player, message, args)
     return super().decorate(name, check, description)
 
 class SetupCommand(AdminCommand):
@@ -164,10 +164,10 @@ def single_arg(message_key, *message_args):
   return decorator
 
 def single_use(func):
-  async def result(self, message, args):
+  async def result(self, me, message, args):
     if self.used:
       return await question(message, tr('ability_used').format(BOT_PREFIX + get_command_name(func.__name__)))
-    await func(self, message, args)
+    await func(self, me, message, args)
   result.__name__ = func.__name__
   return result
 
@@ -309,8 +309,7 @@ def initialize(admins):
 
     @single_use
     @single_arg('see_wronguse')
-    async def see(self, message, args):
-      me = get_player(message.author)
+    async def see(self, me, message, args):
       if me.extern.name == args:
         return await question(message, tr('seer_self'))
       player = await find_player(message, args)
@@ -324,11 +323,10 @@ def initialize(admins):
       self.used = False
 
     @single_use
-    async def swap(self, message, args):
+    async def swap(self, me, message, args):
       players = args.split()
       if len(players) != 2:
         return await question(message, tr('troublemaker_wronguse').format(BOT_PREFIX))
-      me = get_player(message.author)
       if me.extern.name in players:
         return await question(message, tr('no_swap_self'))
       players = [ await find_player(message, name) for name in players ]
@@ -345,8 +343,7 @@ def initialize(admins):
 
     @single_use
     @single_arg('thief_wronguse')
-    async def swap(self, message, args):
-      me = get_player(message.author)
+    async def swap(self, me, message, args):
       if me.extern.name == args:
         return await question(message, tr('no_swap_self'))
       player = await find_player(message, args)
@@ -362,7 +359,7 @@ def initialize(admins):
 
     @single_use
     @single_arg('drunk_wronguse', EXCESS_CARDS)
-    async def swap(self, message, args):
+    async def swap(self, me, message, args):
       try:
         number = int(args)
       except ValueError:
@@ -370,7 +367,6 @@ def initialize(admins):
       if number < 1 or number > EXCESS_CARDS:
         return await question(message, tr('drunk_outofrange').format(EXCESS_CARDS))
       number = number - 1
-      me = get_player(message.author)
       me.real_role, excess_roles[number] = excess_roles[number], me.real_role
       self.used = True
       return await confirm(message, tr('drunk_success').format(args))
@@ -399,7 +395,6 @@ async def process_message(message):
       [cmd, args] = arr
     cmd = cmd.lower()
     if cmd in commands:
-      player = get_player(message.author)
       await commands[cmd].func(message, args)
     else:
       await confused(message.channel, BOT_PREFIX + cmd)
