@@ -10,6 +10,7 @@ wolf_channel = ( "Xin chào những chú sói nho nhỏ, đàn sói của các b
 
 help_list = ( "các lệnh được thực hiện là `{}`.", "ngoài cắn người, bạn còn có thể dùng lệnh `{}`. (giỡn thoi nha)", "hãy thử một trong các lệnh `{}`" )
 list_roles = ( "Ván này mình chơi {}; cần có {} người chơi", "Trong làng có {}; đủ cho {} người chơi" )
+#channel_greeting = "Chào mừng {} đến với group {}"
 
 start = ( "bắt đầu trò chơi với {}", "trò chơi gồm {} sẽ được bắt đầu ngay bây giờ", "{} chơi ha", "trò chơi bắt đầu! Đêm nay sói sẽ xuất hiện giữa {}" )
 start_needmore = ( "hiện tại có {} người chơi, trong khi mình cần {} người lận", "mình cần {1} người chơi, mới có {0} người à" )
@@ -23,14 +24,17 @@ thief_wronguse = "bạn muốn tráo chức năng với ai thì phải nhắn l�
 troublemaker_wronguse = "bạn muốn tráo chức năng của những người nào thì phải nhắn là `{}trao <người-1> <người-2>`"
 see_wronguse = "bạn muốn soi ai thì phải nhắn là `{}soi <người-đó>`"
 drunk_wronguse = "có {1} lá bài bên ngoài, bạn phải chọn STT lá bài từ 1 đến {1} để đổi với mình bằng lệnh `{0}trao <STT-lá-bài>`"
+clone_wronguse = "bạn muốn nhân bản ai thì phải nhắn là `{}nhanban <người-đó>`"
 
 thief_success = "đã tráo chức năng của bạn với {}"
 troublemaker_success = "đã tráo chức năng của {} và {}"
 see_success = ( "chức năng của {} là {}", "{} là một con {}" )
 drunk_success = "đã tráo lá bài bên ngoài số {} với lá của bạn"
+clone_success = "bạn đã nhân bản chức năng của {}, giờ bạn sẽ là một {}!"
 
 no_swap_self = "bạn không được tráo chức năng với chính mình"
 seer_self = "bạn không được soi chính mình"
+clone_self = "bạn không được nhân bản chính mình"
 
 require_admin = "bạn không phải là admin nên không được dùng lệnh đó nha"
 self_notfound = "không tìm thấy bạn trong làng, bạn có chơi không dạ"

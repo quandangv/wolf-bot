@@ -135,17 +135,18 @@ Expected: {}.
 def expect_response(author, message, channel, response):
   low_expect_response(core.process_message(Message(author, message, channel)), response)
 
-def check_private_single_arg_single_use_cmd(author, cmd, target, wronguse_msg, no_self_msg, success_msg):
+def check_private_single_arg_cmd(author, cmd, target, wronguse_msg, no_self_msg, success_msg, single_use = True):
   expect_response(author, cmd, game, '[game] question({}) dm_only({}) '.format(author.mention, cmd))
   expect_response(author, cmd, bot_dm, '[@bot] question({}) {} '.format(author.mention, wronguse_msg))
   expect_response(author, cmd + ' foo bar', bot_dm, '[@bot] question({}) {} '.format(author.mention, wronguse_msg))
-  expect_response(author, cmd + ' ' + target, bot_dm, '[@bot] confirm({}) {} '.format(author.mention, success_msg))
-  expect_response(author, cmd + ' ' + target, bot_dm, '[@bot] question({}) ability_used({}) '.format(author.mention, cmd))
+  expect_response(author, cmd + ' ' + target, bot_dm, '[@bot] confirm({}) {}'.format(author.mention, success_msg))
+  if single_use:
+    expect_response(author, cmd + ' ' + target, bot_dm, '[@bot] question({}) ability_used({}) '.format(author.mention, cmd))
 
-def check_private_single_player_single_use_cmd(author, cmd, target, wronguse_msg, no_self_msg, success_msg):
+def check_private_single_player_cmd(author, cmd, target, wronguse_msg, no_self_msg, success_msg, single_use = True):
   expect_response(author, cmd + ' foobar', bot_dm, '[@bot] question({}) player_notfound(foobar) '.format(author.mention))
   expect_response(author, cmd + ' ' + author.name, bot_dm, '[@bot] question({}) {} '.format(author.mention, no_self_msg))
-  check_private_single_arg_single_use_cmd(author, cmd, target, wronguse_msg, no_self_msg, success_msg)
+  check_private_single_arg_cmd(author, cmd, target, wronguse_msg, no_self_msg, success_msg, single_use)
 
 expect_response(anne, '!help', game, '[game] confirm(@anne) help_list(!help`, `!add_role`, `!list_roles`, `!start_immediate`, `!reveal_all) ')
 expect_response(carl, '!help', game, '[game] confirm(@carl) help_list(!help`, `!list_roles`, `!reveal_all) ')
@@ -163,7 +164,7 @@ expect_response(anne, '!add_role villager', game, '[game] confirm(@anne) add_suc
 expect_response(anne, '!add_role villager', game, '[game] confirm(@anne) add_success(villager) ')
 expect_response(anne, '!add_role villager', game, '[game] confirm(@anne) add_success(villager) ')
 expect_response(anne, '!add_role villager', game, '[game] confirm(@anne) add_success(villager) ')
-expect_response(anne, '!add_role villager', game, '[game] confirm(@anne) add_success(villager) ')
+expect_response(anne, '!add_role clone', game, '[game] confirm(@anne) add_success(clone) ')
 expect_response(anne, '!add_role drunk', game, '[game] confirm(@anne) add_success(drunk) ')
 expect_response(anne, '!add_role troublemaker', game, '[game] confirm(@anne) add_success(troublemaker) ')
 expect_response(anne, '!add_role thief', game, '[game] confirm(@anne) add_success(thief) ')
@@ -172,25 +173,29 @@ expect_response(anne, '!add_role seer', game, '[game] confirm(@anne) add_success
 expect_response(anne, '!start_immediate', game, '[game] question(@anne) start_needless(9, 7) ')
 expect_response(anne, '!add_role wolf', game, '[game] confirm(@anne) add_success(wolf) ')
 expect_response(anne, '!add_role wolf', game, '[game] confirm(@anne) add_success(wolf) ')
-expect_response(anne, '!list_roles', game, '[game] confirm(@anne) list_roles(villager, villager, villager, villager, villager, drunk, troublemaker, thief, villager, seer, wolf, wolf, 9) ')
-expect_response(anne, '!start_immediate', game, ['[game] confirm(@anne) start(@anne, @bob, @carl, @david, @elsa, @frank, @george, @harry, @ignacio) ', '[@anne] role(wolf) wolf_greeting', '[@bob] role(wolf) wolf_greeting', '[@carl] role(seer) seer_greeting', '[@david] role(villager) villager_greeting', '[@elsa] role(thief) thief_greeting', '[@frank] role(troublemaker) troublemaker_greeting', '[@george] role(drunk) drunk_greeting', '[@harry] role(villager) villager_greeting', '[@ignacio] role(villager) villager_greeting', '[wolf ] wolf_channel(@anne, @bob) '])
+expect_response(anne, '!list_roles', game, '[game] confirm(@anne) list_roles(villager, villager, villager, villager, clone, drunk, troublemaker, thief, villager, seer, wolf, wolf, 9) ')
+expect_response(anne, '!start_immediate', game, ['[game] confirm(@anne) start(@anne, @bob, @carl, @david, @elsa, @frank, @george, @harry, @ignacio) ', '[@anne] role(wolf) wolf_greeting', '[@bob] role(wolf) wolf_greeting', '[@carl] role(seer) seer_greeting', '[@david] role(villager) villager_greeting', '[@elsa] role(thief) thief_greeting', '[@frank] role(troublemaker) troublemaker_greeting', '[@george] role(drunk) drunk_greeting', '[@harry] role(clone) clone_greeting', '[@ignacio] role(villager) villager_greeting', '[wolf ] wolf_channel(@anne, @bob) '])
 
-expect_response(anne, '!reveal_all', bot_dm, '[@bot] confirm(@anne) anne:wolf, carl:seer, bob:wolf, david:villager, elsa:thief, frank:troublemaker, george:drunk, harry:villager, ignacio:villager; excess: villager, villager, villager')
+expect_response(anne, '!reveal_all', bot_dm, '[@bot] confirm(@anne) anne:wolf, carl:seer, bob:wolf, david:villager, elsa:thief, frank:troublemaker, george:drunk, harry:clone, ignacio:villager; excess: villager, villager, villager')
 
 expect_response(anne, '!swap', game, '[game] question(@anne) dm_only(!swap) ')
 expect_response(anne, '!swap carl', bot_dm, '[@bot] question(@anne) wrong_role(!swap) ')
 
-check_private_single_player_single_use_cmd(elsa, '!swap', 'anne', 'thief_wronguse(!)', 'no_swap_self', 'thief_success(anne)')
-expect_response(anne, '!reveal_all', bot_dm, '[@bot] confirm(@anne) anne:thief, carl:seer, bob:wolf, david:villager, elsa:wolf, frank:troublemaker, george:drunk, harry:villager, ignacio:villager; excess: villager, villager, villager')
+check_private_single_player_cmd(elsa, '!swap', 'anne', 'thief_wronguse(!)', 'no_swap_self', 'thief_success(anne) ')
+expect_response(anne, '!reveal_all', bot_dm, '[@bot] confirm(@anne) anne:thief, carl:seer, bob:wolf, david:villager, elsa:wolf, frank:troublemaker, george:drunk, harry:clone, ignacio:villager; excess: villager, villager, villager')
 
-check_private_single_player_single_use_cmd(carl, '!see', 'anne', 'see_wronguse(!)', 'seer_self', 'see_success(anne, thief)')
+check_private_single_player_cmd(carl, '!see', 'anne', 'see_wronguse(!)', 'seer_self', 'see_success(anne, thief) ')
 
 expect_response(frank, '!swap frank elsa', bot_dm, '[@bot] question(@frank) no_swap_self ')
 expect_response(frank, '!swap elsa', bot_dm, '[@bot] question(@frank) troublemaker_wronguse(!) ')
 expect_response(frank, '!swap ', bot_dm, '[@bot] question(@frank) troublemaker_wronguse(!) ')
 expect_response(frank, '!swap anne david', bot_dm, '[@bot] confirm(@frank) troublemaker_success(anne, david) ')
 expect_response(frank, '!swap anne david', bot_dm, '[@bot] question(@frank) ability_used(!swap) ')
-expect_response(anne, '!reveal_all', bot_dm, '[@bot] confirm(@anne) anne:villager, carl:seer, bob:wolf, david:thief, elsa:wolf, frank:troublemaker, george:drunk, harry:villager, ignacio:villager; excess: villager, villager, villager')
+expect_response(anne, '!reveal_all', bot_dm, '[@bot] confirm(@anne) anne:villager, carl:seer, bob:wolf, david:thief, elsa:wolf, frank:troublemaker, george:drunk, harry:clone, ignacio:villager; excess: villager, villager, villager')
 
-check_private_single_arg_single_use_cmd(george, '!swap', '1', 'drunk_wronguse(!, 3)', 'no_swap_self', 'drunk_success(1)')
-expect_response(anne, '!reveal_all', bot_dm, '[@bot] confirm(@anne) anne:villager, carl:seer, bob:wolf, david:thief, elsa:wolf, frank:troublemaker, george:villager, harry:villager, ignacio:villager; excess: drunk, villager, villager')
+check_private_single_arg_cmd(george, '!swap', '1', 'drunk_wronguse(!, 3)', 'no_swap_self', 'drunk_success(1) ')
+expect_response(anne, '!reveal_all', bot_dm, '[@bot] confirm(@anne) anne:villager, carl:seer, bob:wolf, david:thief, elsa:wolf, frank:troublemaker, george:villager, harry:clone, ignacio:villager; excess: drunk, villager, villager')
+
+check_private_single_player_cmd(harry, '!clone', 'david', 'clone_wronguse(!)', 'clone_self', 'clone_success(david, thief) thief_greeting', False)
+expect_response(harry, '!swap frank', bot_dm, '[@bot] confirm(@harry) thief_success(frank) ')
+expect_response(anne, '!reveal_all', bot_dm, '[@bot] confirm(@anne) anne:villager, carl:seer, bob:wolf, david:thief, elsa:wolf, frank:thief, george:villager, harry:troublemaker, ignacio:villager; excess: drunk, villager, villager')

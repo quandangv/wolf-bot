@@ -230,6 +230,9 @@ def initialize(admins):
   @cmd(RoleCommand('dm'))
   def see(): pass
 
+  @cmd(RoleCommand('dm'))
+  def clone(): pass
+
   @cmd(Command())
   async def help(message, args):
     if args:
@@ -318,6 +321,24 @@ def initialize(admins):
         return await confirm(message, tr('see_success').format(args, player.real_role.name))
 
   @role
+  class Clone(Villager):
+    def __init__(self):
+      self.used = False
+
+    @single_use
+    @single_arg('clone_wronguse')
+    async def clone(self, me, message, args):
+      if me.extern.name == args:
+        return await question(message, tr('clone_self'))
+      player = await find_player(message, args)
+      if player:
+        me.role = me.real_role = roles[player.real_role.name]()
+        if hasattr(me.role, 'on_start'):
+          await me.role.on_start(me)
+        return await confirm(message, tr('clone_success').format(args, me.role.name) + me.role.greeting)
+        
+
+  @role
   class Troublemaker(Villager):
     def __init__(self):
       self.used = False
@@ -377,7 +398,9 @@ def initialize(admins):
       if not 'wolf' in tmp_channels:
         tmp_channels['wolf'] = await create_channel(tr('wolf'), player)
       else:
-        await add_member(tmp_channels['wolf'], player)
+        channel = tmp_channels['wolf']
+        await add_member(channel, player)
+        #await channel.send(tr('channel_greeting').format(player.extern.mention, channel.name))
 
 ########################### EVENTS #############################
 
