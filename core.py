@@ -323,7 +323,7 @@ def initialize(admins):
       self.used = False
 
     @single_use
-    @single_arg('thief_swap_wronguse')
+    @single_arg('thief_wronguse')
     async def swap(self, message, args):
       me = get_player(message.author)
       if me.extern.name == args:
