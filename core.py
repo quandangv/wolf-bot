@@ -7,10 +7,13 @@ main_commands = []
 players = {}
 real_roles = {}
 played_roles = []
+excess_roles = []
 tmp_channels = {}
 
 BOT_PREFIX = '!'
 CREATE_NORMALIZED_ALIASES = True
+EXCESS_CARDS = 3
+DEBUG = False
 
 ############################ ACTIONS ###########################
 
@@ -55,6 +58,18 @@ class Command:
 
   def is_listed(self, _, __):
     return True
+
+class DebugCommand(Command):
+  def is_listed(self, _, __):
+    return DEBUG
+
+  def decorate(self, name, func, description):
+    async def check(message, args):
+      if DEBUG:
+        await func(message, args)
+      else:
+        await question(message, tr('debug_command'))
+    return super().decorate(name, check, description)
 
 class AdminCommand(Command):
   def is_listed(self, player, _):
@@ -187,7 +202,7 @@ def join_with_and(arr):
   return arr[0] if len(arr) == 1 else ", ".join(arr[:-1]) + ", " + tr('_and') + arr[-1]
 
 def player_count():
-  return len(played_roles)
+  return len(played_roles) - EXCESS_CARDS
 
 def get_command_name(name):
   return tr('cmd_' + name)[0]
@@ -260,21 +275,27 @@ def initialize(admins):
         channel.delete()
       tmp_channels.clear()
 
-      for idx, role in enumerate(shuffle_copy(played_roles)):
-        player = get_player(members[idx])
-        player.real_role = player.role = roles[role]()
-        await player.extern.dm_channel.send(tr('role').format(role) + player.role.greeting.format(BOT_PREFIX))
+      shuffled_roles = shuffle_copy(played_roles)
+      for idx, member in enumerate(members):
+        player = get_player(member)
+        player.real_role = player.role = roles[shuffled_roles[idx]]()
+        await player.extern.dm_channel.send(tr('role').format(player.role.name) + player.role.greeting.format(BOT_PREFIX))
         if hasattr(player.role, 'on_start'):
           await player.role.on_start(player)
+
+      excess_roles.clear()
+      for idx in range(EXCESS_CARDS):
+        excess_roles.append(roles[shuffled_roles[-idx - 1]]())
 
       for id, channel in tmp_channels.items():
         await channel.send(tr(id + '_channel').format(
             join_with_and([member.extern.mention for member in channel.members])))
 
-  @cmd(AdminCommand())
+  @cmd(DebugCommand())
   async def reveal_all(message, args):
     await confirm(message, join_with_and([ player.extern.name + ':' + player.real_role.name
-        for player in players.values() if player.role ]))
+        for player in players.values() if player.role ])
+        + "; excess: " + ', '.join([role.name for role in excess_roles]))
 
 ############################ ROLES #############################
 

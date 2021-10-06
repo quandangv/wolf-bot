@@ -14,6 +14,7 @@ list_roles = ( "Ván này mình chơi {}; cần có {} người chơi", "Trong l
 start = ( "bắt đầu trò chơi với {}", "trò chơi gồm {} sẽ được bắt đầu ngay bây giờ", "{} chơi ha", "trò chơi bắt đầu! Đêm nay sói sẽ xuất hiện giữa {}" )
 start_needmore = ( "hiện tại có {} người chơi, trong khi mình cần {} người lận", "mình cần {1} người chơi, mới có {0} người à" )
 start_needless = ( "hiện tại có tới {} người chơi, mình mới set đủ chức năng cho {} người thôi", "chức năng chỉ đủ cho {1} người thôi, giờ làng có đến {0} người lận" )
+debug_command = "lệnh này chỉ được dùng để debug, bạn không được dùng đâu"
 
 add_success = ( "đã thêm {} vào danh sách chức năng", "một {} vừa xuất hiện trong làng" )
 add_wronguse = "bạn muốn thêm chức năng gì thì phải nhắn là `{}them <chức-năng>`"
