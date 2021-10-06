@@ -22,10 +22,12 @@ add_wronguse = "bạn muốn thêm chức năng gì thì phải nhắn là `{}th
 thief_wronguse = "bạn muốn tráo chức năng với ai thì phải nhắn là `{}trao <người-đó>`"
 troublemaker_wronguse = "bạn muốn tráo chức năng của những người nào thì phải nhắn là `{}trao <người-1> <người-2>`"
 see_wronguse = "bạn muốn soi ai thì phải nhắn là `{}soi <người-đó>`"
+drunk_wronguse = "có {1} lá bài bên ngoài, bạn phải chọn STT lá bài từ 1 đến {1} để đổi với mình bằng lệnh `{0}trao <STT-lá-bài>`"
 
 thief_success = "đã tráo chức năng của bạn với {}"
 troublemaker_success = "đã tráo chức năng của {} và {}"
-see_success = ( "Chức năng của {} là {}", "{} là một con {}" )
+see_success = ( "chức năng của {} là {}", "{} là một con {}" )
+drunk_success = "đã tráo lá bài bên ngoài số {} với lá của bạn"
 
 no_swap_self = "bạn không được tráo chức năng với chính mình"
 seer_self = "bạn không được soi chính mình"

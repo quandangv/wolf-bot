@@ -151,13 +151,13 @@ def role(base):
       print("ERROR: Can't create alias {} to role {}!".format(alias, base.name))
   return base
 
-def single_arg(message_key):
+def single_arg(message_key, *message_args):
   def decorator(func):
     async def result(*arr):
       try:
         [arg] = arr[-1].split()
       except ValueError:
-        return await question(arr[-2], tr(message_key).format(BOT_PREFIX))
+        return await question(arr[-2], tr(message_key).format(BOT_PREFIX, *message_args))
       await func(*arr[:-1], arg)
     result.__name__ = func.__name__
     return result
@@ -354,6 +354,26 @@ def initialize(admins):
         me.real_role, player.real_role = player.real_role, me.real_role
         self.used = True
         return await confirm(message, tr('thief_success').format(args))
+
+  @role
+  class Drunk(Villager):
+    def __init__(self):
+      self.used = False
+
+    @single_use
+    @single_arg('drunk_wronguse', EXCESS_CARDS)
+    async def swap(self, message, args):
+      try:
+        number = int(args)
+      except ValueError:
+        return await question(message, tr('drunk_wronguse').format(BOT_PREFIX, EXCESS_CARDS))
+      if number < 1 or number > EXCESS_CARDS:
+        return await question(message, tr('drunk_outofrange').format(EXCESS_CARDS))
+      number = number - 1
+      me = get_player(message.author)
+      me.real_role, excess_roles[number] = excess_roles[number], me.real_role
+      self.used = True
+      return await confirm(message, tr('drunk_success').format(args))
 
   @role
   class Wolf:
