@@ -134,7 +134,7 @@ def role(base):
       print("ERROR: Can't create alias {} to role {}!".format(alias, base.name))
   return base
 
-def single_arg_cmd(message_key):
+def single_arg(message_key):
   def decorator(func):
     async def result(*arr):
       args = arr[-1].strip()
@@ -144,6 +144,14 @@ def single_arg_cmd(message_key):
     result.__name__ = func.__name__
     return result
   return decorator
+
+def single_use(func):
+  async def result(self, message, args):
+    if self.used:
+      return await question(message, tr('ability_used').format(BOT_PREFIX + get_command_name('swap')))
+    await func(self, message, args)
+  result.__name__ = func.__name__
+  return result
 
 ############################# UTILS ############################
 
@@ -181,6 +189,14 @@ def player_count():
 def get_command_name(name):
   return tr('cmd_' + name)[0]
 
+async def find_player(message, name):
+  for player in players.values():
+    if player.extern.name == name:
+      if not player.role:
+        return await question(message, tr('player_norole').format(player.mention))
+      return player
+  return await question(message, tr('player_notfound').format(name))
+
 ############################ INIT ##############################
 
 def initialize(admins):
@@ -192,6 +208,9 @@ def initialize(admins):
 
   @cmd(RoleCommand('dm'))
   def swap(): pass
+
+  @cmd(RoleCommand('dm'))
+  def see(): pass
 
   @cmd(Command())
   async def help(message, args):
@@ -208,7 +227,7 @@ def initialize(admins):
       await confirm(message, tr('help_list').format('`, `'.join(command_list)))
 
   @cmd(SetupCommand())
-  @single_arg_cmd('add_nothing')
+  @single_arg('add_nothing')
   async def add_role(message, args):
     if args in roles:
       name = roles[args].name
@@ -260,29 +279,35 @@ def initialize(admins):
   class Villager: pass
 
   @role
-  class Seer(Villager): pass
+  class Seer(Villager):
+    def __init__(self):
+      self.used = False
+
+    async def see(self, message, args):
+      me = get_player(message.author)
+      if me.extern.name == args:
+        return await question(message, tr('seer_self'))
+      player = await find_player(message, args)
+      if player:
+        self.used = True
+        return await confirm(message, tr('see_success').format(player.extern.mention, player.role.name))
 
   @role
   class Thief(Villager):
     def __init__(self):
       self.used = False
 
-    @single_arg_cmd('thief_swap_nothing')
+    @single_use
+    @single_arg('thief_swap_nothing')
     async def swap(self, message, args):
-      if self.used:
-        return await question(message, tr('ability_used').format(BOT_PREFIX + get_command_name('swap')))
       me = get_player(message.author)
       if me.extern.name == args:
-        return await question(message, tr('thief_swapself'))
-      for player in players.values():
-        if player.extern.name == args:
-          if not player.role:
-            return await question(message, tr('thief_norole').format(args))
-          else:
-            me.role, player.role = player.role, me.role
-            self.used = True
-            return await confirm(message, tr('thief_success').format(args))
-      await question(message, tr('username_notfound').format(args))
+        return await question(message, tr('thief_self'))
+      player = await find_player(message, args)
+      if player:
+        me.role, player.role = player.role, me.role
+        self.used = True
+        return await confirm(message, tr('thief_success').format(args))
 
   @role
   class Wolf:
