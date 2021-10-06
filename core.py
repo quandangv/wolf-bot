@@ -139,10 +139,11 @@ def role(base):
 def single_arg(message_key):
   def decorator(func):
     async def result(*arr):
-      args = arr[-1].strip()
-      if not args:
+      try:
+        [arg] = arr[-1].split()
+      except ValueError:
         return await question(arr[-2], tr(message_key).format(BOT_PREFIX))
-      await func(*arr[:-1], args)
+      await func(*arr[:-1], arg)
     result.__name__ = func.__name__
     return result
   return decorator
@@ -150,7 +151,7 @@ def single_arg(message_key):
 def single_use(func):
   async def result(self, message, args):
     if self.used:
-      return await question(message, tr('ability_used').format(BOT_PREFIX + get_command_name('swap')))
+      return await question(message, tr('ability_used').format(BOT_PREFIX + get_command_name(func.__name__)))
     await func(self, message, args)
   result.__name__ = func.__name__
   return result
@@ -229,7 +230,7 @@ def initialize(admins):
       await confirm(message, tr('help_list').format('`, `'.join(command_list)))
 
   @cmd(SetupCommand())
-  @single_arg('add_nothing')
+  @single_arg('add_wronguse')
   async def add_role(message, args):
     if args in roles:
       name = roles[args].name
@@ -285,6 +286,8 @@ def initialize(admins):
     def __init__(self):
       self.used = False
 
+    @single_use
+    @single_arg('see_wronguse')
     async def see(self, message, args):
       me = get_player(message.author)
       if me.extern.name == args:
@@ -292,7 +295,27 @@ def initialize(admins):
       player = await find_player(message, args)
       if player:
         self.used = True
-        return await confirm(message, tr('see_success').format(player.extern.mention, player.real_role.name))
+        return await confirm(message, tr('see_success').format(args, player.real_role.name))
+
+  @role
+  class Troublemaker(Villager):
+    def __init__(self):
+      self.used = False
+
+    @single_use
+    async def swap(self, message, args):
+      players = args.split()
+      if len(players) != 2:
+        return await question(message, tr('troublemaker_wronguse').format(BOT_PREFIX))
+      me = get_player(message.author)
+      if me.extern.name in players:
+        return await question(message, tr('no_swap_self'))
+      players = [ await find_player(message, name) for name in players ]
+      if players[0] and players[1]:
+        players[0].real_role, players[1].real_role = players[1].real_role, players[0].real_role
+        self.used = True
+        return await confirm(message, tr('troublemaker_success')
+            .format(*[ p.extern.name for p in players]))
 
   @role
   class Thief(Villager):
@@ -300,11 +323,11 @@ def initialize(admins):
       self.used = False
 
     @single_use
-    @single_arg('thief_swap_nothing')
+    @single_arg('thief_swap_wronguse')
     async def swap(self, message, args):
       me = get_player(message.author)
       if me.extern.name == args:
-        return await question(message, tr('thief_self'))
+        return await question(message, tr('no_swap_self'))
       player = await find_player(message, args)
       if player:
         me.real_role, player.real_role = player.real_role, me.real_role

@@ -89,11 +89,12 @@ bob = Member(1, 'bob')
 carl = Member(2, 'carl')
 david = Member(3, 'david')
 elsa = Member(4, 'elsa')
+frank = Member(5, 'frank')
 
 game = low_create_channel('game')
 bot_dm = low_create_channel('@bot')
 
-members = [ anne, bob, carl, david, elsa ]
+members = [ anne, bob, carl, david, elsa, frank ]
 admins = [ anne ]
 
 core.BOT_PREFIX = '!'
@@ -130,24 +131,37 @@ expect_response(carl, '!help blabla', game, '[game] confused(`blabla`) ')
 expect_response(anne, '!help_alias help', game, '[game] confirm(@anne) help_desc ')
 expect_response(anne, '!help help_alias', game, '[game] confirm(@anne) alias(help_alias, help) help_desc ')
 
-expect_response(anne, '!add_role', game, '[game] question(@anne) add_nothing(!) ')
+expect_response(anne, '!add_role', game, '[game] question(@anne) add_wronguse(!) ')
 expect_response(carl, '!add_role', game, '[game] question(@carl) require_admin ')
 
+expect_response(anne, '!add_role troublemaker', game, '[game] confirm(@anne) add_success(troublemaker) ')
 expect_response(anne, '!add_role thief', game, '[game] confirm(@anne) add_success(thief) ')
 expect_response(anne, '!add_role villager_alias', game, '[game] confirm(@anne) add_success(villager) ')
 expect_response(anne, '!add_role seer', game, '[game] confirm(@anne) add_success(seer) ')
-expect_response(anne, '!start_immediate', game, '[game] question(@anne) start_needless(5, 3) ')
+expect_response(anne, '!start_immediate', game, '[game] question(@anne) start_needless(6, 4) ')
 expect_response(anne, '!add_role wolf', game, '[game] confirm(@anne) add_success(wolf) ')
 expect_response(anne, '!add_role wolf', game, '[game] confirm(@anne) add_success(wolf) ')
-expect_response(anne, '!list_roles', game, '[game] confirm(@anne) list_roles(thief, villager, seer, wolf, wolf, 5) ')
-expect_response(anne, '!start_immediate', game, ['[game] confirm(@anne) start(@anne, @bob, @carl, @david, @elsa) ', '[@anne] role(wolf) wolf_greeting', '[@bob] role(wolf) wolf_greeting', '[@carl] role(seer) seer_greeting', '[@david] role(villager) villager_greeting', '[@elsa] role(thief) thief_greeting', '[wolf ] wolf_channel(@anne, @bob) '])
+expect_response(anne, '!list_roles', game, '[game] confirm(@anne) list_roles(troublemaker, thief, villager, seer, wolf, wolf, 6) ')
+expect_response(anne, '!start_immediate', game, ['[game] confirm(@anne) start(@anne, @bob, @carl, @david, @elsa, @frank) ', '[@anne] role(wolf) wolf_greeting', '[@bob] role(wolf) wolf_greeting', '[@carl] role(seer) seer_greeting', '[@david] role(villager) villager_greeting', '[@elsa] role(thief) thief_greeting', '[@frank] role(troublemaker) troublemaker_greeting', '[wolf ] wolf_channel(@anne, @bob) '])
+
 expect_response(anne, '!swap', game, '[game] question(@anne) dm_only(!swap) ')
 expect_response(elsa, '!swap', game, '[game] question(@elsa) dm_only(!swap) ')
-expect_response(elsa, '!swap', bot_dm, '[@bot] question(@elsa) thief_swap_nothing(!) ')
+expect_response(elsa, '!swap', bot_dm, '[@bot] question(@elsa) thief_swap_wronguse(!) ')
+expect_response(elsa, '!swap carl anne', bot_dm, '[@bot] question(@elsa) thief_swap_wronguse(!) ')
 expect_response(elsa, '!swap lolbla', bot_dm, '[@bot] question(@elsa) player_notfound(lolbla) ')
-expect_response(elsa, '!swap elsa', bot_dm, '[@bot] question(@elsa) thief_self ')
+expect_response(elsa, '!swap elsa', bot_dm, '[@bot] question(@elsa) no_swap_self ')
 expect_response(elsa, '!swap anne', bot_dm, '[@bot] confirm(@elsa) thief_success(anne) ')
 expect_response(anne, '!swap carl', bot_dm, '[@bot] question(@anne) wrong_role(!swap) ')
-expect_response(anne, '!reveal_all', bot_dm, '[@bot] confirm(@anne) anne:thief, carl:seer, bob:wolf, david:villager, elsa:wolf')
+expect_response(anne, '!reveal_all', bot_dm, '[@bot] confirm(@anne) anne:thief, carl:seer, bob:wolf, david:villager, elsa:wolf, frank:troublemaker')
+
 expect_response(carl, '!see carl', bot_dm, '[@bot] question(@carl) seer_self ')
-expect_response(carl, '!see anne', bot_dm, '[@bot] confirm(@carl) see_success(@anne, thief) ')
+expect_response(carl, '!see ', bot_dm, '[@bot] question(@carl) see_wronguse(!) ')
+expect_response(carl, '!see anne elsa', bot_dm, '[@bot] question(@carl) see_wronguse(!) ')
+expect_response(carl, '!see anne', bot_dm, '[@bot] confirm(@carl) see_success(anne, thief) ')
+expect_response(carl, '!see david', bot_dm, '[@bot] question(@carl) ability_used(!see) ')
+
+expect_response(frank, '!swap frank elsa', bot_dm, '[@bot] question(@frank) no_swap_self ')
+expect_response(frank, '!swap elsa', bot_dm, '[@bot] question(@frank) troublemaker_wronguse(!) ')
+expect_response(frank, '!swap anne david', bot_dm, '[@bot] confirm(@frank) troublemaker_success(anne, david) ')
+expect_response(anne, '!reveal_all', bot_dm, '[@bot] confirm(@anne) anne:villager, carl:seer, bob:wolf, david:thief, elsa:wolf, frank:troublemaker')
+
