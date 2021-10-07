@@ -1,10 +1,16 @@
 # TODO
-- Should delete temporary rooms at the end of the game, not the start
+- Complete Minion role
+- Complete Insomniac role
+- Lonely wolves able to reveal excess card
+- End vote when the remaining votes don't matter
+- Info after endgame
 
 # DOING
-- Add more roles
 
 # DONE
+- Should delete temporary rooms at the end of the game, not the start
+- Test reponse when using game commands outside of a game
+- Vote countdown should lock core
 - differentiate get_player from get_or_create_player
 - Focus on one-night mode
 - Commands for roles to use their ability

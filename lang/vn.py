@@ -8,11 +8,15 @@ alias = "`{}` là tên gọi khác của lệnh `{}`.\n"
 role = ( "Hé lô, bạn là {} nha. ", "Ván này bạn làm {} nhé. ", "Chúc mừng! Bạn được làm {}. " )
 wolf_channel = ( "Xin chào những chú sói nho nhỏ, đàn sói của các bạn gồm có {}", "Hé lô sói! Các sói {} hãy làm quen với nhau đi", "Chào {}. Chúc mừng các bạn đã trở thành sói!" )
 wake_up = ( "Ò ó ooo, sáng rồi nè, dậy treo cổ mấy con sói đii. ", "Dậy đi dậy đii, đêm nay làng ta ko ai chết nha. ", "Cả làng dậy đi! " )
+end_game = ( "Chúc mừng {} đã chiến thắng!", "{} đã giành lấy chiến thắng trong bàn này" )
+reveal_player = ( "{} chính là {}!", "{} là một con {}" )
 
 vote = ( "Dùng lệnh `{}vote <người-chơi>` để bỏ phiếu treo cổ người đó", "Bạn ghét đứa nào thì cứ `{}vote <đứa-đó>` nha" )
 help_list = ( "các lệnh được thực hiện là `{}`.", "ngoài cắn người, bạn còn có thể dùng lệnh `{}`. (giỡn thoi nha)", "hãy thử một trong các lệnh `{}`" )
 list_roles = ( "Ván này mình chơi {}; cần có {} người chơi", "Trong làng có {}; đủ cho {} người chơi" )
-#channel_greeting = "Chào mừng {} đến với group {}"
+vote_countdown = "Phần lớn mọi người đã bỏ phiếu! Những người khác còn {} giây để bỏ phiếu"
+vote_result = "Cả làng đã bỏ phiếu xong! Kết quả là:\n{}"
+lynch = ( "Và thế là {} bị quăng vào chảo lửa", "{} quá thất vọng với quyết định của dân làng và lăn ra chết", "Làng treo cổ {}, rồi đem đi chôn cất", "Mọi người đuổi {0} ra khỏi làng. Từ đó không ai nhìn thấy {0} nữa" )
 
 start = ( "bắt đầu trò chơi với {}", "trò chơi gồm {} sẽ được bắt đầu ngay bây giờ", "{} chơi ha", "trò chơi bắt đầu! Đêm nay sói sẽ xuất hiện giữa {}" )
 start_needmore = ( "hiện tại có {} người chơi, trong khi mình cần {} người lận", "mình cần {1} người chơi, mới có {0} người à" )
@@ -24,6 +28,7 @@ troublemaker_wronguse = "bạn muốn tráo chức năng của những người 
 see_wronguse = "bạn muốn soi ai thì phải nhắn là `{}soi <người-đó>`"
 drunk_wronguse = "có {1} lá bài bên ngoài, bạn phải chọn STT lá bài từ 1 đến {1} để đổi với mình bằng lệnh `{0}trao <STT-lá-bài>`"
 clone_wronguse = "bạn muốn nhân bản ai thì phải nhắn là `{}nhanban <người-đó>`"
+vote_wronguse = "bạn muốn treo cổ ai thì phải nhắn là `{}vote <người-đó>`"
 
 add_success = ( "đã thêm {} vào danh sách chức năng", "một {} vừa xuất hiện trong làng" )
 thief_success = "đã tráo chức năng của bạn với {}"
@@ -31,20 +36,22 @@ troublemaker_success = "đã tráo chức năng của {} và {}"
 see_success = ( "chức năng của {} là {}", "{} là một con {}" )
 drunk_success = "đã tráo lá bài bên ngoài số {} với lá của bạn"
 clone_success = "bạn đã nhân bản chức năng của {}, giờ bạn sẽ là một {}!"
+vote_success = ( "{} đòi quăng {} vào chảo lửa!", "{} đòi treo cổ {}!", "{} vote treo cổ {}" )
 
 no_swap_self = "bạn không được tráo chức năng với chính mình"
 seer_self = "bạn không được soi chính mình"
 clone_self = "bạn không được nhân bản chính mình"
 
 require_admin = "bạn không phải là admin nên không được dùng lệnh đó nha"
-self_notfound = "không tìm thấy bạn trong làng, bạn có chơi không dạ"
+not_playing = "không tìm thấy bạn trong làng, bạn không được dùng lệnh này đâu"
 wrong_role = ( "bạn đâu có chức năng `{}`", "ai cho bạn `{}`" )
 dm_only = "lộn chỗ rồi nha! Nếu chức năng bạn cho phép `{}`, bạn phải nhắn tin riêng với quản trò"
+public_only = "bạn phải nhắn lệnh `{}` ở group chính chứ không phải ở đây"
 player_notfound = ( "'{}' là ai dạ?", "Hong tìm thấy '{}'" )
 player_norole = "không tìm thấy chức năng của {} để tráo, hình như nó ko có chơi á"
 debug_command = ( "lệnh này chỉ được dùng để debug, bạn không được dùng đâu" )
-night_only = ( "bạn chỉ được dùng chức năng này vào ban đêm, hãy quay lại khi trời tối nhé", "tối mới được dùng chức năng này nha" )
-day_only = ( "bạn chỉ được dùng chức năng này vào ban ngày, đợi làng thức dậy nha", "đợi sáng dậy mới được dùng chức năng này nha" )
+night_only = ( "bạn chỉ được dùng lệnh này vào ban đêm, hãy quay lại khi trời tối nhé", "tối mới được dùng lệnh này nha" )
+day_only = ( "bạn chỉ được dùng lệnh này vào ban ngày, đợi làng thức dậy nha", "đợi sáng dậy mới được dùng lệnh này nha" )
 ability_used = ( "bạn đã sử dụng chức năng `{}` rồi mà", "`{0}` gồi, hong cho `{0}` nữa" )
 
 wolf = ( "Sói", "Những chú sói dui dẻ", "Schói", "SÓI" )

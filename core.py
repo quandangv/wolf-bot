@@ -1,20 +1,25 @@
 import random
+import asyncio
+import time
 
+lock = asyncio.Lock()
 commands = {}
 roles = {}
 main_commands = []
 
 players = {}
-real_roles = {}
 played_roles = []
 excess_roles = []
 tmp_channels = {}
 night = True
+vote_countdown_task = None
 
 BOT_PREFIX = '!'
 CREATE_NORMALIZED_ALIASES = True
 EXCESS_CARDS = 3
 DEBUG = False
+SUPERMAJORITY = 2/3
+VOTE_COUNTDOWN = 60
 
 ############################ ACTIONS ###########################
 
@@ -85,23 +90,35 @@ class AdminCommand(Command):
         await func(message, args)
     return super().decorate(name, check, description)
 
-class RoleCommand(Command):
+class PlayerCommand(Command):
+  def is_listed(self, player, _):
+    return player.role
+
+  def decorate(self, name, func, description):
+    async def check(message, args):
+      if not message.author.id in players:
+        return await question(message, tr('not_playing'))
+      player = players[message.author.id]
+      if not player.role:
+        await question(message, tr('not_playing'))
+      else:
+        await func(player, message, args)
+    return super().decorate(name, check, description)
+
+class RoleCommand(PlayerCommand):
   def __init__(self, required_channel, night = True):
     self.required_channel = required_channel
     self.night = night
 
   def is_listed(self, player, channel):
-    return name_channel(channel) == self.required_channel and player.role and hasattr(player.role, self.name)
+    return super().is_listed(player, channel) and name_channel(channel) == self.required_channel and hasattr(player.role, self.name)
 
   def decorate(self, name, _, description):
-    async def check(message, args):
+    async def check(player, message, args):
       if name_channel(message.channel) != self.required_channel:
         return await question(message, tr(self.required_channel + '_only').format(BOT_PREFIX + name))
       if self.night != night:
         return await question(message, tr(('night' if self.night else 'day') + '_only'))
-      player = players[message.author.id]
-      if not player:
-        return await question(message, tr('self_notfound'))
       if not hasattr(player.role, name):
         return await question(message, tr('wrong_role').format(BOT_PREFIX + name))
       await getattr(player.role, name)(player, message, args)
@@ -116,6 +133,7 @@ class Player:
     self.extern = extern
     self.role = None
     self.real_role = None
+    self.vote = None
 
 ########################## DECORATORS ##########################
 
@@ -229,6 +247,31 @@ async def wake_up():
   night = False
   await main_channel().send(tr('wake_up') + tr('vote').format(BOT_PREFIX))
 
+async def on_voted(me, player):
+  me.vote = player.extern.name
+  channel = main_channel()
+  await channel.send(tr('vote_success').format(me.extern.mention, player.extern.mention))
+
+  total_player = total_voted = 0
+  for player in players.values():
+    if player.role:
+      total_player += 1
+      if player.vote != None:
+        total_voted += 1
+  if total_player == total_voted:
+    close_vote()
+  elif total_voted / total_player > SUPERMAJORITY:
+    global vote_countdown_task
+    if not vote_countdown_task:
+      async def close_vote_countdown():
+        await asyncio.sleep(VOTE_COUNTDOWN)
+        global vote_countdown_task
+        if vote_countdown_task:
+          vote_countdown_task = None
+          await close_vote(None, None)
+      vote_countdown_task = asyncio.create_task(close_vote_countdown())
+      await channel.send(tr('vote_countdown').format(VOTE_COUNTDOWN))
+
 ############################ INIT ##############################
 
 def initialize(admins):
@@ -275,6 +318,17 @@ def initialize(admins):
   async def list_roles(message, args):
     await confirm(message, tr('list_roles').format(join_with_and(played_roles), player_count()))
 
+  @cmd(PlayerCommand())
+  @single_arg('vote_wronguse')
+  async def vote(me, message, args):
+    if night:
+      return await question(message, tr('day_only'))
+    if not is_public_channel(message.channel):
+      return await question(message, tr('public_only').format(BOT_PREFIX + tr('cmd_vote')[0]))
+    player = await find_player(message, args)
+    if player:
+      await on_voted(me, player)
+
   @cmd(AdminCommand())
   async def start_immediate(message, args):
     members = get_available_members()
@@ -289,9 +343,6 @@ def initialize(admins):
         [member.mention for member in members]
       )))
       night = True
-      for channel in tmp_channels.values():
-        channel.delete()
-      tmp_channels.clear()
 
       shuffled_roles = shuffle_copy(played_roles)
       for idx, member in enumerate(members):
@@ -309,6 +360,52 @@ def initialize(admins):
         await channel.send(tr(id + '_channel').format(
             join_with_and([member.extern.mention for member in channel.members])))
 
+  global close_vote
+  @cmd(AdminCommand())
+  async def close_vote(_, __):
+    global vote_countdown_task
+    if vote_countdown_task:
+      vote_countdown_task.cancel()
+      vote_countdown_task = None
+    channel = main_channel()
+    vote_count = {}
+    vote_list = []
+    most_vote = None
+    max_vote = 0
+    for player in players.values():
+      if player.vote:
+        current = vote_count[player.vote] = vote_count[player.vote] + 1 if player.vote in vote_count else 1
+        vote_list.append(player.extern.mention + ": " + player.vote)
+        if current > max_vote:
+          max_vote = current
+          most_vote = player.vote
+    await channel.send(tr('vote_result').format("\n".join(vote_list)))
+    await channel.send(tr('lynch').format(most_vote))
+
+    for lynched in players.values():
+      if lynched.extern.name == most_vote:
+        role = lynched.real_role
+        if isinstance(role, Villager) or isinstance(role, Minion):
+          winners = [ player for player in players.values() if isinstance(player.real_role, WolfSide) ]
+        elif isinstance(role, Tanner):
+          winners = [ lynched ]
+        elif isinstance(role, WolfSide):
+          winners = [ player for player in players.values() if isinstance(player.real_role, Villager) ]
+        await channel.send(tr('end_game').format(join_with_and([ p.extern.mention for p in winners ])))
+        await channel.send(tr('reveal_player').format(lynched.extern.mention, role.name))
+        await end_game(None, None)
+        return
+
+  @cmd(AdminCommand())
+  async def end_game(_, __):
+    night = True
+    for player in players.values():
+      player.real_role = player.role = player.vote = None
+    for channel in tmp_channels.values():
+      channel.delete()
+    tmp_channels.clear()
+    played_roles.clear()
+
   @cmd(DebugCommand())
   async def reveal_all(message, args):
     await confirm(message, join_with_and([ player.extern.name + ':' + player.real_role.name
@@ -321,7 +418,7 @@ def initialize(admins):
   class Villager: pass
 
   @role
-  class Tanner(Villager): pass
+  class Tanner: pass
 
   @role
   class Insomniac(Villager): pass
@@ -357,7 +454,6 @@ def initialize(admins):
         if hasattr(me.role, 'on_start'):
           await me.role.on_start(me)
         return await confirm(message, tr('clone_success').format(args, me.role.name) + me.role.greeting)
-        
 
   @role
   class Troublemaker(Villager):
@@ -408,37 +504,47 @@ def initialize(admins):
         return await question(message, tr('drunk_wronguse').format(BOT_PREFIX, EXCESS_CARDS))
       if number < 1 or number > EXCESS_CARDS:
         return await question(message, tr('drunk_outofrange').format(EXCESS_CARDS))
-      number = number - 1
+      number -= 1
       me.real_role, excess_roles[number] = excess_roles[number], me.real_role
       await on_used(self)
       return await confirm(message, tr('drunk_success').format(args))
 
+  class WolfSide: pass
+
   @role
-  class Wolf:
+  class Minion(WolfSide): pass
+
+  @role
+  class Wolf(WolfSide):
     async def on_start(self, player):
       if not 'wolf' in tmp_channels:
         tmp_channels['wolf'] = await create_channel(tr('wolf'), player)
       else:
         channel = tmp_channels['wolf']
         await add_member(channel, player)
-        #await channel.send(tr('channel_greeting').format(player.extern.mention, channel.name))
 
 ########################### EVENTS #############################
 
 async def process_message(message):
   content = message.content
   if content.startswith(BOT_PREFIX):
-    full = content[len(BOT_PREFIX):]
-    arr = full.split(" ", 1)
-    if len(arr) == 0:
-      return
-    if len(arr) == 1:
-      cmd = arr[0]
-      args = ''
-    else:
-      [cmd, args] = arr
-    cmd = cmd.lower()
-    if cmd in commands:
-      await commands[cmd].func(message, args)
-    else:
-      await confused(message.channel, BOT_PREFIX + cmd)
+    async with lock:
+      full = content[len(BOT_PREFIX):]
+      arr = full.split(" ", 1)
+      if len(arr) == 0:
+        return
+      if len(arr) == 1:
+        cmd = arr[0]
+        args = ''
+      else:
+        [cmd, args] = arr
+      cmd = cmd.lower()
+      if cmd in commands:
+        await commands[cmd].func(message, args)
+      else:
+        await confused(message.channel, BOT_PREFIX + cmd)
+
+async def process_and_wait(message):
+  await process_message(message)
+  if vote_countdown_task:
+    await vote_countdown_task
