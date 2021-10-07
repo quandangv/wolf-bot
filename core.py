@@ -9,6 +9,7 @@ real_roles = {}
 played_roles = []
 excess_roles = []
 tmp_channels = {}
+night = True
 
 BOT_PREFIX = '!'
 CREATE_NORMALIZED_ALIASES = True
@@ -24,6 +25,7 @@ async def create_channel(name, *players): raise missing_action_error('create_cha
 async def add_member(channel, player): raise missing_action_error('add_member')
 def is_dm_channel(channel): raise missing_action_error('is_dm_channel')
 def is_public_channel(channel): raise missing_action_error('is_public_channel')
+def main_channel(): raise missing_action_error('get_main_channel')
 
 def shuffle_copy(arr): return random.sample(arr, k=len(arr))
 
@@ -38,7 +40,7 @@ def action(func):
       globals()[name] = func
       return True
   if not(accept_name('get_available_members') or accept_name('tr') or accept_name('add_member')
-      or accept_name('shuffle_copy') or accept_name('create_channel')
+      or accept_name('shuffle_copy') or accept_name('create_channel') or accept_name('main_channel')
       or accept_name('is_dm_channel') or accept_name('is_public_channel')):
     raise ValueError("Action not used: {}".format(name))
   return func
@@ -84,8 +86,9 @@ class AdminCommand(Command):
     return super().decorate(name, check, description)
 
 class RoleCommand(Command):
-  def __init__(self, required_channel):
+  def __init__(self, required_channel, night = True):
     self.required_channel = required_channel
+    self.night = night
 
   def is_listed(self, player, channel):
     return name_channel(channel) == self.required_channel and player.role and hasattr(player.role, self.name)
@@ -93,16 +96,15 @@ class RoleCommand(Command):
   def decorate(self, name, _, description):
     async def check(message, args):
       if name_channel(message.channel) != self.required_channel:
-        await question(message, tr(self.required_channel + '_only').format(BOT_PREFIX + name))
-        return
+        return await question(message, tr(self.required_channel + '_only').format(BOT_PREFIX + name))
+      if self.night != night:
+        return await question(message, tr(('night' if self.night else 'day') + '_only'))
       player = players[message.author.id]
       if not player:
-        await question(message, tr('self_notfound'))
-        return
+        return await question(message, tr('self_notfound'))
       if not hasattr(player.role, name):
-        await question(message, tr('wrong_role').format(BOT_PREFIX + name))
-      else:
-        await getattr(player.role, name)(player, message, args)
+        return await question(message, tr('wrong_role').format(BOT_PREFIX + name))
+      await getattr(player.role, name)(player, message, args)
     return super().decorate(name, check, description)
 
 class SetupCommand(AdminCommand):
@@ -215,6 +217,18 @@ async def find_player(message, name):
       return player
   return await question(message, tr('player_notfound').format(name))
 
+async def on_used(role):
+  role.used = True
+  for player in players.values():
+    if player.role and hasattr(player.role, 'used') and not player.role.used:
+      return
+  await wake_up()
+
+async def wake_up():
+  global night
+  night = False
+  await main_channel().send(tr('wake_up') + tr('vote').format(BOT_PREFIX))
+
 ############################ INIT ##############################
 
 def initialize(admins):
@@ -274,6 +288,7 @@ def initialize(admins):
       await confirm(message, tr('start').format(join_with_and(
         [member.mention for member in members]
       )))
+      night = True
       for channel in tmp_channels.values():
         channel.delete()
       tmp_channels.clear()
@@ -306,6 +321,12 @@ def initialize(admins):
   class Villager: pass
 
   @role
+  class Tanner(Villager): pass
+
+  @role
+  class Insomniac(Villager): pass
+
+  @role
   class Seer(Villager):
     def __init__(self):
       self.used = False
@@ -317,7 +338,7 @@ def initialize(admins):
         return await question(message, tr('seer_self'))
       player = await find_player(message, args)
       if player:
-        self.used = True
+        await on_used(self)
         return await confirm(message, tr('see_success').format(args, player.real_role.name))
 
   @role
@@ -353,7 +374,7 @@ def initialize(admins):
       players = [ await find_player(message, name) for name in players ]
       if players[0] and players[1]:
         players[0].real_role, players[1].real_role = players[1].real_role, players[0].real_role
-        self.used = True
+        await on_used(self)
         return await confirm(message, tr('troublemaker_success')
             .format(*[ p.extern.name for p in players]))
 
@@ -370,7 +391,7 @@ def initialize(admins):
       player = await find_player(message, args)
       if player:
         me.real_role, player.real_role = player.real_role, me.real_role
-        self.used = True
+        await on_used(self)
         return await confirm(message, tr('thief_success').format(args))
 
   @role
@@ -389,7 +410,7 @@ def initialize(admins):
         return await question(message, tr('drunk_outofrange').format(EXCESS_CARDS))
       number = number - 1
       me.real_role, excess_roles[number] = excess_roles[number], me.real_role
-      self.used = True
+      await on_used(self)
       return await confirm(message, tr('drunk_success').format(args))
 
   @role

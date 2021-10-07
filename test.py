@@ -16,7 +16,53 @@ def low_create_channel(name, *players):
   channel.members.extend(players)
   return channel
 
+class Channel:
+  def __init__(self, name):
+    self.name = name
+    self.send = generate_send(name)
+    self.members = []
+    channels[name] = self
+
+  def delete():
+    del channels[name]
+    del self.name
+    del self.send
+
+class Message:
+  def __init__(self, author, content, channel):
+    self.content = content
+    self.author = author
+    self.channel = channel
+
+class Member:
+  def __init__(self, id, name):
+    self.id = id
+    self.name = name
+    self.mention = '@' + name
+    self.dm_channel = low_create_channel(self.mention, self)
+
 core.DEBUG = True
+core.BOT_PREFIX = '!'
+
+anne = Member(0, 'anne')
+bob = Member(1, 'bob')
+carl = Member(2, 'carl')
+david = Member(3, 'david')
+elsa = Member(4, 'elsa')
+frank = Member(5, 'frank')
+george = Member(6, 'george')
+harry = Member(7, 'harry')
+ignacio = Member(8, 'ignacio')
+
+game = low_create_channel('game')
+bot_dm = low_create_channel('@bot')
+
+members = [ anne, bob, carl, david, elsa, frank, george, harry, ignacio ]
+admins = [ anne ]
+
+@core.action
+def main_channel():
+  return game
 
 @core.action
 def is_dm_channel(channel):
@@ -67,48 +113,6 @@ def get_available_members():
 def shuffle_copy(arr):
   return arr[::-1]
 
-class Channel:
-  def __init__(self, name):
-    self.name = name
-    self.send = generate_send(name)
-    self.members = []
-    channels[name] = self
-
-  def delete():
-    del channels[name]
-    del self.name
-    del self.send
-
-class Message:
-  def __init__(self, author, content, channel):
-    self.content = content
-    self.author = author
-    self.channel = channel
-
-class Member:
-  def __init__(self, id, name):
-    self.id = id
-    self.name = name
-    self.mention = '@' + name
-    self.dm_channel = low_create_channel(self.mention, self)
-
-anne = Member(0, 'anne')
-bob = Member(1, 'bob')
-carl = Member(2, 'carl')
-david = Member(3, 'david')
-elsa = Member(4, 'elsa')
-frank = Member(5, 'frank')
-george = Member(6, 'george')
-harry = Member(7, 'harry')
-ignacio = Member(8, 'ignacio')
-
-game = low_create_channel('game')
-bot_dm = low_create_channel('@bot')
-
-members = [ anne, bob, carl, david, elsa, frank, george, harry, ignacio ]
-admins = [ anne ]
-
-core.BOT_PREFIX = '!'
 core.initialize(admins)
 
 loop = asyncio.get_event_loop()
@@ -197,5 +201,7 @@ check_private_single_arg_cmd(george, '!swap', '1', 'drunk_wronguse(!, 3)', 'no_s
 expect_response(anne, '!reveal_all', bot_dm, '[@bot] confirm(@anne) anne:villager, carl:seer, bob:wolf, david:thief, elsa:wolf, frank:troublemaker, george:villager, harry:clone, ignacio:villager; excess: drunk, villager, villager')
 
 check_private_single_player_cmd(harry, '!clone', 'david', 'clone_wronguse(!)', 'clone_self', 'clone_success(david, thief) thief_greeting', False)
-expect_response(harry, '!swap frank', bot_dm, '[@bot] confirm(@harry) thief_success(frank) ')
+expect_response(harry, '!swap frank', bot_dm, [ '[game] wake_up vote(!) ', '[@bot] confirm(@harry) thief_success(frank) ' ])
 expect_response(anne, '!reveal_all', bot_dm, '[@bot] confirm(@anne) anne:villager, carl:seer, bob:wolf, david:thief, elsa:wolf, frank:thief, george:villager, harry:troublemaker, ignacio:villager; excess: drunk, villager, villager')
+
+expect_response(harry, '!swap frank', bot_dm, '[@bot] question(@harry) night_only ')
