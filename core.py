@@ -163,7 +163,6 @@ def role(base):
       normalized = unidecode.unidecode(alias)
       if normalized != alias:
         aliases.append(normalized)
-
   for alias in aliases:
     if alias not in roles:
       roles[alias] = base
@@ -243,6 +242,9 @@ async def on_used(role):
   await wake_up()
 
 async def wake_up():
+  for player in players.values():
+    if player.role and hasattr(player.role, 'before_dawn'):
+      await player.role.before_dawn(player)
   global night
   night = False
   await main_channel().send(tr('wake_up') + tr('vote').format(BOT_PREFIX))
@@ -421,7 +423,9 @@ def initialize(admins):
   class Tanner: pass
 
   @role
-  class Insomniac(Villager): pass
+  class Insomniac(Villager):
+    async def before_dawn(self, player):
+      await player.extern.dm_channel.send(tr('insomniac_reveal').format(player.real_role.name))
 
   @role
   class Seer(Villager):

@@ -37,6 +37,7 @@ see_success = ( "chức năng của {} là {}", "{} là một con {}" )
 drunk_success = "đã tráo lá bài bên ngoài số {} với lá của bạn"
 clone_success = "bạn đã nhân bản chức năng của {}, giờ bạn sẽ là một {}!"
 vote_success = ( "{} đòi quăng {} vào chảo lửa!", "{} đòi treo cổ {}!", "{} vote treo cổ {}" )
+insomniac_reveal = ( "Sau một đêm dài, bạn xem lại chức năng của mình và thấy: bạn là {}!", "Trước khi trời sáng, bạn vội xem lại chức năng của mình và thấy nó là {}!" )
 
 no_swap_self = "bạn không được tráo chức năng với chính mình"
 seer_self = "bạn không được soi chính mình"
