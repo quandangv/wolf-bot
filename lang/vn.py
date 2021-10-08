@@ -23,6 +23,8 @@ start_needmore = ( "hiện tại có {} người chơi, trong khi mình cần {}
 start_needless = ( "hiện tại có tới {} người chơi, mình mới set đủ chức năng cho {} người thôi", "chức năng chỉ đủ cho {1} người thôi, giờ làng có đến {0} người lận" )
 
 add_wronguse = "bạn muốn thêm chức năng gì thì phải nhắn là `{}them <chức-năng>`"
+remove_wronguse = "bạn muốn bỏ chức năng nào thì phải nhắn là `{}bo <chức-năng>`"
+remove_notfound = "hiện tại làng không có chơi {}"
 thief_wronguse = "bạn muốn tráo chức năng với ai thì phải nhắn là `{}trao <người-đó>`"
 troublemaker_wronguse = "bạn muốn tráo chức năng của những người nào thì phải nhắn là `{}trao <người-1> <người-2>`"
 see_wronguse = "bạn muốn soi ai thì phải nhắn là `{}soi <người-đó>`"
@@ -31,6 +33,7 @@ clone_wronguse = "bạn muốn nhân bản ai thì phải nhắn là `{}nhanban 
 vote_wronguse = "bạn muốn treo cổ ai thì phải nhắn là `{}vote <người-đó>`"
 
 add_success = ( "đã thêm {} vào danh sách chức năng", "một {} vừa xuất hiện trong làng" )
+remove_success = ( "đã bỏ một {} ra khỏi làng", "một con {} đã rời khỏi làng" )
 thief_success = "đã tráo chức năng của bạn với {}"
 troublemaker_success = "đã tráo chức năng của {} và {}"
 see_success = ( "chức năng của {} là {}", "{} là một con {}" )

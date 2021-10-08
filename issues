@@ -4,12 +4,14 @@
 - End vote when the remaining votes don't matter
 - Info after endgame
 - Remove roles
-- Allow non-admin to add/remove roles
+- Allow non-admin to setup game
 - Forbid editing roles during game
 
 # DOING
 
 # DONE
+- Admin commands should be public
+- Added role may contain space and would be rejected by single_arg
 - Complete Insomniac role
 - Should delete temporary rooms at the end of the game, not the start
 - Test reponse when using game commands outside of a game

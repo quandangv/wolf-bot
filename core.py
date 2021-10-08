@@ -86,6 +86,8 @@ class AdminCommand(Command):
     async def check(message, args):
       if not players[message.author.id].is_admin:
         await question(message, tr('require_admin'))
+      elif not is_public_channel(message.channel):
+        await question(message, tr('public_only').format(BOT_PREFIX + name))
       else:
         await func(message, args)
     return super().decorate(name, check, description)
@@ -307,12 +309,29 @@ def initialize(admins):
       await confirm(message, tr('help_list').format('`, `'.join(command_list)))
 
   @cmd(SetupCommand())
-  @single_arg('add_wronguse')
   async def add_role(message, args):
-    if args in roles:
+    args = args.strip()
+    if not args:
+      await question(message, tr('add_wronguse').format(BOT_PREFIX))
+    elif args in roles:
       name = roles[args].name
       played_roles.append(name)
-      await confirm(message, tr('add_success').format(name))
+      await confirm(message, tr('add_success').format(args))
+    else:
+      await confused(message.channel, args)
+
+  @cmd(SetupCommand())
+  async def remove_role(message, args):
+    args = args.strip()
+    if not args:
+      await question(message, tr('remove_wronguse').format(BOT_PREFIX))
+    elif args in roles:
+      name = roles[args].name
+      if name in played_roles:
+        played_roles.pop(played_roles.index(name))
+        await confirm(message, tr('remove_success').format(args))
+      else:
+        await question(message, tr('remove_notfound').format(args))
     else:
       await confused(message.channel, args)
 
@@ -406,7 +425,6 @@ def initialize(admins):
     for channel in tmp_channels.values():
       channel.delete()
     tmp_channels.clear()
-    played_roles.clear()
 
   @cmd(DebugCommand())
   async def reveal_all(message, args):
