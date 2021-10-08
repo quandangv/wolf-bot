@@ -15,6 +15,7 @@ wolves_reveal = "Những con sói trong làng là {}"
 vote = ( "Dùng lệnh `{}vote <người-chơi>` để bỏ phiếu treo cổ người đó", "Bạn ghét đứa nào thì cứ `{}vote <đứa-đó>` nha" )
 help_list = ( "các lệnh được thực hiện là `{}`.", "ngoài cắn người, bạn còn có thể dùng lệnh `{}`. (giỡn thoi nha)", "hãy thử một trong các lệnh `{}`" )
 list_roles = ( "Ván này mình chơi {}; cần có {} người chơi", "Trong làng có {}; đủ cho {} người chơi" )
+wolf_get_reveal = "Bạn là một con sói cô độc. Vì vậy bạn sẽ được dùng lệnh `{}soi <STT-lá bài>` để soi một trong {} lá ở ngoài"
 vote_countdown = "Phần lớn mọi người đã bỏ phiếu! Những người khác còn {} giây để bỏ phiếu"
 vote_result = "Cả làng đã bỏ phiếu xong! Kết quả là:\n{}"
 lynch = ( "Và thế là {} bị quăng vào chảo lửa", "{} quá thất vọng với quyết định của dân làng và lăn ra chết", "Làng treo cổ {}, rồi đem đi chôn cất", "Mọi người đuổi {0} ra khỏi làng. Từ đó không ai nhìn thấy {0} nữa" )
@@ -29,7 +30,8 @@ remove_notfound = "hiện tại làng không có chơi {}"
 thief_wronguse = "bạn muốn tráo chức năng với ai thì phải nhắn là `{}trao <người-đó>`"
 troublemaker_wronguse = "bạn muốn tráo chức năng của những người nào thì phải nhắn là `{}trao <người-1> <người-2>`"
 see_wronguse = "bạn muốn soi ai thì phải nhắn là `{}soi <người-đó>`"
-drunk_wronguse = "có {1} lá bài bên ngoài, bạn phải chọn STT lá bài từ 1 đến {1} để đổi với mình bằng lệnh `{0}trao <STT-lá-bài>`"
+drunk_wronguse = "có {1} lá bài bên ngoài, bạn phải chọn STT lá bài từ 1 đến {1} và dùng lệnh `{0}trao <STT-lá-bài>` để đổi với lá của mình"
+reveal_wronguse = "có {1} lá bài bên ngoài, bạn phải chọn STT lá bài từ 1 đến {1} và dùng lệnh `{0}xem <STT-lá-bài>` để đổi xem lá đó"
 clone_wronguse = "bạn muốn nhân bản ai thì phải nhắn là `{}nhanban <người-đó>`"
 vote_wronguse = "bạn muốn treo cổ ai thì phải nhắn là `{}vote <người-đó>`"
 
@@ -42,6 +44,7 @@ drunk_success = "đã tráo lá bài bên ngoài số {} với lá của bạn"
 clone_success = "bạn đã nhân bản chức năng của {}, giờ bạn sẽ là một {}!"
 vote_success = ( "{} đòi quăng {} vào chảo lửa!", "{} đòi treo cổ {}!", "{} vote treo cổ {}" )
 insomniac_reveal = ( "Sau một đêm dài, bạn xem lại chức năng của mình và thấy: bạn là {}!", "Trước khi trời sáng, bạn vội xem lại chức năng của mình và thấy nó là {}!" )
+reveal_success = "lá bài số {} là {}"
 
 no_swap_self = "bạn không được tráo chức năng với chính mình"
 seer_self = "bạn không được soi chính mình"
@@ -58,6 +61,7 @@ debug_command = ( "lệnh này chỉ được dùng để debug, bạn không đ
 night_only = ( "bạn chỉ được dùng lệnh này vào ban đêm, hãy quay lại khi trời tối nhé", "tối mới được dùng lệnh này nha" )
 day_only = ( "bạn chỉ được dùng lệnh này vào ban ngày, đợi làng thức dậy nha", "đợi sáng dậy mới được dùng lệnh này nha" )
 ability_used = ( "bạn đã sử dụng chức năng `{}` rồi mà", "`{0}` gồi, hong cho `{0}` nữa" )
+choice_outofrange = "bạn phải chọn STT từ 1 đến {}"
 
 wolf = ( "Sói", "Những chú sói dui dẻ", "Schói", "SÓI" )
 

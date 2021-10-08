@@ -5,6 +5,7 @@ import time
 lock = asyncio.Lock()
 commands = {}
 roles = {}
+channel_events = {}
 main_commands = []
 
 players = {}
@@ -172,6 +173,9 @@ def role(base):
       print("ERROR: Can't create alias {} to role {}!".format(alias, base.name))
   return base
 
+def channel_event(func):
+  channel_events[func.__name__] = func
+
 def single_arg(message_key, *message_args):
   def decorator(func):
     async def result(*arr):
@@ -276,6 +280,13 @@ async def on_voted(me, player):
       vote_countdown_task = asyncio.create_task(close_vote_countdown())
       await channel.send(tr('vote_countdown').format(VOTE_COUNTDOWN))
 
+@channel_event
+async def wolf_channel(channel):
+  if len(channel.members) == 1:
+    lone_wolf = get_player(channel.members[0])
+    lone_wolf.role.used = False
+    await channel.send(tr('wolf_get_reveal').format(BOT_PREFIX, EXCESS_CARDS))
+
 ############################ INIT ##############################
 
 def initialize(admins):
@@ -290,6 +301,9 @@ def initialize(admins):
 
   @cmd(RoleCommand('dm'))
   def see(): pass
+
+  @cmd(RoleCommand('dm'))
+  def reveal(): pass
 
   @cmd(RoleCommand('dm'))
   def clone(): pass
@@ -378,8 +392,11 @@ def initialize(admins):
         excess_roles.append(roles[shuffled_roles[-idx - 1]]())
 
       for id, channel in tmp_channels.items():
-        await channel.send(tr(id + '_channel').format(
-            join_with_and([member.extern.mention for member in channel.members])))
+        channel_name = id + '_channel'
+        await channel.send(tr(channel_name).format(
+            join_with_and([member.mention for member in channel.members])))
+        if channel_name in channel_events:
+          await channel_events[channel_name](channel)
 
   global close_vote
   @cmd(AdminCommand())
@@ -419,6 +436,7 @@ def initialize(admins):
 
   @cmd(AdminCommand())
   async def end_game(_, __):
+    global night
     night = True
     for player in players.values():
       player.real_role = player.role = player.vote = None
@@ -525,7 +543,7 @@ def initialize(admins):
       except ValueError:
         return await question(message, tr('drunk_wronguse').format(BOT_PREFIX, EXCESS_CARDS))
       if number < 1 or number > EXCESS_CARDS:
-        return await question(message, tr('drunk_outofrange').format(EXCESS_CARDS))
+        return await question(message, tr('choice_outofrange').format(EXCESS_CARDS))
       number -= 1
       me.real_role, excess_roles[number] = excess_roles[number], me.real_role
       await on_used(self)
@@ -544,12 +562,27 @@ def initialize(admins):
 
   @role
   class Wolf(WolfSide):
+    def __init__(self):
+      self.used = True
+
+    @single_use
+    @single_arg('reveal_wronguse', EXCESS_CARDS)
+    async def reveal(self, me, message, args):
+      try:
+        number = int(args)
+      except ValueError:
+        return await question(message, tr('reveal_wronguse').format(BOT_PREFIX, EXCESS_CARDS))
+      if number < 1 or number > EXCESS_CARDS:
+        return await question(message, tr('choice_outofrange').format(EXCESS_CARDS))
+      await confirm(message, tr('reveal_success').format(number, excess_roles[number - 1].name))
+      await on_used(self)
+
     async def on_start(self, player):
       if not 'wolf' in tmp_channels:
-        tmp_channels['wolf'] = await create_channel(tr('wolf'), player)
+        tmp_channels['wolf'] = await create_channel(tr('wolf'), player.extern)
       else:
         channel = tmp_channels['wolf']
-        await add_member(channel, player)
+        await add_member(channel, player.extern)
 
 ########################### EVENTS #############################
 

@@ -1,13 +1,14 @@
 # TODO
-- Lonely wolves able to reveal excess card
 - End vote when the remaining votes don't matter
 - Info after endgame
 - Allow non-admin to setup game
 - Forbid editing roles during game
+- Seer able to reveal 2 cards
 
 # DOING
 
 # DONE
+- Lonely wolves able to reveal excess card
 - Complete Minion role
 - Remove roles
 - Admin commands should be public
