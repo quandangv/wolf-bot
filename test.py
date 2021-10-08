@@ -276,6 +276,7 @@ loop.run_until_complete(asyncio.gather(
     '[@george] role(seer) seer_greeting',
     '[@harry] role(wolf) wolf_greeting',
     '[@ignacio] role(minion) minion_greeting',
+    '[@ignacio] wolves_reveal(harry) ',
     '[wolf ] wolf_channel(@harry) '
   ])
 ))

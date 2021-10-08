@@ -1,15 +1,15 @@
 # TODO
-- Complete Minion role
 - Lonely wolves able to reveal excess card
 - End vote when the remaining votes don't matter
 - Info after endgame
-- Remove roles
 - Allow non-admin to setup game
 - Forbid editing roles during game
 
 # DOING
 
 # DONE
+- Complete Minion role
+- Remove roles
 - Admin commands should be public
 - Added role may contain space and would be rejected by single_arg
 - Complete Insomniac role

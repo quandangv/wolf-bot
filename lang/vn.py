@@ -10,6 +10,7 @@ wolf_channel = ( "Xin chào những chú sói nho nhỏ, đàn sói của các b
 wake_up = ( "Ò ó ooo, sáng rồi nè, dậy treo cổ mấy con sói đii. ", "Dậy đi dậy đii, đêm nay làng ta ko ai chết nha. ", "Cả làng dậy đi! " )
 end_game = ( "Chúc mừng {} đã chiến thắng!", "{} đã giành lấy chiến thắng trong bàn này" )
 reveal_player = ( "{} chính là {}!", "{} là một con {}" )
+wolves_reveal = "Những con sói trong làng là {}"
 
 vote = ( "Dùng lệnh `{}vote <người-chơi>` để bỏ phiếu treo cổ người đó", "Bạn ghét đứa nào thì cứ `{}vote <đứa-đó>` nha" )
 help_list = ( "các lệnh được thực hiện là `{}`.", "ngoài cắn người, bạn còn có thể dùng lệnh `{}`. (giỡn thoi nha)", "hãy thử một trong các lệnh `{}`" )

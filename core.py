@@ -534,7 +534,13 @@ def initialize(admins):
   class WolfSide: pass
 
   @role
-  class Minion(WolfSide): pass
+  class Minion(WolfSide):
+    async def on_start(self, player):
+      wolves = []
+      for player in players.values():
+        if isinstance(player.role, Wolf):
+          wolves.append(player.extern.name)
+      await player.extern.dm_channel.send(tr('wolves_reveal').format(join_with_and(wolves)))
 
   @role
   class Wolf(WolfSide):
