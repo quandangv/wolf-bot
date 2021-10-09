@@ -1,18 +1,22 @@
 confirm = ( "{}, ", "Okie {}, ", "{} Ờ, ", "{} Okayla, ", "Okay {}, ", "{} Uhm, " )
 question = ( "{}, ", "{} ơi, ", "{} à, ", "Ây {}, " )
 confused = ( "`{}` là gì dạ?", "`{}` không tồn tại", "`{}` ăn được hăm?" )
-
 _and = "và"
+
 alias = "`{}` là tên gọi khác của lệnh `{}`.\n"
+wolf = ( "Sói", "Những chú sói dui dẻ", "Schói", "SÓI" )
 
 role = ( "Hé lô, bạn là {} nha. ", "Ván này bạn làm {} nhé. ", "Chúc mừng! Bạn được làm {}. " )
 wolf_channel = ( "Xin chào những chú sói nho nhỏ, đàn sói của các bạn gồm có {}", "Hé lô sói! Các sói {} hãy làm quen với nhau đi", "Chào {}. Chúc mừng các bạn đã trở thành sói!" )
-wake_up = ( "Ò ó ooo, sáng rồi nè, dậy treo cổ mấy con sói đii. ", "Dậy đi dậy đii, đêm nay làng ta ko ai chết nha. ", "Cả làng dậy đi! " )
 channel_greeting = ( "Chào mừng {} đến group {}!", "Hello {}! Xin chào đến với group {}" )
+
+wake_up = ( "Ò ó ooo, sáng rồi nè, dậy treo cổ mấy con sói đii. ", "Dậy đi dậy đii, đêm nay làng ta ko ai chết nha. ", "Cả làng dậy đi! " )
 end_game = ( "Chúc mừng {} đã chiến thắng!", "{} đã giành lấy chiến thắng trong bàn này" )
+lynch = ( "Và thế là {} bị quăng vào chảo lửa", "{} quá thất vọng với quyết định của dân làng và lăn ra chết", "Làng treo cổ {}, rồi đem đi chôn cất", "Mọi người đuổi {0} ra khỏi làng. Từ đó không ai nhìn thấy {0} nữa" )
+
 reveal_player = ( "{} chính là {}!", "{} là một con {}" )
-wolves_reveal = "Những con sói trong làng là {}"
 reveal_item = "{} là {}"
+wolves_reveal = "Những con sói trong làng là {}"
 reveal_all = "Chức năng của mọi người: \n{}"
 excess_cards = "Các lá bài thừa: {}"
 
@@ -20,7 +24,6 @@ vote = ( "Dùng lệnh `{}vote <người-chơi>` để bỏ phiếu treo cổ ng
 help_list = ( "các lệnh được thực hiện là `{}`.", "ngoài cắn người, bạn còn có thể dùng lệnh `{}`. (giỡn thoi nha)", "hãy thử một trong các lệnh `{}`" )
 list_roles = ( "Ván này mình chơi {}; cần có {} người chơi", "Trong làng có {}; đủ cho {} người chơi" )
 wolf_get_reveal = "Bạn là một con sói cô độc. Vì vậy bạn sẽ được dùng lệnh `{}soi <STT-lá bài>` để soi một trong {} lá ở ngoài"
-lynch = ( "Và thế là {} bị quăng vào chảo lửa", "{} quá thất vọng với quyết định của dân làng và lăn ra chết", "Làng treo cổ {}, rồi đem đi chôn cất", "Mọi người đuổi {0} ra khỏi làng. Từ đó không ai nhìn thấy {0} nữa" )
 
 start = ( "bắt đầu trò chơi với {}", "trò chơi gồm {} sẽ được bắt đầu ngay bây giờ", "{} chơi ha", "trò chơi bắt đầu! Đêm nay sói sẽ xuất hiện giữa {}" )
 start_needmore = ( "hiện tại có {} người chơi, trong khi mình cần {} người lận", "mình cần {1} người chơi, mới có {0} người à" )
@@ -72,8 +75,6 @@ choice_outofrange = "bạn phải chọn STT từ 1 đến {}"
 seer_reveal_already = "bạn đã lật lá bài ở ngoài, bạn không được soi người khác nữa"
 seer_see_already = "bạn đã soi chức năng của người khác, không được lật lá bài ở ngoài nữa"
 out_of_reveal = "bạn đã lật lá bài ở ngoài {} lần, bạn không được lật thêm nữa"
-
-wolf = ( "Sói", "Những chú sói dui dẻ", "Schói", "SÓI" )
 
 cmd_help = [ "giupdo", "`{0}` liệt kê các lệnh bạn được thực hiện.\nCòn `{0} <cau-lenh>` sẽ nhắn thông tin trợ giúp về lệnh đó", "trogiup" ]
 cmd_start_immediate = [ "choingay", "`{0}` để bắt đầu chơi ngay lập tức" ]
