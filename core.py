@@ -446,6 +446,7 @@ def initialize(admins):
           winners = [ player for player in players.values() if isinstance(player.real_role, Villager) ]
         await channel.send(tr('end_game').format(join_with_and([ p.extern.mention for p in winners ])))
         await channel.send(tr('reveal_player').format(lynched.extern.mention, role.name))
+        await low_reveal_all(channel)
         await end_game(None, None)
         return
 
@@ -461,8 +462,11 @@ def initialize(admins):
 
   @cmd(DebugCommand())
   async def reveal_all(message, args):
+    await low_reveal_all(message.channel)
+
+  async def low_reveal_all(channel):
     reveal_item = tr('reveal_item')
-    await message.channel.send(tr('reveal_all').format('\n'.join([ reveal_item.format(player.extern.name, player.real_role.name) for player in players.values() if player.role ])) + '\n' + tr('excess_cards').format(', '.join([role.name for role in excess_roles])))
+    await channel.send(tr('reveal_all').format('\n'.join([ reveal_item.format(player.extern.name, player.real_role.name) for player in players.values() if player.role ])) + '\n' + tr('excess_cards').format(', '.join([role.name for role in excess_roles])))
 
 ############################ ROLES #############################
 

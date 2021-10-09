@@ -1,6 +1,5 @@
 # TODO
 - End vote when the remaining votes don't matter
-- Info after endgame
 - Allow non-admin to setup game
 - Forbid editing roles during game
 - Force fixed or randomized order of action for roles
@@ -9,6 +8,7 @@
 # DOING
 
 # DONE
+- Info after endgame
 - Seer able to reveal 2 cards
 - Lonely wolves able to reveal excess card
 - Complete Minion role

@@ -234,7 +234,6 @@ loop.run_until_complete(asyncio.gather(
 
   *check_private_single_player_cmd(harry, '!clone', 'david', 'clone_wronguse(!)', 'clone_self', 'clone_success(david, thief) thief_greeting', False),
   expect_response(harry, '!swap ignacio', bot_dm, [ '[@ignacio] insomniac_reveal(thief) ', '[game] wake_up vote(!) ', '[@bot] confirm(@harry) thief_success(ignacio, insomniac) ' ]),
-  expect_response(anne, '!reveal_all', bot_dm, '[@bot] reveal_all(anne:villager\ncarl:seer\nbob:wolf\ndavid:thief\nelsa:wolf\nfrank:troublemaker\ngeorge:villager\nharry:insomniac\nignacio:thief) \nexcess_cards(drunk, villager, villager) '),
 
   expect_response(harry, '!swap frank', bot_dm, '[@bot] question(@harry) night_only '),
   expect_response(not_player, '!vote frank', bot_dm, '[@bot] question(@not_player) not_playing '),
@@ -253,7 +252,7 @@ loop.run_until_complete(asyncio.gather(
 members.pop()
 
 loop.run_until_complete(asyncio.gather(
-  expect_response(carl, '', game, [ '[game] vote_result(vote_item(@anne, harry) \nvote_item(@carl, elsa) \nvote_item(@bob, harry) \nvote_item(@david, frank) \nvote_item(@elsa, david) \nvote_item(@frank, harry) \nvote_item(@harry, anne) \nvote_item(@ignacio, elsa) ) ', '[game] lynch(harry) ', '[game] end_game(@bob, @elsa) ', '[game] reveal_player(@harry, insomniac) ' ]),
+  expect_response(carl, '', game, [ '[game] vote_result(vote_item(@anne, harry) \nvote_item(@carl, elsa) \nvote_item(@bob, harry) \nvote_item(@david, frank) \nvote_item(@elsa, david) \nvote_item(@frank, harry) \nvote_item(@harry, anne) \nvote_item(@ignacio, elsa) ) ', '[game] lynch(harry) ', '[game] end_game(@bob, @elsa) ', '[game] reveal_player(@harry, insomniac) ', '[game] reveal_all(anne:villager\ncarl:seer\nbob:wolf\ndavid:thief\nelsa:wolf\nfrank:troublemaker\ngeorge:villager\nharry:insomniac\nignacio:thief) \nexcess_cards(drunk, villager, villager) ' ]),
   expect_response(carl, '!vote elsa', game, '[game] question(@carl) not_playing ')
 ))
 
@@ -297,7 +296,6 @@ loop.run_until_complete(asyncio.gather(
   expect_response(carl, '!swap 1', bot_dm, '[@bot] confirm(@carl) drunk_success(1) '),
   expect_response(david, '!swap elsa george', bot_dm, '[@bot] confirm(@david) troublemaker_success(elsa, george) '),
   expect_response(elsa, '!swap ignacio', bot_dm, [ '[@anne] insomniac_reveal(insomniac) ', '[game] wake_up vote(!) ', '[@bot] confirm(@elsa) thief_success(ignacio, minion) ' ]),
-  expect_response(anne, '!reveal_all', bot_dm, '[@bot] reveal_all(anne:insomniac\ncarl:wolf\nbob:wolf\ndavid:troublemaker\nelsa:minion\nfrank:villager\ngeorge:thief\nharry:wolf\nignacio:seer) \nexcess_cards(drunk, villager, villager) '),
   expect_response(not_player, '!vote frank', bot_dm, '[@bot] question(@not_player) not_playing '),
   expect_response(harry, '!vote frank', bot_dm, '[@bot] question(@harry) public_only(!vote) '),
   expect_response(harry, '!vote frank', game, '[game] vote_success(@harry, @frank) '),
@@ -309,5 +307,5 @@ loop.run_until_complete(asyncio.gather(
   expect_response(ignacio, '!vote elsa', game, '[game] vote_success(@ignacio, @elsa) '),
   expect_response(bob, '!vote harry', game, [ '[game] vote_success(@bob, @harry) ', '[game] vote_countdown({}) '.format(core.VOTE_COUNTDOWN) ]),
   expect_response(carl, '!vote elsa', game, '[game] vote_success(@carl, @elsa) '),
-  expect_response(george, '!vote elsa', game, [ '[game] vote_success(@george, @elsa) ', '[game] vote_result(vote_item(@anne, harry) \nvote_item(@carl, elsa) \nvote_item(@bob, harry) \nvote_item(@david, frank) \nvote_item(@elsa, david) \nvote_item(@frank, harry) \nvote_item(@george, elsa) \nvote_item(@harry, anne) \nvote_item(@ignacio, elsa) ) ', '[game] lynch(harry) ', '[game] end_game(@anne, @david, @frank, @george, @ignacio) ', '[game] reveal_player(@harry, wolf) ' ]),
+  expect_response(george, '!vote elsa', game, [ '[game] vote_success(@george, @elsa) ', '[game] vote_result(vote_item(@anne, harry) \nvote_item(@carl, elsa) \nvote_item(@bob, harry) \nvote_item(@david, frank) \nvote_item(@elsa, david) \nvote_item(@frank, harry) \nvote_item(@george, elsa) \nvote_item(@harry, anne) \nvote_item(@ignacio, elsa) ) ', '[game] lynch(harry) ', '[game] end_game(@anne, @david, @frank, @george, @ignacio) ', '[game] reveal_player(@harry, wolf) ', '[game] reveal_all(anne:insomniac\ncarl:wolf\nbob:wolf\ndavid:troublemaker\nelsa:minion\nfrank:villager\ngeorge:thief\nharry:wolf\nignacio:seer) \nexcess_cards(drunk, villager, villager) ' ]),
 ))
