@@ -21,6 +21,7 @@ EXCESS_CARDS = 3
 DEBUG = False
 SUPERMAJORITY = 2/3
 VOTE_COUNTDOWN = 60
+SEER_REVEAL = 2
 
 ############################ ACTIONS ###########################
 
@@ -191,7 +192,7 @@ def single_arg(message_key, *message_args):
 def single_use(func):
   async def result(self, me, message, args):
     if self.used:
-      return await question(message, tr('ability_used').format(BOT_PREFIX + get_command_name(func.__name__)))
+      return await question(message, tr('ability_used').format(get_command_name(func.__name__)))
     await func(self, me, message, args)
   result.__name__ = func.__name__
   return result
@@ -230,7 +231,7 @@ def player_count():
   return len(played_roles) - EXCESS_CARDS
 
 def get_command_name(name):
-  return tr('cmd_' + name)[0]
+  return BOT_PREFIX + tr('cmd_' + name)[0]
 
 async def find_player(message, name):
   for player in players.values():
@@ -240,8 +241,20 @@ async def find_player(message, name):
       return player
   return await question(message, tr('player_notfound').format(name))
 
-async def on_used(role):
+async def select_excess_card(message, wronguse_msg, args):
+  try:
+    number = int(args)
+  except ValueError:
+    return await question(message, tr(wronguse_msg).format(BOT_PREFIX, EXCESS_CARDS))
+  if number < 1 or number > EXCESS_CARDS:
+    return await question(message, tr('choice_outofrange').format(EXCESS_CARDS))
+  return number
+
+async def set_used(role):
   role.used = True
+  await on_used()
+
+async def on_used():
   for player in players.values():
     if player.role and hasattr(player.role, 'used') and not player.role.used:
       return
@@ -359,7 +372,7 @@ def initialize(admins):
     if night:
       return await question(message, tr('day_only'))
     if not is_public_channel(message.channel):
-      return await question(message, tr('public_only').format(BOT_PREFIX + tr('cmd_vote')[0]))
+      return await question(message, tr('public_only').format(get_command_name('vote')))
     player = await find_player(message, args)
     if player:
       await on_voted(me, player)
@@ -467,15 +480,32 @@ def initialize(admins):
   class Seer(Villager):
     def __init__(self):
       self.used = False
+      self.reveal_count = 0
+
+    @single_arg('reveal_wronguse', EXCESS_CARDS)
+    async def reveal(self, me, message, args):
+      if self.used:
+        return await question(message, tr('seer_see_already'))
+      if self.reveal_count >= SEER_REVEAL:
+        return await question(message, tr('out_of_reveal').format(SEER_REVEAL))
+      number = await select_excess_card(message, 'reveal_wronguse', args)
+      if number:
+        await confirm(message, tr('reveal_success').format(number, excess_roles[number - 1].name))
+        self.reveal_count += 1
+        if self.reveal_count >= SEER_REVEAL:
+          await on_used()
+      
 
     @single_use
     @single_arg('see_wronguse')
     async def see(self, me, message, args):
+      if self.reveal_count:
+        return await question(message, tr('seer_reveal_already'))
       if me.extern.name == args:
         return await question(message, tr('seer_self'))
       player = await find_player(message, args)
       if player:
-        await on_used(self)
+        await set_used(self)
         return await confirm(message, tr('see_success').format(args, player.real_role.name))
 
   @role
@@ -510,7 +540,7 @@ def initialize(admins):
       players = [ await find_player(message, name) for name in players ]
       if players[0] and players[1]:
         players[0].real_role, players[1].real_role = players[1].real_role, players[0].real_role
-        await on_used(self)
+        await set_used(self)
         return await confirm(message, tr('troublemaker_success')
             .format(*[ p.extern.name for p in players]))
 
@@ -527,7 +557,7 @@ def initialize(admins):
       player = await find_player(message, args)
       if player:
         me.real_role, player.real_role = player.real_role, me.real_role
-        await on_used(self)
+        await set_used(self)
         return await confirm(message, tr('thief_success').format(args))
 
   @role
@@ -538,16 +568,12 @@ def initialize(admins):
     @single_use
     @single_arg('drunk_wronguse', EXCESS_CARDS)
     async def swap(self, me, message, args):
-      try:
-        number = int(args)
-      except ValueError:
-        return await question(message, tr('drunk_wronguse').format(BOT_PREFIX, EXCESS_CARDS))
-      if number < 1 or number > EXCESS_CARDS:
-        return await question(message, tr('choice_outofrange').format(EXCESS_CARDS))
-      number -= 1
-      me.real_role, excess_roles[number] = excess_roles[number], me.real_role
-      await on_used(self)
-      return await confirm(message, tr('drunk_success').format(args))
+      number = await select_excess_card(message, 'drunk_wronguse', args)
+      if number:
+        number -= 1
+        me.real_role, excess_roles[number] = excess_roles[number], me.real_role
+        await set_used(self)
+        return await confirm(message, tr('drunk_success').format(args))
 
   class WolfSide: pass
 
@@ -568,14 +594,10 @@ def initialize(admins):
     @single_use
     @single_arg('reveal_wronguse', EXCESS_CARDS)
     async def reveal(self, me, message, args):
-      try:
-        number = int(args)
-      except ValueError:
-        return await question(message, tr('reveal_wronguse').format(BOT_PREFIX, EXCESS_CARDS))
-      if number < 1 or number > EXCESS_CARDS:
-        return await question(message, tr('choice_outofrange').format(EXCESS_CARDS))
-      await confirm(message, tr('reveal_success').format(number, excess_roles[number - 1].name))
-      await on_used(self)
+      number = await select_excess_card(message, 'reveal_wronguse', args)
+      if number:
+        await confirm(message, tr('reveal_success').format(number, excess_roles[number - 1].name))
+        await set_used(self)
 
     async def on_start(self, player):
       if not 'wolf' in tmp_channels:

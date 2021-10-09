@@ -62,6 +62,9 @@ night_only = ( "bạn chỉ được dùng lệnh này vào ban đêm, hãy quay
 day_only = ( "bạn chỉ được dùng lệnh này vào ban ngày, đợi làng thức dậy nha", "đợi sáng dậy mới được dùng lệnh này nha" )
 ability_used = ( "bạn đã sử dụng chức năng `{}` rồi mà", "`{0}` gồi, hong cho `{0}` nữa" )
 choice_outofrange = "bạn phải chọn STT từ 1 đến {}"
+seer_reveal_already = "bạn đã lật lá bài ở ngoài, bạn không được soi người khác nữa"
+seer_see_already = "bạn đã soi chức năng của người khác, không được lật lá bài ở ngoài nữa"
+out_of_reveal = "bạn đã lật lá bài ở ngoài {} lần, bạn không được lật thêm nữa"
 
 wolf = ( "Sói", "Những chú sói dui dẻ", "Schói", "SÓI" )
 

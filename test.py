@@ -215,6 +215,8 @@ loop.run_until_complete(asyncio.gather(
   expect_response(anne, '!reveal_all', bot_dm, '[@bot] confirm(@anne) anne:thief, carl:seer, bob:wolf, david:villager, elsa:wolf, frank:troublemaker, george:drunk, harry:clone, ignacio:insomniac; excess: villager, villager, villager'),
 
   *check_private_single_player_cmd(carl, '!see', 'anne', 'see_wronguse(!)', 'seer_self', 'see_success(anne, thief) '),
+  expect_response(carl, '!reveal', bot_dm, '[@bot] question(@carl) reveal_wronguse(!, 3) '),
+  expect_response(carl, '!reveal 2', bot_dm, '[@bot] question(@carl) seer_see_already '),
 
   expect_response(frank, '!swap frank elsa', bot_dm, '[@bot] question(@frank) no_swap_self '),
   expect_response(frank, '!swap elsa', bot_dm, '[@bot] question(@frank) troublemaker_wronguse(!) '),
@@ -281,7 +283,12 @@ loop.run_until_complete(asyncio.gather(
     '[wolf ] wolf_channel(@harry) ',
     '[wolf ] wolf_get_reveal(!, 3) '
   ]),
+  expect_response(anne, '!reveal_all', bot_dm, '[@bot] confirm(@anne) anne:insomniac, carl:drunk, bob:clone, david:troublemaker, elsa:thief, frank:villager, george:seer, harry:wolf, ignacio:minion; excess: wolf, villager, villager'),
   expect_response(harry, '!reveal 1', game, '[game] question(@harry) dm_only(!reveal) '),
   expect_response(harry, '!reveal 1', bot_dm, '[@bot] confirm(@harry) reveal_success(1, wolf) '),
-  expect_response(harry, '!reveal 1', bot_dm, '[@bot] question(@harry) ability_used(!reveal) ')
+  expect_response(harry, '!reveal 1', bot_dm, '[@bot] question(@harry) ability_used(!reveal) '),
+  expect_response(george, '!reveal 2', bot_dm, '[@bot] confirm(@george) reveal_success(2, villager) '),
+  expect_response(george, '!see harry', bot_dm, '[@bot] question(@george) seer_reveal_already '),
+  expect_response(george, '!reveal 1', bot_dm, '[@bot] confirm(@george) reveal_success(1, wolf) '),
+  expect_response(george, '!reveal 3', bot_dm, '[@bot] question(@george) out_of_reveal(2) '),
 ))
