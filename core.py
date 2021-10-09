@@ -424,10 +424,11 @@ def initialize(admins):
     vote_list = []
     most_vote = None
     max_vote = 0
+    vote_item = tr('vote_item')
     for player in players.values():
       if player.vote:
         current = vote_count[player.vote] = vote_count[player.vote] + 1 if player.vote in vote_count else 1
-        vote_list.append(player.extern.mention + ": " + player.vote)
+        vote_list.append(vote_item.format(player.extern.mention, player.vote))
         if current > max_vote:
           max_vote = current
           most_vote = player.vote
@@ -460,9 +461,8 @@ def initialize(admins):
 
   @cmd(DebugCommand())
   async def reveal_all(message, args):
-    await confirm(message, join_with_and([ player.extern.name + ':' + player.real_role.name
-        for player in players.values() if player.role ])
-        + "; excess: " + ', '.join([role.name for role in excess_roles]))
+    reveal_item = tr('reveal_item')
+    await message.channel.send(tr('reveal_all').format('\n'.join([ reveal_item.format(player.extern.name, player.real_role.name) for player in players.values() if player.role ])) + '\n' + tr('excess_cards').format(', '.join([role.name for role in excess_roles])))
 
 ############################ ROLES #############################
 

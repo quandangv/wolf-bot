@@ -12,18 +12,23 @@ channel_greeting = ( "Chào mừng {} đến group {}!", "Hello {}! Xin chào đ
 end_game = ( "Chúc mừng {} đã chiến thắng!", "{} đã giành lấy chiến thắng trong bàn này" )
 reveal_player = ( "{} chính là {}!", "{} là một con {}" )
 wolves_reveal = "Những con sói trong làng là {}"
+reveal_item = "{} là {}"
+reveal_all = "Chức năng của mọi người: \n{}"
+excess_cards = "Các lá bài thừa: {}"
 
 vote = ( "Dùng lệnh `{}vote <người-chơi>` để bỏ phiếu treo cổ người đó", "Bạn ghét đứa nào thì cứ `{}vote <đứa-đó>` nha" )
 help_list = ( "các lệnh được thực hiện là `{}`.", "ngoài cắn người, bạn còn có thể dùng lệnh `{}`. (giỡn thoi nha)", "hãy thử một trong các lệnh `{}`" )
 list_roles = ( "Ván này mình chơi {}; cần có {} người chơi", "Trong làng có {}; đủ cho {} người chơi" )
 wolf_get_reveal = "Bạn là một con sói cô độc. Vì vậy bạn sẽ được dùng lệnh `{}soi <STT-lá bài>` để soi một trong {} lá ở ngoài"
-vote_countdown = "Phần lớn mọi người đã bỏ phiếu! Những người khác còn {} giây để bỏ phiếu"
-vote_result = "Cả làng đã bỏ phiếu xong! Kết quả là:\n{}"
 lynch = ( "Và thế là {} bị quăng vào chảo lửa", "{} quá thất vọng với quyết định của dân làng và lăn ra chết", "Làng treo cổ {}, rồi đem đi chôn cất", "Mọi người đuổi {0} ra khỏi làng. Từ đó không ai nhìn thấy {0} nữa" )
 
 start = ( "bắt đầu trò chơi với {}", "trò chơi gồm {} sẽ được bắt đầu ngay bây giờ", "{} chơi ha", "trò chơi bắt đầu! Đêm nay sói sẽ xuất hiện giữa {}" )
 start_needmore = ( "hiện tại có {} người chơi, trong khi mình cần {} người lận", "mình cần {1} người chơi, mới có {0} người à" )
 start_needless = ( "hiện tại có tới {} người chơi, mình mới set đủ chức năng cho {} người thôi", "chức năng chỉ đủ cho {1} người thôi, giờ làng có đến {0} người lận" )
+
+vote_countdown = "Phần lớn mọi người đã bỏ phiếu! Những người khác còn {} giây để bỏ phiếu"
+vote_result = "Cả làng đã bỏ phiếu xong! Kết quả là:\n{}"
+vote_item = "{} bỏ phiếu {}"
 
 add_wronguse = "bạn muốn thêm chức năng gì thì phải nhắn là `{}them <chức-năng>`"
 remove_wronguse = "bạn muốn bỏ chức năng nào thì phải nhắn là `{}bo <chức-năng>`"
