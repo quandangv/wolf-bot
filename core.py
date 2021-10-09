@@ -280,7 +280,7 @@ async def on_voted(me, player):
       if player.vote != None:
         total_voted += 1
   if total_player == total_voted:
-    close_vote()
+    await close_vote(None, None)
   elif total_voted / total_player > SUPERMAJORITY:
     global vote_countdown_task
     if not vote_countdown_task:
@@ -289,7 +289,8 @@ async def on_voted(me, player):
         global vote_countdown_task
         if vote_countdown_task:
           vote_countdown_task = None
-          await close_vote(None, None)
+          async with lock:
+            await close_vote(None, None)
       vote_countdown_task = asyncio.create_task(close_vote_countdown())
       await channel.send(tr('vote_countdown').format(VOTE_COUNTDOWN))
 
@@ -415,9 +416,9 @@ def initialize(admins):
   @cmd(AdminCommand())
   async def close_vote(_, __):
     global vote_countdown_task
-    if vote_countdown_task:
-      vote_countdown_task.cancel()
-      vote_countdown_task = None
+    #if vote_countdown_task:
+    #  vote_countdown_task.cancel()
+    #  vote_countdown_task = None
     channel = main_channel()
     vote_count = {}
     vote_list = []
@@ -493,14 +494,14 @@ def initialize(admins):
         await confirm(message, tr('reveal_success').format(number, excess_roles[number - 1].name))
         self.reveal_count += 1
         if self.reveal_count >= SEER_REVEAL:
-          await on_used()
-      
+          await set_used(self)
 
-    @single_use
     @single_arg('see_wronguse')
     async def see(self, me, message, args):
       if self.reveal_count:
         return await question(message, tr('seer_reveal_already'))
+      if self.used:
+        return await question(message, tr('ability_used').format(get_command_name('see')))
       if me.extern.name == args:
         return await question(message, tr('seer_self'))
       player = await find_player(message, args)
@@ -558,7 +559,7 @@ def initialize(admins):
       if player:
         me.real_role, player.real_role = player.real_role, me.real_role
         await set_used(self)
-        return await confirm(message, tr('thief_success').format(args))
+        return await confirm(message, tr('thief_success').format(args, me.real_role.name))
 
   @role
   class Drunk(Villager):
@@ -605,6 +606,7 @@ def initialize(admins):
       else:
         channel = tmp_channels['wolf']
         await add_member(channel, player.extern)
+        await channel.send(tr('channel_greeting').format(player.extern.mention, channel.name))
 
 ########################### EVENTS #############################
 
