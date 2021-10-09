@@ -12,7 +12,7 @@ players = {}
 played_roles = []
 excess_roles = []
 tmp_channels = {}
-night = True
+status = None
 vote_countdown_task = None
 
 BOT_PREFIX = '!'
@@ -110,9 +110,9 @@ class PlayerCommand(Command):
     return super().decorate(name, check, description)
 
 class RoleCommand(PlayerCommand):
-  def __init__(self, required_channel, night = True):
+  def __init__(self, required_channel, required_status = 'night'):
     self.required_channel = required_channel
-    self.night = night
+    self.required_status = required_status
 
   def is_listed(self, player, channel):
     return super().is_listed(player, channel) and name_channel(channel) == self.required_channel and hasattr(player.role, self.name)
@@ -121,15 +121,23 @@ class RoleCommand(PlayerCommand):
     async def check(player, message, args):
       if name_channel(message.channel) != self.required_channel:
         return await question(message, tr(self.required_channel + '_only').format(BOT_PREFIX + name))
-      if self.night != night:
-        return await question(message, tr(('night' if self.night else 'day') + '_only'))
+      if self.required_status != status:
+        return await question(message, tr(self.required_status + '_only'))
       if not hasattr(player.role, name):
         return await question(message, tr('wrong_role').format(BOT_PREFIX + name))
       await getattr(player.role, name)(player, message, args)
     return super().decorate(name, check, description)
 
 class SetupCommand(AdminCommand):
-  pass
+  def is_listed(self, player, _):
+    return not status and super().is_listed(player, None)
+
+  def decorate(self, name, func, description):
+    async def check(message, args):
+      if status:
+        return await question(message, tr('forbid_game_started').format(BOT_PREFIX + name))
+      await func(message, args)
+    return super().decorate(name, check, description)
 
 class Player:
   def __init__(self, is_admin, extern):
@@ -264,8 +272,8 @@ async def wake_up():
   for player in players.values():
     if player.role and hasattr(player.role, 'before_dawn'):
       await player.role.before_dawn(player)
-  global night
-  night = False
+  global status
+  status = 'day'
   await main_channel().send(tr('wake_up') + tr('vote').format(BOT_PREFIX))
 
 async def on_voted(me, player):
@@ -370,7 +378,7 @@ def initialize(admins):
   @cmd(PlayerCommand())
   @single_arg('vote_wronguse')
   async def vote(me, message, args):
-    if night:
+    if status != 'day':
       return await question(message, tr('day_only'))
     if not is_public_channel(message.channel):
       return await question(message, tr('public_only').format(get_command_name('vote')))
@@ -391,7 +399,8 @@ def initialize(admins):
       await confirm(message, tr('start').format(join_with_and(
         [member.mention for member in members]
       )))
-      night = True
+      global status
+      status = 'night'
 
       shuffled_roles = shuffle_copy(played_roles)
       for idx, member in enumerate(members):
@@ -452,8 +461,8 @@ def initialize(admins):
 
   @cmd(AdminCommand())
   async def end_game(_, __):
-    global night
-    night = True
+    global status
+    status = None
     for player in players.values():
       player.real_role = player.role = player.vote = None
     for channel in tmp_channels.values():

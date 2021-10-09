@@ -57,7 +57,8 @@ seer_self = "bạn không được soi chính mình"
 clone_self = "bạn không được nhân bản chính mình"
 
 require_admin = "bạn không phải là admin nên không được dùng lệnh đó nha"
-not_playing = "không tìm thấy bạn trong làng, bạn không được dùng lệnh này đâu"
+not_playing = "bạn không có trong trò chơi, bạn không được dùng lệnh này đâu"
+forbid_game_started = ( "bạn không được dùng lệnh `{}` khi trò chơi đã bắt đầu", "trò chơi bắt đầu rồi, bạn không được dùng lệnh `{}` đâu" )
 wrong_role = ( "bạn đâu có chức năng `{}`", "ai cho bạn `{}`" )
 dm_only = "lộn chỗ rồi nha! Nếu chức năng bạn cho phép `{}`, bạn phải nhắn tin riêng với quản trò"
 public_only = "bạn phải nhắn lệnh `{}` ở group chính chứ không phải ở đây"

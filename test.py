@@ -173,6 +173,7 @@ loop.run_until_complete(asyncio.gather(
   expect_response(anne, '!help help_alias', game, '[game] confirm(@anne) alias(help_alias, help) help_desc '),
 
   expect_response(anne, '!add_role', game, '[game] question(@anne) add_wronguse(!) '),
+  expect_response(anne, '!vote carl', game, '[game] question(@anne) not_playing '),
   expect_response(carl, '!add_role', game, '[game] question(@carl) require_admin '),
 
   expect_response(anne, '!add_role villager', bot_dm, '[@bot] question(@anne) public_only(!add_role) '),
@@ -209,6 +210,7 @@ loop.run_until_complete(asyncio.gather(
 members.append(not_player)
 
 loop.run_until_complete(asyncio.gather(
+  expect_response(anne, '!add_role villager ', game, '[game] question(@anne) forbid_game_started(!add_role) '),
   expect_response(anne, '!reveal_all', bot_dm, '[@bot] reveal_all(anne:wolf\ncarl:seer\nbob:wolf\ndavid:villager\nelsa:thief\nfrank:troublemaker\ngeorge:drunk\nharry:clone\nignacio:insomniac) \nexcess_cards(villager, villager, villager) '),
 
   expect_response(anne, '!swap', game, '[game] question(@anne) dm_only(!swap) '),
