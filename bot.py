@@ -50,7 +50,7 @@ async def debug(msg):
 @core.action
 def tr(key):
   result = getattr(lang, key)
-  return result[random.randrange(len(result))] if isinstance(result, tuple) else result
+  return result[random.randrange(len(result))] if isinstance(result, list) else result
 
 @core.action
 async def send_post(channel, text):

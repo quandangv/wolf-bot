@@ -100,7 +100,7 @@ def tr(key):
   if strip_prefix('role_'):
     return [ key, key + '_desc ', key + '_greeting', key + ' alias' ]
   sample_result = getattr(lang, key)
-  if isinstance(sample_result, tuple):
+  if isinstance(sample_result, list):
     sample_result = sample_result[0]
   if '{0}' in sample_result:
     arg_count = 2
