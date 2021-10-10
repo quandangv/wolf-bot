@@ -77,10 +77,21 @@ seer_see_already = "bạn đã soi chức năng của người khác, không đ�
 out_of_reveal = "bạn đã lật lá bài ở ngoài {} lần, bạn không được lật thêm nữa"
 
 cmd_help = ( "giupdo", "`{0}` liệt kê các lệnh bạn được thực hiện.\nCòn `{0} <cau-lenh>` sẽ nhắn thông tin trợ giúp về lệnh đó", "trogiup" )
-cmd_start_immediate = ( "choingay", "`{0}` để bắt đầu chơi ngay lập tức" )
+cmd_start_immediate = ( "choingay", "`{0}` để bắt đầu chơi ngay" )
 cmd_add_role = ( "them", "`{0} <chức-năng>` sẽ thêm một chức năng vào game" )
+cmd_remove_role = ( "bo", "`{0} <chức-năng>` để bỏ một chức năng khỏi game", "bo", "xoa" )
 cmd_list_roles = ( "chucnang", "`{0}` để liệt kê các vai trò có trong làng" )
-cmd_reveal_all = ( "reveal_all", "`{0}` DEBUG COMMAND" )
+cmd_end_game = ( "ngungchoi", "`{0}` sẽ lập tức dừng trò chơi" )
+cmd_close_vote = ( "dongvote", "`{0}` để lập tức ngưng bỏ phiếu", "ngungvote" )
+cmd_vote = ( "vote", "`{0} <người-chơi>` để bỏ phiếu giết người đó", "giet" )
+cmd_clone = ( "nhanban", "`{0} <người-chơi>` để nhân bản chức năng của người đó", "saochep" )
+cmd_reveal = ( "latbai", "`{0} <STT-lá-bài` để lật và xem lá bài đó", "xem" )
+cmd_see = ( "soi", "`{0} <người-chơi>` để soi chức năng của người đó" )
+cmd_swap = ( "trao", "``{0} <người-1> <người-2>` để tráo chức năng của 2 người" )
+cmd_steal = ( "trom", "`{0} <người-chơi>` để đổi chức năng của mình với người đó" )
+cmd_take = ( "lay", "``{0} <STT-lá-bài>` để đổi chức năng của mình với một lá bài bên ngoài" )
+
+cmd_reveal_all = ( "tietlo", "`{0}` liệt kê thông tin chức năng của mọi người và danh sách các lá bài bên ngoài (Debug)" )
 
 role_villager = ( "dân thường", "Một con dân thường không có chức năng. Nhờ vậy, bạn sẽ được yên giấc vào ban đêm", "Ban đêm bạn không phải làm gì cả. Sáng dậy, bạn có thể `{}vote` người để treo cổ", "dân làng", "dân" )
 role_wolf = ( "sói", "Sói chống lại dân làng. Chúng sẽ thắng nếu người bị treo cổ là phe dân", "Bạn sẽ được biết con sói còn lại. Ban ngày, hãy tìm cách treo cổ một người dân để chiến thắng" )

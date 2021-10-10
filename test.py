@@ -120,7 +120,6 @@ def shuffle_copy(arr):
   return arr[::-1]
 
 core.initialize(admins)
-
 loop = asyncio.get_event_loop()
 
 async def low_expect_response(coroutine, response):
@@ -216,7 +215,7 @@ loop.run_until_complete(asyncio.gather(
   expect_response(anne, '!swap', game, '[game] question(@anne) dm_only(!swap) '),
   expect_response(anne, '!swap carl', bot_dm, '[@bot] question(@anne) wrong_role(!swap) '),
 
-  *check_private_single_player_cmd(elsa, '!swap', 'anne', 'thief_wronguse(!)', 'no_swap_self', 'thief_success(anne, wolf) '),
+  *check_private_single_player_cmd(elsa, '!steal', 'anne', 'thief_wronguse(!)', 'no_swap_self', 'thief_success(anne, wolf) '),
   expect_response(anne, '!reveal_all', bot_dm, '[@bot] reveal_all(anne:thief\ncarl:seer\nbob:wolf\ndavid:villager\nelsa:wolf\nfrank:troublemaker\ngeorge:drunk\nharry:clone\nignacio:insomniac) \nexcess_cards(villager, villager, villager) '),
 
   *check_private_single_player_cmd(carl, '!see', 'anne', 'see_wronguse(!)', 'seer_self', 'see_success(anne, thief) '),
@@ -230,12 +229,12 @@ loop.run_until_complete(asyncio.gather(
   expect_response(frank, '!swap anne david', bot_dm, '[@bot] question(@frank) ability_used(!swap) '),
   expect_response(anne, '!reveal_all', bot_dm, '[@bot] reveal_all(anne:villager\ncarl:seer\nbob:wolf\ndavid:thief\nelsa:wolf\nfrank:troublemaker\ngeorge:drunk\nharry:clone\nignacio:insomniac) \nexcess_cards(villager, villager, villager) '),
 
-  expect_response(george, '!swap 4', bot_dm, '[@bot] question(@george) choice_outofrange(3) '),
-  *check_private_single_arg_cmd(george, '!swap', '1', 'drunk_wronguse(!, 3)', 'no_swap_self', 'drunk_success(1) '),
+  expect_response(george, '!take 4', bot_dm, '[@bot] question(@george) choice_outofrange(3) '),
+  *check_private_single_arg_cmd(george, '!take', '1', 'drunk_wronguse(!, 3)', 'no_swap_self', 'drunk_success(1) '),
   expect_response(anne, '!reveal_all', bot_dm, '[@bot] reveal_all(anne:villager\ncarl:seer\nbob:wolf\ndavid:thief\nelsa:wolf\nfrank:troublemaker\ngeorge:villager\nharry:clone\nignacio:insomniac) \nexcess_cards(drunk, villager, villager) '),
 
   *check_private_single_player_cmd(harry, '!clone', 'david', 'clone_wronguse(!)', 'clone_self', 'clone_success(david, thief) thief_greeting', False),
-  expect_response(harry, '!swap ignacio', bot_dm, [ '[@ignacio] insomniac_reveal(thief) ', '[game] wake_up vote(!) ', '[@bot] confirm(@harry) thief_success(ignacio, insomniac) ' ]),
+  expect_response(harry, '!steal ignacio', bot_dm, [ '[@ignacio] insomniac_reveal(thief) ', '[game] wake_up vote(!) ', '[@bot] confirm(@harry) thief_success(ignacio, insomniac) ' ]),
 
   expect_response(harry, '!swap frank', bot_dm, '[@bot] question(@harry) night_only '),
   expect_response(not_player, '!vote frank', bot_dm, '[@bot] question(@not_player) not_playing '),
@@ -295,9 +294,9 @@ loop.run_until_complete(asyncio.gather(
   expect_response(george, '!see harry', bot_dm, '[@bot] question(@george) seer_reveal_already '),
   expect_response(george, '!reveal 1', bot_dm, '[@bot] confirm(@george) reveal_success(1, wolf) '),
   expect_response(bob, '!clone harry', bot_dm, [ '[wolf ] channel_greeting(@bob, wolf ) ', '[@bot] confirm(@bob) clone_success(harry, wolf) wolf_greeting' ]),
-  expect_response(carl, '!swap 1', bot_dm, '[@bot] confirm(@carl) drunk_success(1) '),
+  expect_response(carl, '!take 1', bot_dm, '[@bot] confirm(@carl) drunk_success(1) '),
   expect_response(david, '!swap elsa george', bot_dm, '[@bot] confirm(@david) troublemaker_success(elsa, george) '),
-  expect_response(elsa, '!swap ignacio', bot_dm, [ '[@anne] insomniac_reveal(insomniac) ', '[game] wake_up vote(!) ', '[@bot] confirm(@elsa) thief_success(ignacio, minion) ' ]),
+  expect_response(elsa, '!steal ignacio', bot_dm, [ '[@anne] insomniac_reveal(insomniac) ', '[game] wake_up vote(!) ', '[@bot] confirm(@elsa) thief_success(ignacio, minion) ' ]),
   expect_response(not_player, '!vote frank', bot_dm, '[@bot] question(@not_player) not_playing '),
   expect_response(harry, '!vote frank', bot_dm, '[@bot] question(@harry) public_only(!vote) '),
   expect_response(harry, '!vote frank', game, '[game] vote_success(@harry, @frank) '),

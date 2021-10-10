@@ -322,6 +322,12 @@ def initialize(admins):
   def swap(): pass
 
   @cmd(RoleCommand('dm'))
+  def steal(): pass
+
+  @cmd(RoleCommand('dm'))
+  def take(): pass
+
+  @cmd(RoleCommand('dm'))
   def see(): pass
 
   @cmd(RoleCommand('dm'))
@@ -565,7 +571,7 @@ def initialize(admins):
 
     @single_use
     @single_arg('thief_wronguse')
-    async def swap(self, me, message, args):
+    async def steal(self, me, message, args):
       if me.extern.name == args:
         return await question(message, tr('no_swap_self'))
       player = await find_player(message, args)
@@ -581,7 +587,7 @@ def initialize(admins):
 
     @single_use
     @single_arg('drunk_wronguse', EXCESS_CARDS)
-    async def swap(self, me, message, args):
+    async def take(self, me, message, args):
       number = await select_excess_card(message, 'drunk_wronguse', args)
       if number:
         number -= 1
