@@ -91,25 +91,28 @@ def tr(key):
     if key.startswith(prefix):
       key = key[len(prefix):]
       return True
+  def add_format_spots(key, sample):
+    if '{0}' in sample:
+      arg_count = 2
+      while ('{' + str(arg_count-1) + '}') in sample:
+        arg_count = arg_count + 1
+      arg_count = arg_count - 1
+    else:
+      arg_count = sample.count('{') - sample.count('{{') * 2
+    return (key if arg_count == 0 else '{}({})'.format(key, ', '.join(['{}'] * arg_count)))
   if key == '_and':
     return ''
   if key == 'reveal_item':
     return '{}:{}'
   if strip_prefix('cmd_'):
-    return [ key, key + '_desc ', key + '_alias' ]
+    sample = getattr(lang, 'cmd_' + key)
+    return [ add_format_spots(key, sample[0]), add_format_spots(key + '_desc', sample[1]), key + '_alias' ]
   if strip_prefix('role_'):
     return [ key, key + '_desc ', key + '_greeting', key + ' alias' ]
   sample_result = getattr(lang, key)
   if isinstance(sample_result, list):
     sample_result = sample_result[0]
-  if '{0}' in sample_result:
-    arg_count = 2
-    while ('{' + str(arg_count-1) + '}') in sample_result:
-      arg_count = arg_count + 1
-    arg_count = arg_count - 1
-  else:
-    arg_count = sample_result.count('{') - sample_result.count('{{') * 2
-  return (key if arg_count == 0 else '{}({})'.format(key, ', '.join(['{}'] * arg_count))) + ' '
+  return add_format_spots(key, sample_result) + ' '
 
 @core.action
 def get_available_members():
@@ -165,11 +168,11 @@ loop.run_until_complete(asyncio.gather(
   expect_response(anne, '!help', game, '[game] confirm(@anne) help_list(!help`, `!add_role`, `!remove_role`, `!list_roles`, `!start_immediate`, `!close_vote`, `!end_game`, `!reveal_all) '),
   expect_response(carl, '!help', game, '[game] confirm(@carl) help_list(!help`, `!list_roles`, `!reveal_all) '),
 
-  expect_response(anne, '!help help', game, '[game] confirm(@anne) help_desc '),
-  expect_response(carl, '!help start_immediate', game, '[game] confirm(@carl) start_immediate_desc '),
+  expect_response(anne, '!help help', game, '[game] confirm(@anne) help_desc(!help)'),
+  expect_response(carl, '!help start_immediate', game, '[game] confirm(@carl) start_immediate_desc(!start_immediate)'),
   expect_response(carl, '!help blabla', game, '[game] confused(`blabla`) '),
-  expect_response(anne, '!help_alias help', game, '[game] confirm(@anne) help_desc '),
-  expect_response(anne, '!help help_alias', game, '[game] confirm(@anne) alias(help_alias, help) help_desc '),
+  expect_response(anne, '!help_alias help', game, '[game] confirm(@anne) help_desc(!help)'),
+  expect_response(anne, '!help help_alias', game, '[game] confirm(@anne) alias(help_alias, help) help_desc(!help)'),
 
   expect_response(anne, '!add_role', game, '[game] question(@anne) add_wronguse(!) '),
   expect_response(anne, '!vote carl', game, '[game] question(@anne) not_playing '),
