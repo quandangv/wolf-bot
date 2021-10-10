@@ -177,6 +177,8 @@ def check_private_single_player_cmd(author, cmd, target, wronguse_msg, no_self_m
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(asyncio.gather(
+  expect_response(anne, '!list_roles', game, '[game] no_roles '),
+  expect_response(anne, '!start_immediate', game, '[game] start_needmore(9, 0) '),
   expect_response(anne, '!help', game, '[game] confirm(@anne) help_list(!help`, `!add_role`, `!remove_role`, `!list_roles`, `!start_immediate`, `!close_vote`, `!end_game`, `!reveal_all) '),
   expect_response(carl, '!help', game, '[game] confirm(@carl) help_list(!help`, `!list_roles`, `!reveal_all) '),
 

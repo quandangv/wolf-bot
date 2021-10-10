@@ -1,13 +1,14 @@
 # TODO
-- End vote when the remaining votes don't matter
 - Allow non-admin to setup game
 - Force fixed or randomized order of action for roles
 - Include aliases in help message
-- Complete discord connection
+- Add multiple roles
 
 # DOING
 
 # DONE
+- Complete discord connection
+- End vote when the remaining votes don't matter
 - Vote ties
 - Vote countdown should check for self
 - Make sure roles know their commands every night

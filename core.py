@@ -175,10 +175,14 @@ def role(base):
   roles[base.name] = base
   if CREATE_NORMALIZED_ALIASES:
     import unidecode
+    normalized = unidecode.unidecode(base.name)
+    if normalized != base.name:
+      aliases.append(normalized)
     length = len(aliases)
     for idx in range(length):
       alias = aliases[idx]
       normalized = unidecode.unidecode(alias)
+      print(normalized)
       if normalized != alias:
         aliases.append(normalized)
   for alias in aliases:
@@ -242,7 +246,7 @@ def join_with_and(arr):
   return arr[0] if len(arr) == 1 else ", ".join(arr[:-1]) + ", " + tr('_and') + arr[-1]
 
 def needed_players_count():
-  return len(played_roles) - EXCESS_CARDS
+  return max(0, len(played_roles) - EXCESS_CARDS)
 
 def get_command_name(name):
   return BOT_PREFIX + tr('cmd_' + name)[0]
@@ -396,7 +400,7 @@ def initialize(admins):
     elif args in roles:
       name = roles[args].name
       played_roles.append(name)
-      await confirm(message, tr('add_success').format(args))
+      await confirm(message, tr('add_success').format(name))
     else:
       await confused(message.channel, args)
 
@@ -417,6 +421,8 @@ def initialize(admins):
 
   @cmd(Command())
   async def list_roles(message, args):
+    if not played_roles:
+      return await confirm(message, tr('no_roles'))
     await confirm(message, tr('list_roles').format(join_with_and(played_roles), needed_players_count()))
 
   @cmd(PlayerCommand())

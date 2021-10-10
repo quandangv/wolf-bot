@@ -10,6 +10,7 @@ intents = discord.Intents.default()
 intents.members = True
 intents.presences = True
 client = discord.Client(intents=intents)
+guild = None
 
 MAX_MESSAGE_LEN = 2000
 
@@ -17,9 +18,10 @@ MAX_MESSAGE_LEN = 2000
 
 @client.event
 async def on_ready():
+  global guild
   print("We have logged in as {0.user}".format(client))
   debug_channel = client.get_channel(DEBUG_CHANNEL)
-  build = client.get_channel(GAME_CHANNEL).guild
+  guild = client.get_channel(GAME_CHANNEL).guild
   core.initialize([guild.get_member(id) for id in ADMINS])
 
 @client.event
@@ -53,23 +55,42 @@ def tr(key):
   return result[random.randrange(len(result))] if isinstance(result, list) else result
 
 @core.action
-async def send_post(channel, text):
-  if len(text) <= MAX_MESSAGE_LEN:
-    return await channel.send(text)
-  else:
-    await channel.send(text[:MAX_MESSAGE_LEN])
-    await send_post(channel, text[MAX_MESSAGE_LEN:])
-
-@core.action
 def get_available_members():
-  def is_available(id):
+  result = []
+  def process(id):
     """Properly retrieve the online status of a member.
     The status property of member objects may contain incorrect value."""
+    if not member or member.id == client.use.id:
+      return
     member = guild.get_member(id)
-    return member.status in {discord.Status.online, discord.Status.idle} if member else False
+    if not member.dm_channel:
+      asyncio.run(member.create_dm())
+    if member.status in {discord.Status.online, discord.Status.idle}:
+      result.append(member)
+  for member in guild.members:
+    process(member.id)
+  return result
 
-  return [member for member in guild.members:
-    if is_available(member.id) and member.id != client.user.id ]
+@core.action
+async def create_channel(name, *players):
+  overwrites = { p: discord.PermissionOverwrite(read_messages=True, write_messages = True) for p in players }
+  await guild.create_text_channel(name, overwrites)
+
+@core.action
+async def add_member(channel, player):
+  await channel.set_permission(player, read_messages = True, write_messages = True)
+
+@core.action
+def is_dm_channel(channel):
+  return isinstance(channel, discord.DMChannel)
+
+@core.action
+def is_public_channel(channel):
+  return channel.id == GAME_CHANNEL
+
+@core.action
+def main_channel():
+  return client.get_channel(GAME_CHANNEL)
 
 ########################## EXECUTION ###########################
 
