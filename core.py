@@ -14,8 +14,10 @@ played_roles = []
 excess_roles = []
 tmp_channels = {}
 status = None
-vote_countdown_task = None
 player_count = 0
+
+vote_countdown_task = None
+vote_countdown_monitor = None
 
 THIS_MODULE = sys.modules[__name__]
 BOT_PREFIX = '!'
@@ -24,6 +26,7 @@ EXCESS_CARDS = 3
 DEBUG = False
 SUPERMAJORITY = 2/3
 VOTE_COUNTDOWN = 60
+LANDSLIDE_VOTE_COUNTDOWN = 10
 SEER_REVEAL = 2
 
 ############################ ACTIONS ###########################
@@ -271,6 +274,10 @@ async def on_used():
       return
   await wake_up()
 
+def clear_vote_countdown():
+  global vote_countdown_task
+  vote_countdown_task = None
+
 async def wake_up():
   for player in players.values():
     if player.role and hasattr(player.role, 'before_dawn'):
@@ -281,26 +288,44 @@ async def wake_up():
   vote_list = { None: player_count }
   await main_channel().send(tr('wake_up') + tr('vote').format(BOT_PREFIX))
 
-async def on_voted(me, player):
+async def on_voted(me, vote):
   vote_list[me.vote] -= 1
-  me.vote = player.extern.mention
-  vote_list[me.vote] = vote_list[me.vote] + 1 if me.vote in vote_list else 1
+  me.vote = vote
+  my_vote = vote_list[me.vote] = vote_list[me.vote] + 1 if me.vote in vote_list else 1
+  not_voted = vote_list[None]
   channel = main_channel()
-  await channel.send(tr('vote_success').format(me.extern.mention, player.extern.mention))
+  if vote:
+    await channel.send(tr('vote_success').format(me.extern.mention, vote))
+    next_most = 0
+    for p, votes in vote_list.items():
+      if p and p != me.vote and votes > next_most:
+        next_most = votes
 
-  if vote_list[None] == 0:
-    await close_vote(None, None)
-  elif vote_list[None] / player_count <= 1 - SUPERMAJORITY:
+    async def close_vote_countdown(seconds):
+      await asyncio.sleep(seconds)
+      clear_vote_countdown()
+      async with lock:
+        await close_vote(None, None)
+
     global vote_countdown_task
-    if not vote_countdown_task:
-      await channel.send(tr('vote_countdown').format(VOTE_COUNTDOWN))
-      async def close_vote_countdown():
-        await asyncio.sleep(VOTE_COUNTDOWN)
-        global vote_countdown_task
-        vote_countdown_task = None
-        async with lock:
-          await close_vote(None, None)
-      vote_countdown_task = asyncio.create_task(close_vote_countdown())
+    if not_voted == 0:
+      await close_vote(None, None)
+    elif my_vote - next_most > not_voted:
+      if vote_countdown_task:
+        vote_countdown_task.cancel()
+      await channel.send(tr('landslide_vote_countdown').format(me.vote, LANDSLIDE_VOTE_COUNTDOWN))
+      vote_countdown_task = asyncio.create_task(close_vote_countdown(LANDSLIDE_VOTE_COUNTDOWN))
+    elif not_voted / player_count <= 1 - SUPERMAJORITY:
+      if not vote_countdown_task:
+        await channel.send(tr('vote_countdown').format(VOTE_COUNTDOWN))
+        vote_countdown_task = asyncio.create_task(close_vote_countdown(VOTE_COUNTDOWN))
+  else:
+    await channel.send(tr('unvote_success').format(me.extern.mention))
+    if vote_countdown_task:
+      vote_countdown_task.cancel()
+      clear_vote_countdown()
+      await channel.send(tr('vote_countdown_cancelled'))
+
 
 @channel_event
 async def wolf_channel(channel):
@@ -395,6 +420,12 @@ def initialize(admins):
     await confirm(message, tr('list_roles').format(join_with_and(played_roles), needed_players_count()))
 
   @cmd(PlayerCommand())
+  async def unvote(me, message, args):
+    if not me.vote:
+      return await question(message, tr('not_voting'))
+    await on_voted(me, None)
+
+  @cmd(PlayerCommand())
   @single_arg('vote_wronguse')
   async def vote(me, message, args):
     if status != 'day':
@@ -403,7 +434,7 @@ def initialize(admins):
       return await question(message, tr('public_only').format(get_command_name('vote')))
     player = await find_player(message, args)
     if player:
-      await on_voted(me, player)
+      await on_voted(me, player.extern.mention)
 
   @cmd(AdminCommand())
   async def start_immediate(message, args):
@@ -448,14 +479,14 @@ def initialize(admins):
     global vote_countdown_task
     if vote_countdown_task:
       vote_countdown_task.cancel()
-      vote_countdown_task = None
+      clear_vote_countdown()
     channel = main_channel()
     vote_detail = []
     most_vote = None
     max_vote = 0
     vote_item = tr('vote_item')
     for p, votes in vote_list.items():
-      if p:
+      if p and votes:
         vote_detail.append(vote_item.format(p, votes))
         if votes > max_vote:
           max_vote = votes
@@ -498,6 +529,7 @@ def initialize(admins):
     for channel in tmp_channels.values():
       channel.delete()
     tmp_channels.clear()
+    vote_list.clear()
 
   @cmd(DebugCommand())
   async def reveal_all(message, args):

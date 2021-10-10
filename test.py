@@ -47,6 +47,7 @@ class Member:
 core.DEBUG = True
 core.BOT_PREFIX = '!'
 core.VOTE_COUNTDOWN = 0.5
+core.LANDSLIDE_VOTE_COUNTDOWN = 0.3
 
 anne = Member(0, 'anne')
 bob = Member(1, 'bob')
@@ -259,17 +260,17 @@ loop.run_until_complete(asyncio.gather(
   expect_response(harry, '!vote anne', game, '[game] vote_success(@harry, @anne) '),
   expect_response(anne, '!vote harry', game, '[game] vote_success(@anne, @harry) '),
   expect_response(frank, '!vote harry', game, '[game] vote_success(@frank, @harry) '),
-  expect_response(elsa, '!vote david', game, '[game] vote_success(@elsa, @david) '),
-  expect_response(david, '!vote frank', game, '[game] vote_success(@david, @frank) '),
+  expect_response(elsa, '!vote harry', game, '[game] vote_success(@elsa, @harry) '),
+  expect_response(david, '!vote harry', game, '[game] vote_success(@david, @harry) '),
   expect_response(ignacio, '!vote elsa', game, [ '[game] vote_success(@ignacio, @elsa) ', '[game] vote_countdown({}) '.format(core.VOTE_COUNTDOWN) ]),
-  expect_response(bob, '!vote harry', game, '[game] vote_success(@bob, @harry) '),
+  expect_response(bob, '!vote harry', game, [ '[game] vote_success(@bob, @harry) ', '[game] landslide_vote_countdown(@harry, {}) '.format(core.LANDSLIDE_VOTE_COUNTDOWN) ]),
   expect_response(carl, '!vote elsa', game, '[game] vote_success(@carl, @elsa) ')
 ))
 
 members.pop()
 
 loop.run_until_complete(asyncio.gather(
-  expect_response(carl, '', game, [ '[game] vote_result(vote_item(@frank, 1) \nvote_item(@anne, 1) \nvote_item(@harry, 3) \nvote_item(@david, 1) \nvote_item(@elsa, 2) ) ', '[game] lynch(@harry) ', '[game] reveal_player(@harry, insomniac) ', '[game] end_game(@bob, @elsa) ', '[game] reveal_all(anne:villager\ncarl:seer\nbob:wolf\ndavid:thief\nelsa:wolf\nfrank:troublemaker\ngeorge:villager\nharry:insomniac\nignacio:thief) \nexcess_cards(drunk, villager, villager) ' ]),
+  expect_response(carl, '', game, [ '[game] vote_result(vote_item(@anne, 1) \nvote_item(@harry, 5) \nvote_item(@elsa, 2) ) ', '[game] lynch(@harry) ', '[game] reveal_player(@harry, insomniac) ', '[game] end_game(@bob, @elsa) ', '[game] reveal_all(anne:villager\ncarl:seer\nbob:wolf\ndavid:thief\nelsa:wolf\nfrank:troublemaker\ngeorge:villager\nharry:insomniac\nignacio:thief) \nexcess_cards(drunk, villager, villager) ' ]),
   expect_response(carl, '!vote elsa', game, '[game] question(@carl) not_playing ')
 ))
 
@@ -321,6 +322,8 @@ loop.run_until_complete(asyncio.gather(
   expect_response(frank, '!vote harry', game, '[game] vote_success(@frank, @harry) '),
   expect_response(elsa, '!vote david', game, '[game] vote_success(@elsa, @david) '),
   expect_response(david, '!vote frank', game, '[game] vote_success(@david, @frank) '),
+  expect_response(ignacio, '!vote david', game, [ '[game] vote_success(@ignacio, @david) ', '[game] vote_countdown({}) '.format(core.VOTE_COUNTDOWN) ]),
+  expect_response(ignacio, '!unvote', game, [ '[game] unvote_success(@ignacio) ', '[game] vote_countdown_cancelled ' ]),
   expect_response(ignacio, '!vote elsa', game, [ '[game] vote_success(@ignacio, @elsa) ', '[game] vote_countdown({}) '.format(core.VOTE_COUNTDOWN) ]),
   expect_response(bob, '!vote harry', game, '[game] vote_success(@bob, @harry) '),
   expect_response(carl, '!vote elsa', game, '[game] vote_success(@carl, @elsa) '),

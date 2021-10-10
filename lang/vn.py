@@ -31,6 +31,8 @@ start_needmore = [ "hiện tại có {} người chơi, trong khi mình cần {}
 start_needless = [ "hiện tại có tới {} người chơi, mình mới set đủ chức năng cho {} người thôi", "chức năng chỉ đủ cho {1} người thôi, giờ làng có đến {0} người lận" ]
 
 vote_countdown = "Phần lớn mọi người đã bỏ phiếu! Những người khác còn {} giây để bỏ phiếu"
+landslide_vote_countdown = "{} sắp sửa lên dàn, mọi người còn {} giây để thay đổi quyết định!"
+vote_countdown_cancelled = "Mọi người cứ từ từ bỏ phiếu đi"
 vote_result = "Cả làng đã bỏ phiếu xong! Kết quả là:\n{}"
 vote_item = "{} với {} phiếu bầu"
 
@@ -53,6 +55,7 @@ see_success = [ "chức năng của {} là {}", "{} là một con {}" ]
 drunk_success = "đã tráo lá bài bên ngoài số {} với lá của bạn"
 clone_success = "bạn đã nhân bản chức năng của {}, giờ bạn sẽ là một {}! "
 vote_success = [ "{} đòi quăng {} vào chảo lửa!", "{} đòi treo cổ {}!", "{} vote treo cổ {}" ]
+unvote_success = "{} đổi ý và rút lại phiếu bầu"
 insomniac_reveal = [ "Sau một đêm dài, bạn xem lại chức năng của mình và thấy: bạn là {}!", "Trước khi trời sáng, bạn vội xem lại chức năng của mình và thấy nó là {}!" ]
 reveal_success = "lá bài số {} là {}"
 
@@ -85,6 +88,7 @@ cmd_list_roles = ( "chucnang", "`{0}` để liệt kê các vai trò có trong l
 cmd_end_game = ( "ngungchoi", "`{0}` sẽ lập tức dừng trò chơi" )
 cmd_close_vote = ( "dongvote", "`{0}` để lập tức ngưng bỏ phiếu", "ngungvote" )
 cmd_vote = ( "vote", "`{0} <người-chơi>` để bỏ phiếu giết người đó", "giet" )
+cmd_unvote = ( "unvote", "`{0}` để rút lại phiếu bầu" )
 cmd_clone = ( "nhanban", "`{0} <người-chơi>` để nhân bản chức năng của người đó", "saochep" )
 cmd_reveal = ( "latbai", "`{0} <STT-lá-bài` để lật và xem lá bài đó", "xem" )
 cmd_see = ( "soi", "`{0} <người-chơi>` để soi chức năng của người đó" )
