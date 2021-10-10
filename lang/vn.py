@@ -31,7 +31,7 @@ start_needless = [ "hiện tại có tới {} người chơi, mình mới set đ
 
 vote_countdown = "Phần lớn mọi người đã bỏ phiếu! Những người khác còn {} giây để bỏ phiếu"
 vote_result = "Cả làng đã bỏ phiếu xong! Kết quả là:\n{}"
-vote_item = "{} bỏ phiếu {}"
+vote_item = "{} với {} phiếu bầu"
 
 add_wronguse = "bạn muốn thêm chức năng gì thì phải nhắn là `{}them <chức-năng>`"
 remove_wronguse = "bạn muốn bỏ chức năng nào thì phải nhắn là `{}bo <chức-năng>`"

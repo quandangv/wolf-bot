@@ -7,6 +7,7 @@ commands = {}
 roles = {}
 channel_events = {}
 main_commands = []
+vote_list = {}
 
 players = {}
 played_roles = []
@@ -14,6 +15,7 @@ excess_roles = []
 tmp_channels = {}
 status = None
 vote_countdown_task = None
+player_count = 0
 
 THIS_MODULE = sys.modules[__name__]
 BOT_PREFIX = '!'
@@ -236,7 +238,7 @@ def get_player(extern):
 def join_with_and(arr):
   return arr[0] if len(arr) == 1 else ", ".join(arr[:-1]) + ", " + tr('_and') + arr[-1]
 
-def player_count():
+def needed_players_count():
   return len(played_roles) - EXCESS_CARDS
 
 def get_command_name(name):
@@ -275,24 +277,23 @@ async def wake_up():
       await player.role.before_dawn(player)
   global status
   status = 'day'
+  global vote_list
+  vote_list = { None: player_count }
   await main_channel().send(tr('wake_up') + tr('vote').format(BOT_PREFIX))
 
 async def on_voted(me, player):
-  me.vote = player.extern.name
+  vote_list[me.vote] -= 1
+  me.vote = player.extern.mention
+  vote_list[me.vote] = vote_list[me.vote] + 1 if me.vote in vote_list else 1
   channel = main_channel()
   await channel.send(tr('vote_success').format(me.extern.mention, player.extern.mention))
 
-  total_player = total_voted = 0
-  for player in players.values():
-    if player.role:
-      total_player += 1
-      if player.vote != None:
-        total_voted += 1
-  if total_player == total_voted:
+  if vote_list[None] == 0:
     await close_vote(None, None)
-  elif total_voted / total_player > SUPERMAJORITY:
+  elif vote_list[None] / player_count <= 1 - SUPERMAJORITY:
     global vote_countdown_task
     if not vote_countdown_task:
+      await channel.send(tr('vote_countdown').format(VOTE_COUNTDOWN))
       async def close_vote_countdown():
         await asyncio.sleep(VOTE_COUNTDOWN)
         global vote_countdown_task
@@ -300,7 +301,6 @@ async def on_voted(me, player):
         async with lock:
           await close_vote(None, None)
       vote_countdown_task = asyncio.create_task(close_vote_countdown())
-      await channel.send(tr('vote_countdown').format(VOTE_COUNTDOWN))
 
 @channel_event
 async def wolf_channel(channel):
@@ -387,7 +387,7 @@ def initialize(admins):
 
   @cmd(Command())
   async def list_roles(message, args):
-    await confirm(message, tr('list_roles').format(join_with_and(played_roles), player_count()))
+    await confirm(message, tr('list_roles').format(join_with_and(played_roles), needed_players_count()))
 
   @cmd(PlayerCommand())
   @single_arg('vote_wronguse')
@@ -404,7 +404,7 @@ def initialize(admins):
   async def start_immediate(message, args):
     members = get_available_members()
     current_count = len(members)
-    needed_count = player_count()
+    needed_count = needed_players_count()
     if current_count > needed_count:
       await question(message, tr('start_needless').format(current_count, needed_count))
     elif current_count < needed_count:
@@ -414,7 +414,9 @@ def initialize(admins):
         [member.mention for member in members]
       )))
       global status
+      global player_count
       status = 'night'
+      player_count = current_count
 
       shuffled_roles = shuffle_copy(played_roles)
       for idx, member in enumerate(members):
@@ -443,23 +445,21 @@ def initialize(admins):
       vote_countdown_task.cancel()
       vote_countdown_task = None
     channel = main_channel()
-    vote_count = {}
-    vote_list = []
+    vote_detail = []
     most_vote = None
     max_vote = 0
     vote_item = tr('vote_item')
-    for player in players.values():
-      if player.vote:
-        current = vote_count[player.vote] = vote_count[player.vote] + 1 if player.vote in vote_count else 1
-        vote_list.append(vote_item.format(player.extern.mention, player.vote))
-        if current > max_vote:
-          max_vote = current
-          most_vote = player.vote
-    await channel.send(tr('vote_result').format("\n".join(vote_list)))
+    for p, votes in vote_list.items():
+      if p:
+        vote_detail.append(vote_item.format(p, votes))
+        if votes > max_vote:
+          max_vote = votes
+          most_vote = p
+    await channel.send(tr('vote_result').format("\n".join(vote_detail)))
     await channel.send(tr('lynch').format(most_vote))
 
     for lynched in players.values():
-      if lynched.extern.name == most_vote:
+      if lynched.extern.mention == most_vote:
         role = lynched.real_role
         if isinstance(role, Villager) or isinstance(role, Minion):
           winners = [ player for player in players.values() if isinstance(player.real_role, WolfSide) ]
