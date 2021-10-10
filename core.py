@@ -296,10 +296,9 @@ async def on_voted(me, player):
       async def close_vote_countdown():
         await asyncio.sleep(VOTE_COUNTDOWN)
         global vote_countdown_task
-        if vote_countdown_task:
-          vote_countdown_task = None
-          async with lock:
-            await close_vote(None, None)
+        vote_countdown_task = None
+        async with lock:
+          await close_vote(None, None)
       vote_countdown_task = asyncio.create_task(close_vote_countdown())
       await channel.send(tr('vote_countdown').format(VOTE_COUNTDOWN))
 
@@ -309,6 +308,12 @@ async def wolf_channel(channel):
     lone_wolf = get_player(channel.members[0])
     lone_wolf.role.used = False
     await channel.send(tr('wolf_get_reveal').format(BOT_PREFIX, EXCESS_CARDS))
+
+async def await_vote_countdown():
+  if vote_countdown_task:
+    try:
+      await vote_countdown_task
+    except asyncio.CancelledError: pass
 
 ############################ INIT ##############################
 
@@ -434,9 +439,9 @@ def initialize(admins):
   @cmd(AdminCommand())
   async def close_vote(_, __):
     global vote_countdown_task
-    #if vote_countdown_task:
-    #  vote_countdown_task.cancel()
-    #  vote_countdown_task = None
+    if vote_countdown_task:
+      vote_countdown_task.cancel()
+      vote_countdown_task = None
     channel = main_channel()
     vote_count = {}
     vote_list = []
@@ -653,5 +658,4 @@ async def process_message(message):
 
 async def process_and_wait(message):
   await process_message(message)
-  if vote_countdown_task:
-    await vote_countdown_task
+  await await_vote_countdown()

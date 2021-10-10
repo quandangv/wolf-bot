@@ -152,8 +152,7 @@ async def low_expect_response(coroutine, response):
        Got: {}.""".format(idx, r, posts[idx])
     finally:
       del posts[:]
-  if core.vote_countdown_task:
-    await core.vote_countdown_task
+  await core.await_vote_countdown()
 
 async def expect_response(author, message, channel, response):
   await low_expect_response(core.process_message(Message(author, message, channel)), response)
