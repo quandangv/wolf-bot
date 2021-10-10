@@ -394,15 +394,24 @@ def initialize(admins):
 
   @cmd(SetupCommand())
   async def add_role(message, args):
-    args = args.strip()
-    if not args:
-      await question(message, tr('add_wronguse').format(BOT_PREFIX))
-    elif args in roles:
-      name = roles[args].name
-      played_roles.append(name)
-      await confirm(message, tr('add_success').format(name))
-    else:
-      await confused(message.channel, args)
+    role_list = []
+    async def add_single(role):
+      role = role.strip()
+      if not role:
+        await question(message, tr('add_wronguse').format(BOT_PREFIX))
+      elif role in roles:
+        name = roles[role].name
+        played_roles.append(name)
+        role_list.append(name)
+        return True
+      else:
+        await confused(message.channel, role)
+    args = args.split(',')
+    for role in args:
+      if not await add_single(role):
+        return
+    print(role_list)
+    await confirm(message, tr('add_success').format(join_with_and(role_list)))
 
   @cmd(SetupCommand())
   async def remove_role(message, args):

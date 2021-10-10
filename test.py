@@ -177,8 +177,8 @@ def check_private_single_player_cmd(author, cmd, target, wronguse_msg, no_self_m
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(asyncio.gather(
-  expect_response(anne, '!list_roles', game, '[game] no_roles '),
-  expect_response(anne, '!start_immediate', game, '[game] start_needmore(9, 0) '),
+  expect_response(anne, '!list_roles', game, '[game] confirm(@anne) no_roles '),
+  expect_response(anne, '!start_immediate', game, '[game] question(@anne) start_needless(9, 0) '),
   expect_response(anne, '!help', game, '[game] confirm(@anne) help_list(!help`, `!add_role`, `!remove_role`, `!list_roles`, `!start_immediate`, `!close_vote`, `!end_game`, `!reveal_all) '),
   expect_response(carl, '!help', game, '[game] confirm(@carl) help_list(!help`, `!list_roles`, `!reveal_all) '),
 
@@ -195,15 +195,13 @@ loop.run_until_complete(asyncio.gather(
   expect_response(carl, '!add_role', game, '[game] question(@carl) require_admin '),
 
   expect_response(anne, '!add_role villager', bot_dm, '[@bot] question(@anne) public_only(!add_role) '),
-  expect_response(anne, '!add_role villager', game, '[game] confirm(@anne) add_success(villager) '),
-  expect_response(anne, '!add_role villager', game, '[game] confirm(@anne) add_success(villager) '),
-  expect_response(anne, '!add_role villager', game, '[game] confirm(@anne) add_success(villager) '),
+  expect_response(anne, '!add_role villager, villager, villager', game, '[game] confirm(@anne) add_success(villager, villager, villager) '),
   expect_response(anne, '!add_role insomniac', game, '[game] confirm(@anne) add_success(insomniac) '),
   expect_response(anne, '!add_role clone', game, '[game] confirm(@anne) add_success(clone) '),
   expect_response(anne, '!add_role drunk', game, '[game] confirm(@anne) add_success(drunk) '),
   expect_response(anne, '!add_role troublemaker', game, '[game] confirm(@anne) add_success(troublemaker) '),
   expect_response(anne, '!add_role thief', game, '[game] confirm(@anne) add_success(thief) '),
-  expect_response(anne, '!add_role villager alias', game, '[game] confirm(@anne) add_success(villager alias) '),
+  expect_response(anne, '!add_role villager alias', game, '[game] confirm(@anne) add_success(villager) '),
   expect_response(anne, '!add_role seer', game, '[game] confirm(@anne) add_success(seer) '),
   expect_response(anne, '!start_immediate', game, '[game] question(@anne) start_needless(9, 7) '),
   expect_response(anne, '!add_role wolf', game, '[game] confirm(@anne) add_success(wolf) '),
