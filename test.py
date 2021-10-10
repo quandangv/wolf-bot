@@ -182,12 +182,12 @@ loop.run_until_complete(asyncio.gather(
   expect_response(anne, '!help', game, '[game] confirm(@anne) help_list(!help`, `!add_role`, `!remove_role`, `!list_roles`, `!start_immediate`, `!close_vote`, `!end_game`, `!reveal_all) '),
   expect_response(carl, '!help', game, '[game] confirm(@carl) help_list(!help`, `!list_roles`, `!reveal_all) '),
 
-  expect_response(anne, '!help help', game, '[game] confirm(@anne) help_desc(!help)'),
+  expect_response(anne, '!help help', game, '[game] confirm(@anne) help_desc(!help)aliases_list(help_alias) '),
   expect_response(anne, '!help tanner', game, '[game] confirm(@anne) tanner_desc'),
   expect_response(anne, '!help seer', game, '[game] confirm(@anne) seer_desc(2)'),
-  expect_response(carl, '!help start_immediate', game, '[game] confirm(@carl) start_immediate_desc(!start_immediate)'),
+  expect_response(carl, '!help start_immediate', game, '[game] confirm(@carl) start_immediate_desc(!start_immediate)aliases_list(start_immediate_alias) '),
   expect_response(carl, '!help blabla', game, '[game] confused(`blabla`) '),
-  expect_response(anne, '!help_alias help', game, '[game] confirm(@anne) help_desc(!help)'),
+  expect_response(anne, '!help_alias help', game, '[game] confirm(@anne) help_desc(!help)aliases_list(help_alias) '),
   expect_response(anne, '!help help_alias', game, '[game] confirm(@anne) alias(help_alias, help) help_desc(!help)'),
 
   expect_response(anne, '!add_role', game, '[game] question(@anne) add_wronguse(!) '),

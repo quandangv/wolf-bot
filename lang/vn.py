@@ -4,6 +4,7 @@ confused = [ "`{}` là gì dạ?", "`{}` không tồn tại", "`{}` ăn được
 _and = "và"
 
 alias = "`{}` là tên gọi khác của lệnh `{}`.\n"
+aliases_list = ". Còn có tên gọi khác là {}"
 wolf = [ "Sói", "Những chú sói dui dẻ", "Schói", "SÓI" ]
 
 role = [ "Hé lô, bạn là {} nha. ", "Ván này bạn làm {} nhé. ", "Chúc mừng! Bạn được làm {}. " ]

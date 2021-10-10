@@ -67,9 +67,9 @@ class Command:
     self.description = description
     return self
 
-  def make_alias(self, alias):
+  def make_alias(self, alias, description):
     return Command().decorate(self.name, self.func,
-        tr('alias').format(alias, self.name) + self.description)
+        tr('alias').format(alias, self.name) + description)
 
   def is_listed(self, _, __):
     return True
@@ -161,10 +161,12 @@ def cmd(base):
     description = description.format(BOT_PREFIX + name)
 
     commands[name] = base.decorate(name, func, description)
+    if aliases:
+      commands[name].description += tr('aliases_list').format(join_with_and(aliases))
     main_commands.append(name)
     for alias in aliases:
       if alias not in commands:
-        commands[alias] = base.make_alias(alias)
+        commands[alias] = base.make_alias(alias, description)
       else:
         print("ERROR: Can't create alias {} to command {}!".format(alias, name))
     return func
@@ -182,7 +184,6 @@ def role(base):
     for idx in range(length):
       alias = aliases[idx]
       normalized = unidecode.unidecode(alias)
-      print(normalized)
       if normalized != alias:
         aliases.append(normalized)
   for alias in aliases:
@@ -410,7 +411,6 @@ def initialize(admins):
     for role in args:
       if not await add_single(role):
         return
-    print(role_list)
     await confirm(message, tr('add_success').format(join_with_and(role_list)))
 
   @cmd(SetupCommand())
