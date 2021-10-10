@@ -162,7 +162,7 @@ def cmd(base):
 
     commands[name] = base.decorate(name, func, description)
     if aliases:
-      commands[name].description += tr('aliases_list').format(join_with_and(aliases))
+      commands[name].description += tr('aliases_list').format('`, `!'.join(aliases))
     main_commands.append(name)
     for alias in aliases:
       if alias not in commands:

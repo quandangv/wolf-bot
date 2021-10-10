@@ -72,12 +72,12 @@ async def get_available_members():
 
 @core.action
 async def create_channel(name, *players):
-  overwrites = { p: discord.PermissionOverwrite(read_messages=True, write_messages = True) for p in players }
+  overwrites = { p: discord.PermissionOverwrite(read_messages=True, send_messages = True) for p in players }
   await guild.create_text_channel(name, overwrites)
 
 @core.action
 async def add_member(channel, player):
-  await channel.set_permission(player, read_messages = True, write_messages = True)
+  await channel.set_permission(player, read_messages = True, send_messages = True)
 
 @core.action
 def is_dm_channel(channel):
