@@ -3,6 +3,7 @@ import os
 import json
 import core
 import importlib
+import asyncio
 from server_conf import *
 random = core.random
 
@@ -55,20 +56,18 @@ def tr(key):
   return result[random.randrange(len(result))] if isinstance(result, list) else result
 
 @core.action
-def get_available_members():
+async def get_available_members():
   result = []
-  def process(id):
+  async def process(id):
     """Properly retrieve the online status of a member.
     The status property of member objects may contain incorrect value."""
-    if not member or member.id == client.use.id:
-      return
     member = guild.get_member(id)
-    if not member.dm_channel:
-      asyncio.run(member.create_dm())
+    if not member or member.id == client.user.id:
+      return
     if member.status in {discord.Status.online, discord.Status.idle}:
       result.append(member)
   for member in guild.members:
-    process(member.id)
+    await process(member.id)
   return result
 
 @core.action

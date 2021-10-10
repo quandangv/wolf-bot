@@ -1,13 +1,13 @@
 confirm = [ "{}, ", "Okie {}, ", "{} Ờ, ", "{} Okayla, ", "Okay {}, ", "{} Uhm, " ]
 question = [ "{}, ", "{} ơi, ", "{} à, ", "Ây {}, " ]
 confused = [ "`{}` là gì dạ?", "`{}` không tồn tại", "`{}` ăn được hăm?" ]
-_and = "và"
+_and = "và "
 
 alias = "`{}` là tên gọi khác của lệnh `{}`.\n"
 aliases_list = ". Còn có tên gọi khác là {}"
 wolf = [ "Sói", "Những chú sói dui dẻ", "Schói", "SÓI" ]
 
-role = [ "Hé lô, bạn là {} nha. ", "Ván này bạn làm {} nhé. ", "Chúc mừng! Bạn được làm {}. " ]
+role = [ "Hé lô, bạn là **{}** nha. ", "Ván này bạn làm **{}** nhé. ", "Chúc mừng! Bạn được làm **{}**! " ]
 wolf_channel = [ "Xin chào những chú sói nho nhỏ, đàn sói của các bạn gồm có {}", "Hé lô sói! Các sói {} hãy làm quen với nhau đi", "Chào {}. Chúc mừng các bạn đã trở thành sói!" ]
 channel_greeting = [ "Chào mừng {} đến group {}!", "Hello {}! Xin chào đến với group {}" ]
 
@@ -50,7 +50,7 @@ reveal_wronguse = "có {1} lá bài bên ngoài, bạn phải chọn STT lá bà
 clone_wronguse = "bạn muốn nhân bản ai thì phải nhắn là `{}nhanban <người-đó>`"
 vote_wronguse = "bạn muốn treo cổ ai thì phải nhắn là `{}vote <người-đó>`"
 
-add_success = [ "đã thêm {} vào danh sách chức năng", "một {} vừa xuất hiện trong làng" ]
+add_success = [ "đã thêm {} vào danh sách chức năng", "{} vừa xuất hiện trong làng" ]
 remove_success = [ "đã bỏ một {} ra khỏi làng", "một con {} đã rời khỏi làng" ]
 thief_success = "bạn đã trộm lá bài {1} từ {0}"
 troublemaker_success = "đã tráo chức năng của {} và {}"

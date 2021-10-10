@@ -128,7 +128,7 @@ def tr(key):
   return add_formats(key, sample_result) + ' '
 
 @core.action
-def get_available_members():
+async def get_available_members():
   return members
 
 @core.action

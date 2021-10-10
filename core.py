@@ -33,7 +33,7 @@ SEER_REVEAL = 2
 
 # These functions must be provided to the module by the @action decorator
 def tr(key): raise missing_action_error('tr')
-def get_available_members(): raise missing_action_error('get_available_members')
+async def get_available_members(): raise missing_action_error('get_available_members')
 async def create_channel(name, *players): raise missing_action_error('create_channel')
 async def add_member(channel, player): raise missing_action_error('add_member')
 def is_dm_channel(channel): raise missing_action_error('is_dm_channel')
@@ -453,7 +453,7 @@ def initialize(admins):
 
   @cmd(AdminCommand())
   async def start_immediate(message, args):
-    members = get_available_members()
+    members = await get_available_members()
     current_count = len(members)
     needed_count = needed_players_count()
     if current_count > needed_count:
@@ -473,7 +473,7 @@ def initialize(admins):
       for idx, member in enumerate(members):
         player = get_player(member)
         player.real_role = player.role = roles[shuffled_roles[idx]]()
-        await player.extern.dm_channel.send(tr('role').format(player.role.name) + player.role.greeting.format(BOT_PREFIX))
+        await player.extern.send(tr('role').format(player.role.name) + player.role.greeting.format(BOT_PREFIX))
         if hasattr(player.role, 'on_start'):
           await player.role.on_start(player)
 
@@ -566,7 +566,7 @@ def initialize(admins):
   @role
   class Insomniac(Villager):
     async def before_dawn(self, player):
-      await player.extern.dm_channel.send(tr('insomniac_reveal').format(player.real_role.name))
+      await player.extern.send(tr('insomniac_reveal').format(player.real_role.name))
 
   @role
   class Seer(Villager):
@@ -676,7 +676,7 @@ def initialize(admins):
       for player in players.values():
         if isinstance(player.role, Wolf):
           wolves.append(player.extern.name)
-      await player.extern.dm_channel.send(tr('wolves_reveal').format(join_with_and(wolves)))
+      await player.extern.send(tr('wolves_reveal').format(join_with_and(wolves)))
 
   @role
   class Wolf(WolfSide):
