@@ -13,6 +13,7 @@ channel_greeting = [ "Chào mừng {} đến group {}!", "Hello {}! Xin chào đ
 wake_up = [ "Ò ó ooo, sáng rồi nè, dậy treo cổ mấy con sói đii. ", "Dậy đi dậy đii, đêm nay làng ta ko ai chết nha. ", "Cả làng dậy đi! " ]
 end_game = [ "Chúc mừng {} đã chiến thắng!", "{} đã giành lấy chiến thắng trong bàn này" ]
 lynch = [ "Và thế là {} bị quăng vào chảo lửa", "{} quá thất vọng với quyết định của dân làng và lăn ra chết", "Làng treo cổ {}, rồi đem đi chôn cất", "Mọi người đuổi {0} ra khỏi làng. Từ đó không ai nhìn thấy {0} nữa" ]
+no_lynch = [ "Làng không biết giết ai cả, tất cả mọi người đều đi ngủ", "Hôm nay làng ăn chay và không giết ai cả", "Không tìm ra con sói, mọi người trong làng đều về nhà ngủ" ]
 
 reveal_player = [ "{} chính là {}!", "{} là một con {}" ]
 reveal_item = "{} là {}"

@@ -315,6 +315,11 @@ async def await_vote_countdown():
       await vote_countdown_task
     except asyncio.CancelledError: pass
 
+async def announce_winners(channel, winners):
+  await channel.send(tr('end_game').format(join_with_and([ p.extern.mention for p in winners ])))
+  await low_reveal_all(channel)
+  await end_game(None, None)
+
 ############################ INIT ##############################
 
 def initialize(admins):
@@ -455,24 +460,35 @@ def initialize(admins):
         if votes > max_vote:
           max_vote = votes
           most_vote = p
+        elif votes == max_vote:
+          most_vote = None
     await channel.send(tr('vote_result').format("\n".join(vote_detail)))
-    await channel.send(tr('lynch').format(most_vote))
+    if most_vote:
+      await channel.send(tr('lynch').format(most_vote))
+      for lynched in players.values():
+        if lynched.extern.mention == most_vote:
+          role = lynched.real_role
+          if isinstance(role, Villager) or isinstance(role, Minion):
+            winners = [ player for player in players.values() if isinstance(player.real_role, WolfSide) ]
+          elif isinstance(role, Tanner):
+            winners = [ lynched ]
+          elif isinstance(role, WolfSide):
+            winners = [ player for player in players.values() if isinstance(player.real_role, Villager) ]
+          await channel.send(tr('reveal_player').format(lynched.extern.mention, role.name))
+          await announce_winners(channel, winners)
+          break
+    else:
+      await channel.send(tr('no_lynch'))
+      wolves = []
+      villagers = []
+      for p in players.values():
+        if isinstance(p.real_role, WolfSide):
+          wolves.append(p)
+        elif isinstance(p.real_role, Villager):
+          villagers.append(p)
+      await announce_winners(channel, wolves if wolves else villagers)
 
-    for lynched in players.values():
-      if lynched.extern.mention == most_vote:
-        role = lynched.real_role
-        if isinstance(role, Villager) or isinstance(role, Minion):
-          winners = [ player for player in players.values() if isinstance(player.real_role, WolfSide) ]
-        elif isinstance(role, Tanner):
-          winners = [ lynched ]
-        elif isinstance(role, WolfSide):
-          winners = [ player for player in players.values() if isinstance(player.real_role, Villager) ]
-        await channel.send(tr('end_game').format(join_with_and([ p.extern.mention for p in winners ])))
-        await channel.send(tr('reveal_player').format(lynched.extern.mention, role.name))
-        await low_reveal_all(channel)
-        await end_game(None, None)
-        return
-
+  global end_game
   @cmd(AdminCommand())
   async def end_game(_, __):
     global status
@@ -487,6 +503,7 @@ def initialize(admins):
   async def reveal_all(message, args):
     await low_reveal_all(message.channel)
 
+  global low_reveal_all
   async def low_reveal_all(channel):
     reveal_item = tr('reveal_item')
     await channel.send(tr('reveal_all').format('\n'.join([ reveal_item.format(player.extern.name, player.real_role.name) for player in players.values() if player.role ])) + '\n' + tr('excess_cards').format(', '.join([role.name for role in excess_roles])))

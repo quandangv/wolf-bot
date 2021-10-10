@@ -4,12 +4,12 @@
 - Force fixed or randomized order of action for roles
 - Include aliases in help message
 - Complete discord connection
-- Vote countdown should check for self
-- Vote ties
 
 # DOING
 
 # DONE
+- Vote ties
+- Vote countdown should check for self
 - Make sure roles know their commands every night
 - Forbid editing roles during game
 - Info after endgame
