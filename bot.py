@@ -26,7 +26,7 @@ async def on_ready():
 async def on_message(message):
   if message.author == client.user:
     return
-  await core.process_message(message)
+  await core.process_and_wait(message)
 
 ############################ INIT ##############################
 

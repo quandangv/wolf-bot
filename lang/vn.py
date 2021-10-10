@@ -76,7 +76,7 @@ seer_reveal_already = "bạn đã lật lá bài ở ngoài, bạn không đư�
 seer_see_already = "bạn đã soi chức năng của người khác, không được lật lá bài ở ngoài nữa"
 out_of_reveal = "bạn đã lật lá bài ở ngoài {} lần, bạn không được lật thêm nữa"
 
-cmd_help = ( "giupdo", "`{0}` liệt kê các lệnh bạn được thực hiện.\nCòn `{0} <cau-lenh>` sẽ nhắn thông tin trợ giúp về lệnh đó", "trogiup" )
+cmd_help = ( "giupdo", "`{0}` liệt kê các lệnh bạn được thực hiện.\nCòn `{0} <câu-lệnh>` sẽ nhắn thông tin trợ giúp về lệnh\nVà `{0} <chức-năng>` sẽ giải thích chức năng đó", "trogiup" )
 cmd_start_immediate = ( "choingay", "`{0}` để bắt đầu chơi ngay" )
 cmd_add_role = ( "them", "`{0} <chức-năng>` sẽ thêm một chức năng vào game" )
 cmd_remove_role = ( "bo", "`{0} <chức-năng>` để bỏ một chức năng khỏi game", "bo", "xoa" )
@@ -88,10 +88,18 @@ cmd_clone = ( "nhanban", "`{0} <người-chơi>` để nhân bản chức năng 
 cmd_reveal = ( "latbai", "`{0} <STT-lá-bài` để lật và xem lá bài đó", "xem" )
 cmd_see = ( "soi", "`{0} <người-chơi>` để soi chức năng của người đó" )
 cmd_swap = ( "trao", "``{0} <người-1> <người-2>` để tráo chức năng của 2 người" )
-cmd_steal = ( "trom", "`{0} <người-chơi>` để đổi chức năng của mình với người đó" )
+cmd_steal = ( "trom", "`{0} <người-khác>` để đổi chức năng của mình với người đó" )
 cmd_take = ( "lay", "``{0} <STT-lá-bài>` để đổi chức năng của mình với một lá bài bên ngoài" )
 
 cmd_reveal_all = ( "tietlo", "`{0}` liệt kê thông tin chức năng của mọi người và danh sách các lá bài bên ngoài (Debug)" )
 
-role_villager = ( "dân thường", "Một con dân thường không có chức năng. Nhờ vậy, bạn sẽ được yên giấc vào ban đêm", "Ban đêm bạn không phải làm gì cả. Sáng dậy, bạn có thể `{}vote` người để treo cổ", "dân làng", "dân" )
+role_villager = ( "dân thường", "Một con dân thường không có chức năng. Nhờ vậy, bạn sẽ được yên giấc vào ban đêm", "Ban đêm bạn không phải làm gì cả. Sáng dậy, bạn có thể vote người để treo cổ", "dân làng", "dân" )
 role_wolf = ( "sói", "Sói chống lại dân làng. Chúng sẽ thắng nếu người bị treo cổ là phe dân", "Bạn sẽ được biết con sói còn lại. Ban ngày, hãy tìm cách treo cổ một người dân để chiến thắng" )
+role_tanner = ( "kẻ chán đời", "Một người với mục tiêu duy nhất là bị treo cổ. Nếu làng treo cổ nó, nó sẽ thắng và mọi người đều thua", "Sáng hôm sau, hãy cố gắng thuyết phục làng treo cổ mình", "chán đời" )
+role_insomniac = ( "cú đêm", "Đây là người ngủ trễ nhất làng. Trước khi ngủ, họ sẽ được xem lại chức năng của mình", "Bạn sẽ được thông báo chức năng cuối cùng của mình trước khi trời sáng", "kẻ mất ngủ" )
+role_thief = ( "kẻ trộm", "Người này sẽ đánh cắp chức năng của một người khác trong làng, thay thế bằng chức năng hiện có của mình", "Hãy dùng lệnh `{}trom <người-khác>` để ăn cắp lá bài của họ", "trộm" )
+role_seer = ( "tiên tri", "Người này được soi chức năng của một người trong làng, hoặc soi {0.SEER_REVEAL} lá bài bên ngoài", "Hãy dùng lệnh `{0}soi <người-khác> để soi chức năng của họ, hoặc dùng lệnh `{0}latbai <STT-lá-bài>` để xem một lá bài bên ngoài" )
+role_clone = ( "nhân bản", "Người này sẽ sao chép chức năng của một người khác trong làng", "Dùng lệnh `{}nhanban <người-khác>` để sao chép chức năng của họ" )
+role_troublemaker = ( "kẻ phá rối", "Vào ban đêm, kẻ này sẽ tráo đổi chức năng của 2 người trong làng", "Hãy dùng lệnh `{}trao <người-1> <người-2>` để tráo chức năng của họ", "nhân bản" )
+role_drunk = ( "kẻ say rượu", "Người này không biết chức năng của mình, và sẽ lấy một trong những lá bài bên ngoài để làm chức năng", "Hãy dùng lệnh `{}lay <STT-lá-bài>` để đổi chức năng của mình lấy một lá bài bên ngoài", "say rượu" )
+role_minion = ( "kẻ phản bội", "Người này thuộc phe sói và biết được sói là ai. Nếu làng treo cổ người này, phe sói sẽ thắng", "Hãy bảo vệ bọn sói và chết thay cho chúng", "phản bội" )

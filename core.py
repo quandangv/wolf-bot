@@ -1,6 +1,6 @@
 import random
 import asyncio
-import time
+import sys
 
 lock = asyncio.Lock()
 commands = {}
@@ -15,6 +15,7 @@ tmp_channels = {}
 status = None
 vote_countdown_task = None
 
+THIS_MODULE = sys.modules[__name__]
 BOT_PREFIX = '!'
 CREATE_NORMALIZED_ALIASES = True
 EXCESS_CARDS = 3
@@ -340,7 +341,9 @@ def initialize(admins):
   async def help(message, args):
     if args:
       if args in commands:
-        await confirm(message, commands[args].description)
+        await confirm(message, commands[args].description.format(THIS_MODULE))
+      elif args in roles:
+        await confirm(message, roles[args].description.format(THIS_MODULE))
       else:
         await confused(message.channel, args)
     else:
@@ -543,7 +546,7 @@ def initialize(admins):
         me.role = me.real_role = roles[player.real_role.name]()
         if hasattr(me.role, 'on_start'):
           await me.role.on_start(me)
-        return await confirm(message, tr('clone_success').format(args, me.role.name) + me.role.greeting)
+        return await confirm(message, tr('clone_success').format(args, me.role.name) + me.role.greeting.format(BOT_PREFIX))
 
   @role
   class Troublemaker(Villager):
