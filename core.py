@@ -228,10 +228,10 @@ def name_channel(channel):
       return id
 
 async def confirm(message, text):
-  await message.channel.send(tr('confirm').format(message.author.mention) + str(text))
+  await message.reply(tr('confirm').format(message.author.mention) + str(text))
 
 async def question(message, text):
-  await message.channel.send(tr('question').format(message.author.mention) + str(text))
+  await message.reply(tr('question').format(message.author.mention) + str(text))
 
 async def confused(channel, msg):
   await channel.send(tr('confused').format('`' + msg + '`'))
@@ -411,7 +411,7 @@ def initialize(admins):
     for role in args:
       if not await add_single(role):
         return
-    await confirm(message, tr('add_success').format(join_with_and(role_list)))
+    await message.channel.send(tr('add_success').format(join_with_and(role_list)))
 
   @cmd(SetupCommand())
   async def remove_role(message, args):
@@ -422,7 +422,7 @@ def initialize(admins):
       name = roles[args].name
       if name in played_roles:
         played_roles.pop(played_roles.index(name))
-        await confirm(message, tr('remove_success').format(args))
+        await message.channel.send(tr('remove_success').format(args))
       else:
         await question(message, tr('remove_notfound').format(args))
     else:
@@ -461,7 +461,7 @@ def initialize(admins):
     elif current_count < needed_count:
       await question(message, tr('start_needmore').format(current_count, needed_count))
     else:
-      await confirm(message, tr('start').format(join_with_and(
+      await message.channel.send(tr('start').format(join_with_and(
         [member.mention for member in members]
       )))
       global status

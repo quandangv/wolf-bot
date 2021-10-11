@@ -36,6 +36,8 @@ class Message:
     self.content = content
     self.author = author
     self.channel = channel
+  async def reply(self, msg):
+    await self.channel.send(msg)
 
 class Member:
   def __init__(self, id, name):
@@ -43,6 +45,8 @@ class Member:
     self.name = name
     self.mention = '@' + name
     self.dm_channel = low_create_channel(self.mention, self)
+  async def send(self, msg):
+    await self.dm_channel.send(msg)
 
 core.DEBUG = True
 core.BOT_PREFIX = '!'
@@ -195,20 +199,20 @@ loop.run_until_complete(asyncio.gather(
   expect_response(carl, '!add_role', game, '[game] question(@carl) require_admin '),
 
   expect_response(anne, '!add_role villager', bot_dm, '[@bot] question(@anne) public_only(!add_role) '),
-  expect_response(anne, '!add_role villager, villager, villager', game, '[game] confirm(@anne) add_success(villager, villager, villager) '),
-  expect_response(anne, '!add_role insomniac', game, '[game] confirm(@anne) add_success(insomniac) '),
-  expect_response(anne, '!add_role clone', game, '[game] confirm(@anne) add_success(clone) '),
-  expect_response(anne, '!add_role drunk', game, '[game] confirm(@anne) add_success(drunk) '),
-  expect_response(anne, '!add_role troublemaker', game, '[game] confirm(@anne) add_success(troublemaker) '),
-  expect_response(anne, '!add_role thief', game, '[game] confirm(@anne) add_success(thief) '),
-  expect_response(anne, '!add_role villager alias', game, '[game] confirm(@anne) add_success(villager) '),
-  expect_response(anne, '!add_role seer', game, '[game] confirm(@anne) add_success(seer) '),
+  expect_response(anne, '!add_role villager, villager, villager', game, '[game] add_success(villager, villager, villager) '),
+  expect_response(anne, '!add_role insomniac', game, '[game] add_success(insomniac) '),
+  expect_response(anne, '!add_role clone', game, '[game] add_success(clone) '),
+  expect_response(anne, '!add_role drunk', game, '[game] add_success(drunk) '),
+  expect_response(anne, '!add_role troublemaker', game, '[game] add_success(troublemaker) '),
+  expect_response(anne, '!add_role thief', game, '[game] add_success(thief) '),
+  expect_response(anne, '!add_role villager alias', game, '[game] add_success(villager) '),
+  expect_response(anne, '!add_role seer', game, '[game] add_success(seer) '),
   expect_response(anne, '!start_immediate', game, '[game] question(@anne) start_needless(9, 7) '),
-  expect_response(anne, '!add_role wolf', game, '[game] confirm(@anne) add_success(wolf) '),
-  expect_response(anne, '!add_role wolf', game, '[game] confirm(@anne) add_success(wolf) '),
+  expect_response(anne, '!add_role wolf', game, '[game] add_success(wolf) '),
+  expect_response(anne, '!add_role wolf', game, '[game] add_success(wolf) '),
   expect_response(anne, '!list_roles', game, '[game] confirm(@anne) list_roles(villager, villager, villager, insomniac, clone, drunk, troublemaker, thief, villager, seer, wolf, wolf, 9) '),
   expect_response(anne, '!start_immediate', game, [
-    '[game] confirm(@anne) start(@anne, @bob, @carl, @david, @elsa, @frank, @george, @harry, @ignacio) ',
+    '[game] start(@anne, @bob, @carl, @david, @elsa, @frank, @george, @harry, @ignacio) ',
     '[@anne] role(wolf) wolf_greeting',
     '[@bob] role(wolf) wolf_greeting',
     '[wolf ] channel_greeting(@bob, wolf ) ',
@@ -279,17 +283,17 @@ def shuffle_copy(arr):
   return arr[:]
 
 loop.run_until_complete(asyncio.gather(
-  expect_response(anne, '!remove_role villager', game, '[game] confirm(@anne) remove_success(villager) '),
-  expect_response(anne, '!remove_role villager', game, '[game] confirm(@anne) remove_success(villager) '),
-  expect_response(anne, '!remove_role villager', game, '[game] confirm(@anne) remove_success(villager) '),
-  expect_response(anne, '!remove_role wolf', game, '[game] confirm(@anne) remove_success(wolf) '),
+  expect_response(anne, '!remove_role villager', game, '[game] remove_success(villager) '),
+  expect_response(anne, '!remove_role villager', game, '[game] remove_success(villager) '),
+  expect_response(anne, '!remove_role villager', game, '[game] remove_success(villager) '),
+  expect_response(anne, '!remove_role wolf', game, '[game] remove_success(wolf) '),
   expect_response(anne, '!remove_role minion', game, '[game] question(@anne) remove_notfound(minion) '),
-  expect_response(anne, '!add_role minion', game, '[game] confirm(@anne) add_success(minion) '),
-  expect_response(anne, '!add_role villager', game, '[game] confirm(@anne) add_success(villager) '),
-  expect_response(anne, '!add_role villager', game, '[game] confirm(@anne) add_success(villager) '),
-  expect_response(anne, '!add_role wolf', game, '[game] confirm(@anne) add_success(wolf) '),
+  expect_response(anne, '!add_role minion', game, '[game] add_success(minion) '),
+  expect_response(anne, '!add_role villager', game, '[game] add_success(villager) '),
+  expect_response(anne, '!add_role villager', game, '[game] add_success(villager) '),
+  expect_response(anne, '!add_role wolf', game, '[game] add_success(wolf) '),
   expect_response(anne, '!start_immediate', game, [
-    '[game] confirm(@anne) start(@anne, @bob, @carl, @david, @elsa, @frank, @george, @harry, @ignacio) ',
+    '[game] start(@anne, @bob, @carl, @david, @elsa, @frank, @george, @harry, @ignacio) ',
     '[@anne] role(insomniac) insomniac_greeting',
     '[@bob] role(clone) clone_greeting(!)',
     '[@carl] role(drunk) drunk_greeting(!)',

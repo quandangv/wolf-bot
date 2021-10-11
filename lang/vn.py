@@ -1,5 +1,5 @@
-confirm = [ "{}, ", "Okie {}, ", "{} Ờ, ", "{} Okayla, ", "Okay {}, ", "{} Uhm, " ]
-question = [ "{}, ", "{} ơi, ", "{} à, ", "Ây {}, " ]
+confirm = [ "", "Okie {}, ", "Ờ, ", "Okayla, ", "Okay {}, ", "Uhm, " ]
+question = [ "", "{} ơi, ", "{} à, ", "Ây {}, " ]
 confused = [ "`{}` là gì dạ?", "`{}` không tồn tại", "`{}` ăn được hăm?" ]
 _and = "và "
 
