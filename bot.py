@@ -72,8 +72,10 @@ async def get_available_members():
 
 @core.action
 async def create_channel(name, *players):
-  overwrites = { p: discord.PermissionOverwrite(read_messages=True, send_messages = True) for p in players }
-  await guild.create_text_channel(name, overwrites)
+  overwrites = { guild.default_role: discord.PermissionOverwrite(read_messages=False) }
+  for p in players:
+    overwrites[p] = discord.PermissionOverwrite(read_messages=True, send_messages = True)
+  return await guild.create_text_channel(name, overwrites = overwrites)
 
 @core.action
 async def add_member(channel, player):

@@ -1,11 +1,15 @@
 # TODO
 - Allow non-admin to setup game
 - Force fixed or randomized order of action for roles
-- Highlight important info
+- Test case for no winners
+- Delete messages to wrong channel
+- Save and reload state of the game
 
 # DOING
 
 # DONE
+- Stop discussion command for wolves
+- Highlight important info
 - Include aliases in help message
 - Add multiple roles
 - Complete discord connection

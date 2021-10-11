@@ -2,32 +2,41 @@ import random
 import asyncio
 import sys
 
-lock = asyncio.Lock()
 commands = {}
 roles = {}
 channel_events = {}
 main_commands = []
-vote_list = {}
 
+vote_list = {}
+tmp_channels = {}
 players = {}
 played_roles = []
 excess_roles = []
-tmp_channels = {}
 status = None
 player_count = 0
 
+lock = asyncio.Lock()
 vote_countdown_task = None
 vote_countdown_monitor = None
+
+EXCESS_CARDS = 3
+SEER_REVEAL = 2
 
 THIS_MODULE = sys.modules[__name__]
 BOT_PREFIX = '!'
 CREATE_NORMALIZED_ALIASES = True
-EXCESS_CARDS = 3
-DEBUG = False
 SUPERMAJORITY = 2/3
+DEBUG = False
 VOTE_COUNTDOWN = 60
 LANDSLIDE_VOTE_COUNTDOWN = 10
-SEER_REVEAL = 2
+
+#def state_to_json(include_settings = False):
+#  import json
+#  tmp_channels_export = {}
+#  for name, channel in tmp_channels
+#  obj = {
+#    vote_list: vote_list,
+#  }
 
 ############################ ACTIONS ###########################
 
@@ -123,15 +132,15 @@ class RoleCommand(PlayerCommand):
   def is_listed(self, player, channel):
     return super().is_listed(player, channel) and name_channel(channel) == self.required_channel and hasattr(player.role, self.name)
 
-  def decorate(self, name, _, description):
+  def decorate(self, name, func, description):
     async def check(player, message, args):
       if name_channel(message.channel) != self.required_channel:
         return await question(message, tr(self.required_channel + '_only').format(BOT_PREFIX + name))
       if self.required_status != status:
         return await question(message, tr(self.required_status + '_only'))
-      if not hasattr(player.role, name):
+      if not hasattr(player.role, func.__name__):
         return await question(message, tr('wrong_role').format(BOT_PREFIX + name))
-      await getattr(player.role, name)(player, message, args)
+      await getattr(player.role, func.__name__)(player, message, args)
     return super().decorate(name, check, description)
 
 class SetupCommand(AdminCommand):
@@ -159,7 +168,6 @@ def cmd(base):
   def decorator(func):
     [name, description, *aliases] = tr('cmd_' + func.__name__)
     description = description.format(BOT_PREFIX + name)
-
     commands[name] = base.decorate(name, func, description)
     if aliases:
       commands[name].description += tr('aliases_list').format('`, `!'.join(aliases))
@@ -275,8 +283,9 @@ async def set_used(role):
 
 async def on_used():
   for player in players.values():
-    if player.role and hasattr(player.role, 'used') and not player.role.used:
-      return
+    if player.role:
+      if (hasattr(player.role, 'used') and not player.role.used) or (hasattr(player.role, 'discussed') and not player.role.discussed):
+        return
   await wake_up()
 
 def clear_vote_countdown():
@@ -331,13 +340,14 @@ async def on_voted(me, vote):
       clear_vote_countdown()
       await channel.send(tr('vote_countdown_cancelled'))
 
-
 @channel_event
 async def wolf_channel(channel):
-  if len(channel.members) == 1:
-    lone_wolf = get_player(channel.members[0])
-    lone_wolf.role.used = False
-    await channel.send(tr('wolf_get_reveal').format(BOT_PREFIX, EXCESS_CARDS))
+  for role in excess_roles:
+    if isinstance(role, Wolf):
+      lone_wolf = get_player(channel.members[0])
+      lone_wolf.role.used = False
+      await channel.send(tr('wolf_get_reveal').format(BOT_PREFIX, EXCESS_CARDS))
+      break
 
 async def await_vote_countdown():
   if vote_countdown_task:
@@ -346,7 +356,10 @@ async def await_vote_countdown():
     except asyncio.CancelledError: pass
 
 async def announce_winners(channel, winners):
-  await channel.send(tr('end_game').format(join_with_and([ p.extern.mention for p in winners ])))
+  if winners:
+    await channel.send(tr('winners').format(join_with_and([ p.extern.mention for p in winners ])))
+  else:
+    await channel.send(tr('no_winners'))
   await low_reveal_all(channel)
   await end_game(None, None)
 
@@ -376,6 +389,9 @@ def initialize(admins):
 
   @cmd(RoleCommand('dm'))
   def clone(): pass
+
+  @cmd(RoleCommand('wolf'))
+  def end_discussion(): pass
 
   @cmd(Command())
   async def help(message, args):
@@ -483,10 +499,10 @@ def initialize(admins):
 
       for id, channel in tmp_channels.items():
         channel_name = id + '_channel'
-        await channel.send(tr(channel_name).format(
-            join_with_and([member.mention for member in channel.members])))
+        await channel.send(tr(channel_name).format(join_with_and([member.mention for member in channel.members if not member.bot])) + tr('end_discussion_info').format(BOT_PREFIX))
         if channel_name in channel_events:
           await channel_events[channel_name](channel)
+      await on_used()
 
   global close_vote
   @cmd(AdminCommand())
@@ -542,7 +558,7 @@ def initialize(admins):
     for player in players.values():
       player.real_role = player.role = player.vote = None
     for channel in tmp_channels.values():
-      channel.delete()
+      await channel.delete()
     tmp_channels.clear()
     vote_list.clear()
 
@@ -582,10 +598,12 @@ def initialize(admins):
         return await question(message, tr('out_of_reveal').format(SEER_REVEAL))
       number = await select_excess_card(message, 'reveal_wronguse', args)
       if number:
-        await confirm(message, tr('reveal_success').format(number, excess_roles[number - 1].name))
         self.reveal_count += 1
         if self.reveal_count >= SEER_REVEAL:
+          await confirm(message, tr('reveal_success').format(number, excess_roles[number - 1].name) + tr('no_reveal_remaining'))
           await set_used(self)
+        else:
+          await confirm(message, tr('reveal_success').format(number, excess_roles[number - 1].name) + tr('reveal_remaining').format(SEER_REVEAL - self.reveal_count))
 
     @single_arg('see_wronguse')
     async def see(self, me, message, args):
@@ -678,10 +696,17 @@ def initialize(admins):
           wolves.append(player.extern.name)
       await player.extern.send(tr('wolves_reveal').format(join_with_and(wolves)))
 
+  global Wolf
   @role
   class Wolf(WolfSide):
     def __init__(self):
       self.used = True
+      self.discussed = False
+
+    async def end_discussion(self, me, message, _):
+      self.discussed = True
+      await confirm(message, tr('discussion_ended'))
+      await on_used()
 
     @single_use
     @single_arg('reveal_wronguse', EXCESS_CARDS)
