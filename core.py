@@ -20,7 +20,7 @@ lock = asyncio.Lock()
 vote_countdown_task = None
 vote_countdown_monitor = None
 
-EXCESS_CARDS = 3
+EXCESS_ROLES = 3
 SEER_REVEAL = 2
 
 THIS_MODULE = sys.modules[__name__]
@@ -97,8 +97,6 @@ class AdminCommand(Command):
     async def check(message, args):
       if not players[message.author.id].is_admin:
         await question(message, tr('require_admin'))
-      elif not is_public_channel(message.channel):
-        await question(message, tr('public_only').format(BOT_PREFIX + name))
       else:
         await func(message, args)
     return super().decorate(name, check, description)
@@ -124,12 +122,10 @@ class RoleCommand(PlayerCommand):
     self.required_status = required_status
 
   def is_listed(self, player, channel):
-    return super().is_listed(player, channel) and name_channel(channel) == self.required_channel and hasattr(player.role, self.name)
+    return super().is_listed(player, channel) and hasattr(player.role, self.name)
 
   def decorate(self, name, func, description):
     async def check(player, message, args):
-      if name_channel(message.channel) != self.required_channel:
-        return await question(message, tr(self.required_channel + '_only').format(BOT_PREFIX + name))
       if self.required_status != status:
         return await question(message, tr(self.required_status + '_only'))
       if not hasattr(player.role, func.__name__):
@@ -250,7 +246,7 @@ def join_with_and(arr):
   return arr[0] if len(arr) == 1 else ", ".join(arr[:-1]) + ", " + tr('_and') + arr[-1]
 
 def needed_players_count():
-  return max(0, len(played_roles) - EXCESS_CARDS)
+  return max(0, len(played_roles) - EXCESS_ROLES)
 
 def get_command_name(name):
   return BOT_PREFIX + tr('cmd_' + name)[0]
@@ -267,9 +263,9 @@ async def select_excess_card(message, wronguse_msg, args):
   try:
     number = int(args)
   except ValueError:
-    return await question(message, tr(wronguse_msg).format(BOT_PREFIX, EXCESS_CARDS))
-  if number < 1 or number > EXCESS_CARDS:
-    return await question(message, tr('choice_outofrange').format(EXCESS_CARDS))
+    return await question(message, tr(wronguse_msg).format(BOT_PREFIX, EXCESS_ROLES))
+  if number < 1 or number > EXCESS_ROLES:
+    return await question(message, tr('choice_outofrange').format(EXCESS_ROLES))
   return number
 
 async def set_used(role):
@@ -404,8 +400,6 @@ def initialize(admins):
   async def vote(me, message, args):
     if status != 'day':
       return await question(message, tr('day_only'))
-    if not is_public_channel(message.channel):
-      return await question(message, tr('public_only').format(get_command_name('vote')))
     player = await find_player(message, args)
     if player:
       await on_voted(me, player.extern.mention)
@@ -438,7 +432,7 @@ def initialize(admins):
           await player.role.on_start(player)
 
       excess_roles.clear()
-      for idx in range(EXCESS_CARDS):
+      for idx in range(EXCESS_ROLES):
         excess_roles.append(shuffled_roles[-idx - 1])
 
       for id, channel in tmp_channels.items():
@@ -530,7 +524,7 @@ def initialize(admins):
 
   async def low_reveal_all(channel):
     reveal_item = tr('reveal_item')
-    await channel.send(tr('reveal_all').format('\n'.join([ reveal_item.format(player.extern.name, player.real_role) for player in players.values() if player.role ])) + '\n' + tr('excess_cards').format(', '.join([name for name in excess_roles])))
+    await channel.send(tr('reveal_all').format('\n'.join([ reveal_item.format(player.extern.name, player.real_role) for player in players.values() if player.role ])) + '\n' + tr('excess_roles').format(', '.join([name for name in excess_roles])))
 
 ############################ ROLES #############################
 
@@ -551,7 +545,7 @@ def initialize(admins):
       transfer_to_self(self, 'used', data, False)
       transfer_to_self(self, 'reveal_count', data, 0)
 
-    @single_arg('reveal_wronguse', EXCESS_CARDS)
+    @single_arg('reveal_wronguse', EXCESS_ROLES)
     async def reveal(self, me, message, args):
       if self.used:
         return await question(message, tr('seer_see_already'))
@@ -638,12 +632,11 @@ def initialize(admins):
       transfer_to_self(self, 'used', data, False)
 
     @single_use
-    @single_arg('drunk_wronguse', EXCESS_CARDS)
+    @single_arg('drunk_wronguse', EXCESS_ROLES)
     async def take(self, me, message, args):
       number = await select_excess_card(message, 'drunk_wronguse', args)
       if number:
-        number -= 1
-        me.real_role, excess_roles[number] = excess_roles[number], me.real_role
+        me.real_role, excess_roles[number-1] = excess_roles[number-1], me.real_role
         await set_used(self)
         return await confirm(message, tr('drunk_success').format(args))
 
@@ -670,7 +663,7 @@ def initialize(admins):
       await on_used()
 
     @single_use
-    @single_arg('reveal_wronguse', EXCESS_CARDS)
+    @single_arg('reveal_wronguse', EXCESS_ROLES)
     async def reveal(self, me, message, args):
       number = await select_excess_card(message, 'reveal_wronguse', args)
       if number:
@@ -716,12 +709,12 @@ def initialize(admins):
       'excess_roles': excess_roles,
       'status': status,
       'SEER_REVEAL': SEER_REVEAL,
-      'EXCESS_CARDS': EXCESS_CARDS,
+      'EXCESS_ROLES': EXCESS_ROLES,
 
       'channels': tmp_channels_export,
       'players': list(players.values()),
     }
-    return json.dump(obj, fp, cls = RoleEncoder, separators=(',', ':'))
+    return json.dump(obj, fp, cls = RoleEncoder, indent = 2)
 
   async def json_to_state(fp, player_mapping = {}):
     await end_game(None, None)
@@ -753,7 +746,7 @@ def initialize(admins):
     for name, channel in obj['channels'].items():
       tmp_channels[name] = await create_channel(channel['name'], *[ players[id].extern for id in channel['members'] ])
 
-    names = ['vote_list', 'played_roles', 'excess_roles', 'status', 'SEER_REVEAL', 'EXCESS_CARDS' ]
+    names = ['vote_list', 'played_roles', 'excess_roles', 'status', 'SEER_REVEAL', 'EXCESS_ROLES' ]
     for name in names:
       if name in obj:
         globals()[name] = obj[name]
@@ -777,8 +770,7 @@ def initialize(admins):
           if not mem.bot:
             lone_wolf = players[channel.members[0].id]
             lone_wolf.role.used = False
-            await channel.send(tr('wolf_get_reveal').format(BOT_PREFIX, EXCESS_CARDS))
-            return
+            await channel.send(tr('wolf_get_reveal').format(BOT_PREFIX, EXCESS_ROLES))
 
   async def announce_winners(channel, winners):
     if winners:

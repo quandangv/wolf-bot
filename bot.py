@@ -79,7 +79,7 @@ async def create_channel(name, *players):
 
 @core.action
 async def add_member(channel, player):
-  await channel.set_permission(player, read_messages = True, send_messages = True)
+  await channel.set_permissions(player, read_messages = True, send_messages = True)
 
 @core.action
 def is_dm_channel(channel):
