@@ -1,6 +1,7 @@
 import random
 import asyncio
 import sys
+import json
 
 commands = {}
 roles = {}
@@ -29,14 +30,7 @@ SUPERMAJORITY = 2/3
 DEBUG = False
 VOTE_COUNTDOWN = 60
 LANDSLIDE_VOTE_COUNTDOWN = 10
-
-#def state_to_json(include_settings = False):
-#  import json
-#  tmp_channels_export = {}
-#  for name, channel in tmp_channels
-#  obj = {
-#    vote_list: vote_list,
-#  }
+ROLE_VARIABLES = [ 'used', 'discussed', 'reveal_count' ]
 
 ############################ ACTIONS ###########################
 
@@ -182,6 +176,7 @@ def cmd(base):
 
 def role(base):
   [base.name, base.description, base.greeting, *aliases] = tr('role_' + base.__name__.lower())
+  base.__role__ = True
   roles[base.name] = base
   if CREATE_NORMALIZED_ALIASES:
     import unidecode
@@ -302,66 +297,14 @@ async def wake_up():
   vote_list = { None: player_count }
   await main_channel().send(tr('wake_up') + tr('vote').format(BOT_PREFIX))
 
-async def on_voted(me, vote):
-  vote_list[me.vote] -= 1
-  me.vote = vote
-  my_vote = vote_list[me.vote] = vote_list[me.vote] + 1 if me.vote in vote_list else 1
-  not_voted = vote_list[None]
-  channel = main_channel()
-  if vote:
-    await channel.send(tr('vote_success').format(me.extern.mention, vote))
-    next_most = 0
-    for p, votes in vote_list.items():
-      if p and p != me.vote and votes > next_most:
-        next_most = votes
-
-    async def close_vote_countdown(seconds):
-      await asyncio.sleep(seconds)
-      clear_vote_countdown()
-      async with lock:
-        await close_vote(None, None)
-
-    global vote_countdown_task
-    if not_voted == 0:
-      await close_vote(None, None)
-    elif my_vote - next_most > not_voted:
-      if vote_countdown_task:
-        vote_countdown_task.cancel()
-      await channel.send(tr('landslide_vote_countdown').format(me.vote, LANDSLIDE_VOTE_COUNTDOWN))
-      vote_countdown_task = asyncio.create_task(close_vote_countdown(LANDSLIDE_VOTE_COUNTDOWN))
-    elif not_voted / player_count <= 1 - SUPERMAJORITY:
-      if not vote_countdown_task:
-        await channel.send(tr('vote_countdown').format(VOTE_COUNTDOWN))
-        vote_countdown_task = asyncio.create_task(close_vote_countdown(VOTE_COUNTDOWN))
-  else:
-    await channel.send(tr('unvote_success').format(me.extern.mention))
-    if vote_countdown_task:
-      vote_countdown_task.cancel()
-      clear_vote_countdown()
-      await channel.send(tr('vote_countdown_cancelled'))
-
-@channel_event
-async def wolf_channel(channel):
-  for role in excess_roles:
-    if isinstance(role, Wolf):
-      lone_wolf = get_player(channel.members[0])
-      lone_wolf.role.used = False
-      await channel.send(tr('wolf_get_reveal').format(BOT_PREFIX, EXCESS_CARDS))
-      break
-
 async def await_vote_countdown():
   if vote_countdown_task:
     try:
       await vote_countdown_task
     except asyncio.CancelledError: pass
 
-async def announce_winners(channel, winners):
-  if winners:
-    await channel.send(tr('winners').format(join_with_and([ p.extern.mention for p in winners ])))
-  else:
-    await channel.send(tr('no_winners'))
-  await low_reveal_all(channel)
-  await end_game(None, None)
+def transfer_to_self(self, name, data, default):
+  setattr(self, name, data[name] if data else default)
 
 ############################ INIT ##############################
 
@@ -488,14 +431,15 @@ def initialize(admins):
       shuffled_roles = shuffle_copy(played_roles)
       for idx, member in enumerate(members):
         player = get_player(member)
-        player.real_role = player.role = roles[shuffled_roles[idx]]()
+        player.role = roles[shuffled_roles[idx]]()
+        player.real_role = player.role.name
         await player.extern.send(tr('role').format(player.role.name) + player.role.greeting.format(BOT_PREFIX))
         if hasattr(player.role, 'on_start'):
           await player.role.on_start(player)
 
       excess_roles.clear()
       for idx in range(EXCESS_CARDS):
-        excess_roles.append(roles[shuffled_roles[-idx - 1]]())
+        excess_roles.append(shuffled_roles[-idx - 1])
 
       for id, channel in tmp_channels.items():
         channel_name = id + '_channel'
@@ -504,7 +448,6 @@ def initialize(admins):
           await channel_events[channel_name](channel)
       await on_used()
 
-  global close_vote
   @cmd(AdminCommand())
   async def close_vote(_, __):
     global vote_countdown_task
@@ -529,14 +472,15 @@ def initialize(admins):
       await channel.send(tr('lynch').format(most_vote))
       for lynched in players.values():
         if lynched.extern.mention == most_vote:
-          role = lynched.real_role
-          if isinstance(role, Villager) or isinstance(role, Minion):
-            winners = [ player for player in players.values() if isinstance(player.real_role, WolfSide) ]
-          elif isinstance(role, Tanner):
+          lynched_role = lynched.real_role
+          await channel.send(tr('reveal_player').format(lynched.extern.mention, lynched_role))
+          lynched_role = roles[lynched_role]
+          if issubclass(lynched_role, Villager) or issubclass(lynched_role, Minion):
+            winners = [ player for player in players.values() if is_wolf_side(player.real_role) ]
+          elif issubclass(lynched_role, Tanner):
             winners = [ lynched ]
-          elif isinstance(role, WolfSide):
-            winners = [ player for player in players.values() if isinstance(player.real_role, Villager) ]
-          await channel.send(tr('reveal_player').format(lynched.extern.mention, role.name))
+          elif issubclass(lynched_role, WolfSide):
+            winners = [ player for player in players.values() if is_village_side(player.real_role) ]
           await announce_winners(channel, winners)
           break
     else:
@@ -544,11 +488,27 @@ def initialize(admins):
       wolves = []
       villagers = []
       for p in players.values():
-        if isinstance(p.real_role, WolfSide):
+        if is_wolf_side(p.real_role):
           wolves.append(p)
-        elif isinstance(p.real_role, Villager):
+        elif is_village_side(p.real_role):
           villagers.append(p)
       await announce_winners(channel, wolves if wolves else villagers)
+
+  @cmd(AdminCommand())
+  async def save(message, args):
+    if '\\' in args or '/' in args:
+      return await question(message, tr('invalid_file_name'))
+    fp = open(args.strip(), 'w')
+    state_to_json(fp)
+    await confirm(message, tr('save_success'))
+
+  @cmd(AdminCommand())
+  async def load(message, args):
+    if '\\' in args or '/' in args:
+      return await question(message, tr('invalid_file_name'))
+    fp = open(args.strip(), 'r')
+    await json_to_state(fp)
+    await confirm(message, tr('load_success'))
 
   global end_game
   @cmd(AdminCommand())
@@ -566,10 +526,9 @@ def initialize(admins):
   async def reveal_all(message, args):
     await low_reveal_all(message.channel)
 
-  global low_reveal_all
   async def low_reveal_all(channel):
     reveal_item = tr('reveal_item')
-    await channel.send(tr('reveal_all').format('\n'.join([ reveal_item.format(player.extern.name, player.real_role.name) for player in players.values() if player.role ])) + '\n' + tr('excess_cards').format(', '.join([role.name for role in excess_roles])))
+    await channel.send(tr('reveal_all').format('\n'.join([ reveal_item.format(player.extern.name, player.real_role) for player in players.values() if player.role ])) + '\n' + tr('excess_cards').format(', '.join([name for name in excess_roles])))
 
 ############################ ROLES #############################
 
@@ -582,13 +541,13 @@ def initialize(admins):
   @role
   class Insomniac(Villager):
     async def before_dawn(self, player):
-      await player.extern.send(tr('insomniac_reveal').format(player.real_role.name))
+      await player.extern.send(tr('insomniac_reveal').format(player.real_role))
 
   @role
   class Seer(Villager):
-    def __init__(self):
-      self.used = False
-      self.reveal_count = 0
+    def __init__(self, data = None):
+      transfer_to_self(self, 'used', data, False)
+      transfer_to_self(self, 'reveal_count', data, 0)
 
     @single_arg('reveal_wronguse', EXCESS_CARDS)
     async def reveal(self, me, message, args):
@@ -600,10 +559,10 @@ def initialize(admins):
       if number:
         self.reveal_count += 1
         if self.reveal_count >= SEER_REVEAL:
-          await confirm(message, tr('reveal_success').format(number, excess_roles[number - 1].name) + tr('no_reveal_remaining'))
+          await confirm(message, tr('reveal_success').format(number, excess_roles[number - 1]) + tr('no_reveal_remaining'))
           await set_used(self)
         else:
-          await confirm(message, tr('reveal_success').format(number, excess_roles[number - 1].name) + tr('reveal_remaining').format(SEER_REVEAL - self.reveal_count))
+          await confirm(message, tr('reveal_success').format(number, excess_roles[number - 1]) + tr('reveal_remaining').format(SEER_REVEAL - self.reveal_count))
 
     @single_arg('see_wronguse')
     async def see(self, me, message, args):
@@ -616,12 +575,12 @@ def initialize(admins):
       player = await find_player(message, args)
       if player:
         await set_used(self)
-        return await confirm(message, tr('see_success').format(args, player.real_role.name))
+        return await confirm(message, tr('see_success').format(args, player.real_role))
 
   @role
   class Clone(Villager):
-    def __init__(self):
-      self.used = False
+    def __init__(self, data = None):
+      transfer_to_self(self, 'used', data, False)
 
     @single_use
     @single_arg('clone_wronguse')
@@ -630,15 +589,16 @@ def initialize(admins):
         return await question(message, tr('clone_self'))
       player = await find_player(message, args)
       if player:
-        me.role = me.real_role = roles[player.real_role.name]()
+        me.role = roles[player.real_role]()
+        me.real_role = me.role.name
         if hasattr(me.role, 'on_start'):
           await me.role.on_start(me)
         return await confirm(message, tr('clone_success').format(args, me.role.name) + me.role.greeting.format(BOT_PREFIX))
 
   @role
   class Troublemaker(Villager):
-    def __init__(self):
-      self.used = False
+    def __init__(self, data = None):
+      transfer_to_self(self, 'used', data, False)
 
     @single_use
     async def swap(self, me, message, args):
@@ -656,8 +616,8 @@ def initialize(admins):
 
   @role
   class Thief(Villager):
-    def __init__(self):
-      self.used = False
+    def __init__(self, data = None):
+      transfer_to_self(self, 'used', data, False)
 
     @single_use
     @single_arg('thief_wronguse')
@@ -668,12 +628,12 @@ def initialize(admins):
       if player:
         me.real_role, player.real_role = player.real_role, me.real_role
         await set_used(self)
-        return await confirm(message, tr('thief_success').format(args, me.real_role.name))
+        return await confirm(message, tr('thief_success').format(args, me.real_role))
 
   @role
   class Drunk(Villager):
-    def __init__(self):
-      self.used = False
+    def __init__(self, data = None):
+      transfer_to_self(self, 'used', data, False)
 
     @single_use
     @single_arg('drunk_wronguse', EXCESS_CARDS)
@@ -696,12 +656,11 @@ def initialize(admins):
           wolves.append(player.extern.name)
       await player.extern.send(tr('wolves_reveal').format(join_with_and(wolves)))
 
-  global Wolf
   @role
   class Wolf(WolfSide):
-    def __init__(self):
-      self.used = True
-      self.discussed = False
+    def __init__(self, data = None):
+      transfer_to_self(self, 'used', data, True)
+      transfer_to_self(self, 'discussed', data, False)
 
     async def end_discussion(self, me, message, _):
       self.discussed = True
@@ -713,7 +672,7 @@ def initialize(admins):
     async def reveal(self, me, message, args):
       number = await select_excess_card(message, 'reveal_wronguse', args)
       if number:
-        await confirm(message, tr('reveal_success').format(number, excess_roles[number - 1].name))
+        await confirm(message, tr('reveal_success').format(number, excess_roles[number - 1]))
         await set_used(self)
 
     async def on_start(self, player):
@@ -723,6 +682,147 @@ def initialize(admins):
         channel = tmp_channels['wolf']
         await add_member(channel, player.extern)
         await channel.send(tr('channel_greeting').format(player.extern.mention, channel.name))
+
+######################### SERIALIZATION ########################
+
+  class RoleEncoder(json.JSONEncoder):
+    def encode_role(self, obj):
+      result = { name: getattr(obj, name) for name in ROLE_VARIABLES if hasattr(obj, name) }
+      result['type'] = obj.name
+      return result
+
+    def default(self, obj):
+      if hasattr(obj, '__role__'):
+        return self.encode_role(obj)
+      if isinstance(obj, Player):
+        result = { 'id': obj.extern.id, 'name': obj.extern.name }
+        if obj.vote:
+          result['vote'] = obj.vote
+        if obj.role:
+          result['role'] = self.encode_role(obj.role)
+          result['real_role'] = obj.real_role
+        return result
+      return json.JSONEncoder.default(self, obj)
+
+  def state_to_json(fp):
+    tmp_channels_export = {}
+    for name, channel in tmp_channels.items():
+      tmp_channels_export[name] = { 'name': channel.name, 'members': [ mem.id for mem in channel.members ] }
+    obj = {
+      'vote_list': vote_list,
+      'played_roles': played_roles,
+      'excess_roles': excess_roles,
+      'status': status,
+      'SEER_REVEAL': SEER_REVEAL,
+      'EXCESS_CARDS': EXCESS_CARDS,
+
+      'channels': tmp_channels_export,
+      'players': list(players.values()),
+    }
+    return json.dump(obj, fp, cls = RoleEncoder, separators=(',', ':'))
+
+  async def json_to_state(fp, player_mapping = {}):
+    await end_game(None, None)
+    obj = json.load(fp)
+
+    available_players = await get_available_members()
+    for decoded_player in obj['players']:
+      id = decoded_player['id']
+      if id in players:
+        player = players[id]
+      else:
+        id = decoded_player['name']
+        if id in player_mapping: id = player_mapping[id]
+        for mem in available_players:
+          if mem.id == id:
+            players[mem.id] = player = Player(False, mem)
+            break
+        else:
+          print("ERROR: Member {} is not available".format(id))
+          return
+      if 'role' in decoded_player:
+        role_obj = decoded_player['role']
+        role = roles[role_obj['type']]
+        player.role = role() if len(role_obj) == 1 else role(role_obj)
+        player.real_role = decoded_player['real_role']
+      if 'vote' in decoded_player:
+        player.vote = decoded_player['vote']
+
+    for name, channel in obj['channels'].items():
+      tmp_channels[name] = await create_channel(channel['name'], *[ players[id].extern for id in channel['members'] ])
+
+    names = ['vote_list', 'played_roles', 'excess_roles', 'status', 'SEER_REVEAL', 'EXCESS_CARDS' ]
+    for name in names:
+      if name in obj:
+        globals()[name] = obj[name]
+    if 'null' in vote_list:
+      vote_list[None] = vote_list['null']
+      del vote_list['null']
+
+############################# UTILS ############################
+
+  def is_wolf_side(role):
+    return issubclass(roles[role], WolfSide)
+
+  def is_village_side(role):
+    return issubclass(roles[role], Villager)
+
+  @channel_event
+  async def wolf_channel(channel):
+    for role in excess_roles:
+      if issubclass(roles[role], Wolf):
+        for mem in channel.members:
+          if not mem.bot:
+            lone_wolf = players[channel.members[0].id]
+            lone_wolf.role.used = False
+            await channel.send(tr('wolf_get_reveal').format(BOT_PREFIX, EXCESS_CARDS))
+            return
+
+  async def announce_winners(channel, winners):
+    if winners:
+      await channel.send(tr('winners').format(join_with_and([ p.extern.mention for p in winners ])))
+    else:
+      await channel.send(tr('no_winners'))
+    await low_reveal_all(channel)
+    await end_game(None, None)
+
+  async def on_voted(me, vote):
+    vote_list[me.vote] -= 1
+    me.vote = vote
+    my_vote = vote_list[me.vote] = vote_list[me.vote] + 1 if me.vote in vote_list else 1
+    not_voted = vote_list[None]
+    channel = main_channel()
+    if vote:
+      await channel.send(tr('vote_success').format(me.extern.mention, vote))
+      next_most = 0
+      for p, votes in vote_list.items():
+        if p and p != me.vote and votes > next_most:
+          next_most = votes
+
+      async def close_vote_countdown(seconds):
+        await asyncio.sleep(seconds)
+        clear_vote_countdown()
+        async with lock:
+          await close_vote(None, None)
+
+      global vote_countdown_task
+      if not_voted == 0:
+        await close_vote(None, None)
+      elif my_vote - next_most > not_voted:
+        if vote_countdown_task:
+          vote_countdown_task.cancel()
+        await channel.send(tr('landslide_vote_countdown').format(me.vote, LANDSLIDE_VOTE_COUNTDOWN))
+        vote_countdown_task = asyncio.create_task(close_vote_countdown(LANDSLIDE_VOTE_COUNTDOWN))
+      elif not_voted / player_count <= 1 - SUPERMAJORITY:
+        if not vote_countdown_task:
+          await channel.send(tr('vote_countdown').format(VOTE_COUNTDOWN))
+          vote_countdown_task = asyncio.create_task(close_vote_countdown(VOTE_COUNTDOWN))
+    else:
+      await channel.send(tr('unvote_success').format(me.extern.mention))
+      if vote_countdown_task:
+        vote_countdown_task.cancel()
+        clear_vote_countdown()
+        await channel.send(tr('vote_countdown_cancelled'))
 
 ########################### EVENTS #############################
 

@@ -182,9 +182,10 @@ def check_private_single_player_cmd(author, cmd, target, wronguse_msg, no_self_m
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(asyncio.gather(
+  expect_response(anne, '!save _test_empty', game, '[game] confirm(@anne) save_success '),
   expect_response(anne, '!list_roles', game, '[game] confirm(@anne) no_roles '),
   expect_response(anne, '!start_immediate', game, '[game] question(@anne) start_needless(9, 0) '),
-  expect_response(anne, '!help', game, '[game] confirm(@anne) help_list(!help`, `!add_role`, `!remove_role`, `!list_roles`, `!start_immediate`, `!close_vote`, `!end_game`, `!reveal_all) '),
+  expect_response(anne, '!help', game, '[game] confirm(@anne) help_list(!help`, `!add_role`, `!remove_role`, `!list_roles`, `!start_immediate`, `!close_vote`, `!save`, `!load`, `!end_game`, `!reveal_all) '),
   expect_response(carl, '!help', game, '[game] confirm(@carl) help_list(!help`, `!list_roles`, `!reveal_all) '),
 
   expect_response(anne, '!help help', game, '[game] confirm(@anne) help_desc(!help)aliases_list(help_alias) '),
@@ -210,6 +211,11 @@ loop.run_until_complete(asyncio.gather(
   expect_response(anne, '!add_role seer', game, '[game] add_success(seer) '),
   expect_response(anne, '!start_immediate', game, '[game] question(@anne) start_needless(9, 7) '),
   expect_response(anne, '!add_role wolf', game, '[game] add_success(wolf) '),
+
+  expect_response(anne, '!save _test', game, '[game] confirm(@anne) save_success '),
+  expect_response(anne, '!load _test_empty', game, '[game] confirm(@anne) load_success '),
+  expect_response(anne, '!load _test ', game, '[game] confirm(@anne) load_success '),
+
   expect_response(anne, '!add_role wolf', game, '[game] add_success(wolf) '),
   expect_response(anne, '!list_roles', game, '[game] confirm(@anne) list_roles(villager, villager, villager, insomniac, clone, drunk, troublemaker, thief, villager, seer, wolf, wolf, 9) '),
   expect_response(anne, '!start_immediate', game, [
@@ -248,6 +254,13 @@ loop.run_until_complete(asyncio.gather(
   expect_response(frank, '!swap elsa', bot_dm, '[@bot] question(@frank) troublemaker_wronguse(!) '),
   expect_response(frank, '!swap ', bot_dm, '[@bot] question(@frank) troublemaker_wronguse(!) '),
   expect_response(frank, '!swap anne david', bot_dm, '[@bot] confirm(@frank) troublemaker_success(anne, david) '),
+
+  expect_response(anne, '!save _test', game, '[game] confirm(@anne) save_success '),
+  expect_response(anne, '!load _test_empty', game, '[game] confirm(@anne) load_success '),
+  expect_response(anne, '!load _test ', game, '[game] confirm(@anne) load_success '),
+))
+
+loop.run_until_complete(asyncio.gather(
   expect_response(frank, '!swap anne david', bot_dm, '[@bot] question(@frank) ability_used(!swap) '),
   expect_response(anne, '!reveal_all', bot_dm, '[@bot] reveal_all(anne:villager\ncarl:seer\nbob:wolf\ndavid:thief\nelsa:wolf\nfrank:troublemaker\ngeorge:drunk\nharry:clone\nignacio:insomniac) \nexcess_cards(villager, villager, villager) '),
 
@@ -268,6 +281,11 @@ loop.run_until_complete(asyncio.gather(
   expect_response(harry, '!vote anne', game, '[game] vote_success(@harry, @anne) '),
   expect_response(anne, '!vote harry', game, '[game] vote_success(@anne, @harry) '),
   expect_response(frank, '!vote harry', game, '[game] vote_success(@frank, @harry) '),
+
+  expect_response(anne, '!save _test', game, '[game] confirm(@anne) save_success '),
+  expect_response(anne, '!load _test_empty', game, '[game] confirm(@anne) load_success '),
+  expect_response(anne, '!load _test ', game, '[game] confirm(@anne) load_success '),
+
   expect_response(elsa, '!vote harry', game, '[game] vote_success(@elsa, @harry) '),
   expect_response(david, '!vote harry', game, '[game] vote_success(@david, @harry) '),
   expect_response(ignacio, '!vote elsa', game, [ '[game] vote_success(@ignacio, @elsa) ', '[game] vote_countdown({}) '.format(core.VOTE_COUNTDOWN) ]),

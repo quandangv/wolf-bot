@@ -66,6 +66,8 @@ unvote_success = "{} đổi ý và rút lại phiếu bầu"
 insomniac_reveal = [ "Sau một đêm dài, bạn xem lại chức năng của mình và thấy: bạn là **{}**!", "Trước khi trời sáng, bạn vội xem lại chức năng của mình và thấy nó là **{}**!" ]
 reveal_success = "lá bài số **{}** là **{}**"
 discussion_ended = "bạn đã ngưng bàn luận, hãy đợi mọi người trong group cùng ngưng bàn luận"
+save_success = "SAVESUCCESS"
+load_success = "LOADSUCCESS"
 
 no_swap_self = "bạn không được tráo chức năng với chính mình"
 seer_self = "bạn không được soi chính mình"
@@ -88,6 +90,7 @@ choice_outofrange = "bạn phải chọn STT từ **1** đến **{}**"
 seer_reveal_already = "bạn đã lật lá bài ở ngoài, bạn không được soi người khác nữa"
 seer_see_already = "bạn đã soi chức năng của người khác, không được lật lá bài ở ngoài nữa"
 out_of_reveal = "bạn đã lật lá bài ở ngoài {} lần, bạn không được lật thêm nữa"
+invalid_file_name = "invalid_file_name"
 
 cmd_help = ( "giupdo", "`{0}` liệt kê các lệnh bạn được thực hiện.\nCòn `{0} <câu-lệnh>` sẽ nhắn thông tin trợ giúp về lệnh\nVà `{0} <chức-năng>` sẽ giải thích chức năng đó", "trogiup" )
 cmd_start_immediate = ( "choingay", "`{0}` để bắt đầu chơi ngay" )
@@ -105,6 +108,8 @@ cmd_see = ( "soi", "`{0} <người-chơi>` để soi chức năng của người
 cmd_swap = ( "trao", "``{0} <người-1> <người-2>` để tráo chức năng của 2 người" )
 cmd_steal = ( "trom", "`{0} <người-khác>` để đổi chức năng của mình với người đó" )
 cmd_take = ( "lay", "``{0} <STT-lá-bài>` để đổi chức năng của mình với một lá bài bên ngoài" )
+cmd_save = ( "save", "CMDSAVE" )
+cmd_load = ( "load", "CMDLOAD" )
 
 cmd_reveal_all = ( "tietlo", "`{0}` liệt kê thông tin chức năng của mọi người và danh sách các lá bài bên ngoài (Debug)" )
 
