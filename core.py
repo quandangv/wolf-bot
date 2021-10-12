@@ -496,19 +496,21 @@ def initialize(admins):
 
   @cmd(AdminCommand())
   async def save(message, args):
+    args = args.strip()
     if '\\' in args or '/' in args:
       return await question(message, tr('invalid_file_name'))
-    fp = open(args.strip(), 'w')
+    fp = open(args, 'w')
     state_to_json(fp)
-    await confirm(message, tr('save_success'))
+    await confirm(message, tr('save_success').format(args))
 
   @cmd(AdminCommand())
   async def load(message, args):
+    args = args.strip()
     if '\\' in args or '/' in args:
       return await question(message, tr('invalid_file_name'))
-    fp = open(args.strip(), 'r')
+    fp = open(args, 'r')
     await json_to_state(fp)
-    await confirm(message, tr('load_success'))
+    await confirm(message, tr('load_success').format(args))
 
   global end_game
   @cmd(AdminCommand())

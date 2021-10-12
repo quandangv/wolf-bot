@@ -1,5 +1,5 @@
-confirm = [ "Okie {}, "", ", "Ờ, ", "Okayla, ", "Okay {}, ", "Uhm, " ]
-question = [ "{} ơi, "", ", "{} à, ", "Ây {}, " ]
+confirm = [ "Okie {}, ", "", "Ờ, ", "Okayla, ", "Okay {}, ", "Uhm, " ]
+question = [ "{} ơi", "", "{} à, ", "Ây {}, " ]
 confused = [ "`{}` là gì dạ?", "`{}` không tồn tại", "`{}` ăn được hăm?" ]
 _and = "và "
 
@@ -28,7 +28,7 @@ vote = [ "Dùng lệnh `{}vote <người-chơi>` để bỏ phiếu treo cổ ng
 help_list = [ "các lệnh được thực hiện là `{}`.", "ngoài cắn người, bạn còn có thể dùng lệnh `{}`. (giỡn thoi nha)", "hãy thử một trong các lệnh `{}`" ]
 list_roles = [ "Ván này mình chơi **{}**; cần có **{}** người chơi", "Trong làng có **{}**; đủ cho **{}** người chơi" ]
 no_roles = [ "Làng trống trơnn", "Chưa có chức năng nào cả" ]
-wolf_get_reveal = "Bạn là một con sói cô độc. Vì vậy bạn sẽ được dùng lệnh `{}soi <STT-lá bài>` để soi một trong {} lá ở ngoài"
+wolf_get_reveal = "Bạn là một con sói cô độc. Vì vậy bạn sẽ được dùng lệnh `{}latbai <STT-lá bài>` để soi một trong {} lá ở ngoài"
 reveal_remaining = ". Bạn còn **{}** lượt lật bài"
 no_reveal_remaining = ". Bạn đã hết chức năng lật bài"
 
@@ -66,8 +66,8 @@ unvote_success = "{} đổi ý và rút lại phiếu bầu"
 insomniac_reveal = [ "Sau một đêm dài, bạn xem lại chức năng của mình và thấy: bạn là **{}**!", "Trước khi trời sáng, bạn vội xem lại chức năng của mình và thấy nó là **{}**!" ]
 reveal_success = "lá bài số **{}** là **{}**"
 discussion_ended = "bạn đã ngưng bàn luận, hãy đợi mọi người trong group cùng ngưng bàn luận"
-save_success = "SAVESUCCESS"
-load_success = "LOADSUCCESS"
+save_success = "đã lưu trạng thái với tên **{}**"
+load_success = "đã tải thành công trạng thái **{}**"
 
 no_swap_self = "bạn không được tráo chức năng với chính mình"
 seer_self = "bạn không được soi chính mình"
@@ -103,13 +103,13 @@ cmd_close_vote = ( "dongvote", "`{0}` để lập tức ngưng bỏ phiếu", "n
 cmd_vote = ( "vote", "`{0} <người-chơi>` để bỏ phiếu giết người đó", "giet" )
 cmd_unvote = ( "unvote", "`{0}` để rút lại phiếu bầu" )
 cmd_clone = ( "nhanban", "`{0} <người-chơi>` để nhân bản chức năng của người đó", "saochep" )
-cmd_reveal = ( "latbai", "`{0} <STT-lá-bài` để lật và xem lá bài đó", "xem" )
+cmd_reveal = ( "latbai", "`{0} <STT-lá-bài>` để lật và xem lá bài đó", "xem" )
 cmd_see = ( "soi", "`{0} <người-chơi>` để soi chức năng của người đó" )
 cmd_swap = ( "trao", "``{0} <người-1> <người-2>` để tráo chức năng của 2 người" )
 cmd_steal = ( "trom", "`{0} <người-khác>` để đổi chức năng của mình với người đó" )
 cmd_take = ( "lay", "``{0} <STT-lá-bài>` để đổi chức năng của mình với một lá bài bên ngoài" )
-cmd_save = ( "save", "CMDSAVE" )
-cmd_load = ( "load", "CMDLOAD" )
+cmd_save = ( "luu", "" )
+cmd_load = ( "tai", "CMDLOAD" )
 
 cmd_reveal_all = ( "tietlo", "`{0}` liệt kê thông tin chức năng của mọi người và danh sách các lá bài bên ngoài (Debug)" )
 

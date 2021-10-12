@@ -3,11 +3,11 @@
 - Force fixed or randomized order of action for roles
 - Test case for no winners
 - Delete messages to wrong channel
-- Save and reload state of the game
 
 # DOING
 
 # DONE
+- Save and reload state of the game
 - Stop discussion command for wolves
 - Highlight important info
 - Include aliases in help message
