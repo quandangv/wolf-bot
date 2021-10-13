@@ -656,7 +656,12 @@ class Wolf(WolfSide):
 
   async def EndDiscussion(self, me, message, _):
     self.discussed = True
-    await confirm(message, tr('discussion_ended'))
+    for player in tmp_channels['wolf'].players:
+      if not player.role.discussed:
+        await confirm(message, tr('discussion_ended') + tr('discussion_wait_other'))
+        break
+    else:
+      await confirm(message, tr('discussion_ended') + tr('discussion_all_ended'))
     await on_used()
 
   @single_use

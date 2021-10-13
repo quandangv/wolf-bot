@@ -32,8 +32,8 @@ no_roles = [ "Làng trống trơnn", "Chưa có chức năng nào cả" ]
 wolf_get_reveal = "Bạn là một con sói cô độc. Vì vậy bạn sẽ được dùng lệnh `{} STT-lá-bài` để soi một trong {} lá ở ngoài"
 reveal_remaining = ". Bạn còn **{}** lượt lật bài"
 no_reveal_remaining = ". Bạn đã hết chức năng lật bài"
-#discussion_wait_other = ", hãy đợi mọi người trong group cùng ngưng bàn luận"
-#discussion_all_ended = ", hãy đợi mọi người trong group cùng ngưng bàn luận"
+discussion_wait_other = ", hãy đợi mọi người trong group cùng ngưng bàn luận"
+discussion_all_ended = ", các bạn đều đã ngưng bàn luận"
 
 start = [ "Bắt đầu trò chơi với {}", "Trò chơi gồm {} sẽ được bắt đầu ngay bây giờ", "{} chơi ha", "Trò chơi bắt đầu! Đêm nay sói sẽ xuất hiện giữa {}" ]
 start_needmore = [ "hiện tại có **{}** người chơi, trong khi mình cần **{}** người lận", "mình cần **{1}** người chơi, mới có **{0}** người à" ]
