@@ -250,7 +250,7 @@ def state_to_json(fp):
   return json.dump(obj, fp, cls = RoleEncoder, indent = 2)
 
 async def json_to_state(fp, player_mapping = {}):
-  await end_game(None, None)
+  await EndGame(None, None)
   obj = json.load(fp)
 
   available_players = await get_available_members()
@@ -292,28 +292,28 @@ async def json_to_state(fp, player_mapping = {}):
 ########################## COMMANDS ############################
 
 @cmd(RoleCommand('dm'))
-def swap(): pass
+def Swap(): pass
 
 @cmd(RoleCommand('dm'))
-def steal(): pass
+def Steal(): pass
 
 @cmd(RoleCommand('dm'))
-def take(): pass
+def Take(): pass
 
 @cmd(RoleCommand('dm'))
-def see(): pass
+def See(): pass
 
 @cmd(RoleCommand('dm'))
-def reveal(): pass
+def Reveal(): pass
 
 @cmd(RoleCommand('dm'))
-def clone(): pass
+def Clone(): pass
 
 @cmd(RoleCommand('wolf'))
-def end_discussion(): pass
+def EndDiscussion(): pass
 
 @cmd(Command())
-async def help(message, args):
+async def Help(message, args):
   if args:
     if args in commands:
       await confirm(message, commands[args].description.format(THIS_MODULE))
@@ -329,7 +329,7 @@ async def help(message, args):
     await confirm(message, tr('help_list').format('`, `'.join(command_list)))
 
 @cmd(SetupCommand())
-async def add_role(message, args):
+async def AddRole(message, args):
   role_list = []
   async def add_single(role):
     role = role.strip()
@@ -349,7 +349,7 @@ async def add_role(message, args):
   await message.channel.send(tr('add_success').format(join_with_and(role_list)))
 
 @cmd(SetupCommand())
-async def remove_role(message, args):
+async def RemoveRole(message, args):
   args = args.strip()
   if not args:
     await question(message, tr('remove_wronguse').format(BOT_PREFIX))
@@ -364,20 +364,20 @@ async def remove_role(message, args):
     await confused(message.channel, args)
 
 @cmd(Command())
-async def list_roles(message, args):
+async def ListRoles(message, args):
   if not played_roles:
     return await confirm(message, tr('no_roles'))
   await confirm(message, tr('list_roles').format(join_with_and(played_roles), needed_players_count()))
 
 @cmd(PlayerCommand())
-async def unvote(me, message, args):
+async def Unvote(me, message, args):
   if not me.vote:
     return await question(message, tr('not_voting'))
   await on_voted(me, None)
 
 @cmd(PlayerCommand())
 @single_arg('vote_wronguse')
-async def vote(me, message, args):
+async def Vote(me, message, args):
   if status != 'day':
     return await question(message, tr('day_only'))
   if not is_public_channel(message.channel):
@@ -387,7 +387,7 @@ async def vote(me, message, args):
     await on_voted(me, player.extern.mention)
 
 @cmd(AdminCommand())
-async def start_immediate(message, args):
+async def StartImmediate(message, args):
   try:
     members = await get_available_members()
     current_count = len(members)
@@ -425,11 +425,11 @@ async def start_immediate(message, args):
           await channel_events[channel_name](channel)
       await on_used()
   except BaseException as e:
-    await end_game(None, None)
+    await EndGame(None, None)
     raise e
 
 @cmd(AdminCommand())
-async def close_vote(_, __):
+async def CloseVote(_, __):
   global vote_countdown_task
   if vote_countdown_task:
     vote_countdown_task.cancel()
@@ -475,7 +475,7 @@ async def close_vote(_, __):
     await announce_winners(channel, wolves if wolves else villagers)
 
 @cmd(AdminCommand())
-async def save(message, args):
+async def Save(message, args):
   args = args.strip()
   if '\\' in args or '/' in args:
     return await question(message, tr('invalid_file_name'))
@@ -484,7 +484,7 @@ async def save(message, args):
   await confirm(message, tr('save_success').format(args))
 
 @cmd(AdminCommand())
-async def load(message, args):
+async def Load(message, args):
   args = args.strip()
   if '\\' in args or '/' in args:
     return await question(message, tr('invalid_file_name'))
@@ -493,7 +493,7 @@ async def load(message, args):
   await confirm(message, tr('load_success').format(args))
 
 @cmd(AdminCommand())
-async def end_game(_, __):
+async def EndGame(_, __):
   global status
   status = None
   for player in players.values():
@@ -504,7 +504,7 @@ async def end_game(_, __):
   vote_list.clear()
 
 @cmd(AdminCommand())
-async def wake_up(_, __):
+async def WakeUp(_, __):
   for player in players.values():
     if player.role and hasattr(player.role, 'before_dawn'):
       await player.role.before_dawn(player)
@@ -515,7 +515,7 @@ async def wake_up(_, __):
   await main_channel().send(tr('wake_up') + tr('vote').format(BOT_PREFIX))
 
 @cmd(DebugCommand())
-async def reveal_all(message, args):
+async def RevealAll(message, args):
   await low_reveal_all(message.channel)
 
 async def low_reveal_all(channel):
@@ -542,7 +542,7 @@ class Seer(Villager):
     transfer_to_self(self, 'reveal_count', data, 0)
 
   @single_arg('reveal_wronguse', EXCESS_ROLES)
-  async def reveal(self, me, message, args):
+  async def Reveal(self, me, message, args):
     if self.used:
       return await question(message, tr('seer_see_already'))
     if self.reveal_count >= SEER_REVEAL:
@@ -557,7 +557,7 @@ class Seer(Villager):
         await confirm(message, tr('reveal_success').format(number, excess_roles[number - 1]) + tr('reveal_remaining').format(SEER_REVEAL - self.reveal_count))
 
   @single_arg('see_wronguse')
-  async def see(self, me, message, args):
+  async def See(self, me, message, args):
     if self.reveal_count:
       return await question(message, tr('seer_reveal_already'))
     if self.used:
@@ -576,7 +576,7 @@ class Clone(Villager):
 
   @single_use
   @single_arg('clone_wronguse')
-  async def clone(self, me, message, args):
+  async def Clone(self, me, message, args):
     if me.extern.name == args:
       return await question(message, tr('clone_self'))
     player = await find_player(message, args)
@@ -593,7 +593,7 @@ class Troublemaker(Villager):
     transfer_to_self(self, 'used', data, False)
 
   @single_use
-  async def swap(self, me, message, args):
+  async def Swap(self, me, message, args):
     players = args.split()
     if len(players) != 2:
       return await question(message, tr('troublemaker_wronguse').format(BOT_PREFIX))
@@ -613,7 +613,7 @@ class Thief(Villager):
 
   @single_use
   @single_arg('thief_wronguse')
-  async def steal(self, me, message, args):
+  async def Steal(self, me, message, args):
     if me.extern.name == args:
       return await question(message, tr('no_swap_self'))
     player = await find_player(message, args)
@@ -629,7 +629,7 @@ class Drunk(Villager):
 
   @single_use
   @single_arg('drunk_wronguse', EXCESS_ROLES)
-  async def take(self, me, message, args):
+  async def Take(self, me, message, args):
     number = await select_excess_card(message, 'drunk_wronguse', args)
     if number:
       me.real_role, excess_roles[number-1] = excess_roles[number-1], me.real_role
@@ -653,14 +653,14 @@ class Wolf(WolfSide):
     transfer_to_self(self, 'used', data, True)
     transfer_to_self(self, 'discussed', data, False)
 
-  async def end_discussion(self, me, message, _):
+  async def EndDiscussion(self, me, message, _):
     self.discussed = True
     await confirm(message, tr('discussion_ended'))
     await on_used()
 
   @single_use
   @single_arg('reveal_wronguse', EXCESS_ROLES)
-  async def reveal(self, me, message, args):
+  async def Reveal(self, me, message, args):
     number = await select_excess_card(message, 'reveal_wronguse', args)
     if number:
       await confirm(message, tr('reveal_success').format(number, excess_roles[number - 1]))
@@ -756,7 +756,7 @@ async def announce_winners(channel, winners):
   else:
     await channel.send(tr('no_winners'))
   await low_reveal_all(channel)
-  await end_game(None, None)
+  await EndGame(None, None)
 
 ############################ INIT ##############################
 
@@ -764,7 +764,7 @@ def initialize(admins):
   random.seed()
 
   for cmd_name, base in list(commands.items()):
-    [name, description, *aliases] = tr('cmd_' + cmd_name)
+    [name, description, *aliases] = tr('cmd_' + cmd_name.lower())
     description = description.format(BOT_PREFIX + name)
     base.add_texts(name, description)
     commands[name] = base
@@ -808,7 +808,7 @@ async def on_used():
     if player.role:
       if (hasattr(player.role, 'used') and not player.role.used) or (hasattr(player.role, 'discussed') and not player.role.discussed):
         return
-  await wake_up(None, None)
+  await WakeUp(None, None)
   return True
 
 async def on_voted(me, vote):
@@ -816,7 +816,7 @@ async def on_voted(me, vote):
     await asyncio.sleep(seconds)
     clear_vote_countdown()
     async with lock:
-      await close_vote(None, None)
+      await CloseVote(None, None)
 
   vote_list[me.vote] -= 1
   me.vote = vote
@@ -831,7 +831,7 @@ async def on_voted(me, vote):
         next_most = votes
     global vote_countdown_task
     if not_voted == 0:
-      await close_vote(None, None)
+      await CloseVote(None, None)
     elif my_vote - next_most > not_voted:
       if vote_countdown_task:
         vote_countdown_task.cancel()

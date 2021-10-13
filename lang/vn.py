@@ -96,14 +96,14 @@ out_of_reveal = "bạn đã lật lá bài ở ngoài {} lần, bạn không đ�
 invalid_file_name = "invalid_file_name"
 
 cmd_help = ( "giupdo", "`{0}` liệt kê các lệnh bạn được thực hiện.\nCòn `{0} câu-lệnh` sẽ nhắn thông tin trợ giúp về lệnh\nVà `{0} chức-năng` sẽ giải thích chức năng đó", "trogiup" )
-cmd_start_immediate = ( "choingay", "`{0}` để bắt đầu chơi ngay" )
-cmd_add_role = ( "them", "`{0} chức-năng` sẽ thêm một chức năng vào game" )
-cmd_remove_role = ( "bot", "`{0} chức-năng` để bỏ một chức năng khỏi game", "xoa" )
-cmd_list_roles = ( "chucnang", "`{0}` để liệt kê các vai trò có trong làng" )
-cmd_end_game = ( "ngungchoi", "`{0}` sẽ lập tức dừng trò chơi" )
-cmd_end_discussion = ( "ngungbanluan", "Nhắn `{0}` trong group kín để ra hiệu ngưng bàn luận cho quản trò", "ngungban" )
-cmd_close_vote = ( "dongvote", "`{0}` để lập tức ngưng bỏ phiếu", "ngungvote" )
-cmd_wake_up = ( "thucday", "`{0}` buộc cả làng thức dậy ngay lập tức" )
+cmd_startimmediate = ( "choingay", "`{0}` để bắt đầu chơi ngay" )
+cmd_addrole = ( "them", "`{0} chức-năng` sẽ thêm một chức năng vào game" )
+cmd_removerole = ( "bot", "`{0} chức-năng` để bỏ một chức năng khỏi game", "xoa" )
+cmd_listroles = ( "chucnang", "`{0}` để liệt kê các vai trò có trong làng" )
+cmd_endgame = ( "ngungchoi", "`{0}` sẽ lập tức dừng trò chơi" )
+cmd_enddiscussion = ( "ngungbanluan", "Nhắn `{0}` trong group kín để ra hiệu ngưng bàn luận cho quản trò", "ngungban" )
+cmd_closevote = ( "dongvote", "`{0}` để lập tức ngưng bỏ phiếu", "ngungvote" )
+cmd_wakeup = ( "thucday", "`{0}` buộc cả làng thức dậy ngay lập tức" )
 cmd_vote = ( "vote", "`{0} người-chơi` để bỏ phiếu giết người đó", "giet" )
 cmd_unvote = ( "unvote", "`{0}` để rút lại phiếu bầu" )
 cmd_clone = ( "nhanban", "`{0} người-chơi` để nhân bản chức năng của người đó", "saochep" )
@@ -114,8 +114,7 @@ cmd_steal = ( "trom", "`{0} người-khác` để đổi chức năng của mìn
 cmd_take = ( "lay", "`{0} STT-lá-bài` để đổi chức năng của mình với một lá bài bên ngoài" )
 cmd_save = ( "luu", "`{0} tên-file` để lưu trạng thái của game" )
 cmd_load = ( "tai", "`{0} tên-file` để tải trạng thái của game" )
-
-cmd_reveal_all = ( "tietlo", "`{0}` liệt kê thông tin chức năng của mọi người và danh sách các lá bài bên ngoài (Debug)" )
+cmd_revealall = ( "tietlo", "`{0}` liệt kê thông tin chức năng của mọi người và danh sách các lá bài bên ngoài (Debug)" )
 
 role_villager = ( "dân thường", "Một con dân thường không có chức năng. Nhờ vậy, bạn sẽ được yên giấc vào ban đêm", "Ban đêm bạn không phải làm gì cả. Sáng dậy, bạn có thể vote người để treo cổ", "dân làng", "dân" )
 role_wolf = ( "sói", "Sói chống lại dân làng. Chúng sẽ thắng nếu người bị treo cổ là phe dân", "Bạn sẽ được thêm vào group sói. Ban ngày, hãy tìm cách treo cổ một người dân để chiến thắng" )

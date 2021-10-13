@@ -9,6 +9,7 @@
 # DOING
 
 # DONE
+- Camel case command names
 - Role names in save file should be class name
 - Move roles and commands outside of init function
 - Log errors to debug channel
