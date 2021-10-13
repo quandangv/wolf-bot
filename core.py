@@ -2,6 +2,7 @@ import random
 import asyncio
 import sys
 import json
+import traceback
 
 commands = {}
 roles = {}
@@ -69,14 +70,11 @@ class Command:
   def decorate(self, func):
     self.func = func
 
-  def add_texts(self, name, description):
-    self.name = name
-    self.description = description
-
   def make_alias(self, alias, description):
     cmd = Command()
     cmd.decorate(self.func)
-    cmd.add_texts(self.name, tr('alias').format(alias, self.name) + description)
+    cmd.name = self.name
+    cmd.description = tr('alias').format(alias, self.name) + description
     return cmd
 
   def is_listed(self, _, __):
@@ -212,6 +210,51 @@ def single_use(func):
     await func(self, me, message, args)
   result.__name__ = func.__name__
   return result
+
+############################ INIT ##############################
+
+def initialize(admins):
+  random.seed()
+
+  for cmd_name, base in list(commands.items()):
+    [name, description, *aliases] = tr('cmd_' + cmd_name.lower())
+    description = description.format(BOT_PREFIX + name)
+    base.name = name
+    base.description = description
+    commands[name] = base
+    if aliases:
+      commands[name].description += tr('aliases_list').format('`, `!'.join(aliases))
+    main_commands.append(name)
+    for alias in aliases:
+      if alias not in commands:
+        commands[alias] = base.make_alias(alias, description)
+      else:
+        print("ERROR: Can't create alias {} to command {}!".format(alias, name))
+
+  for base_name, base in list(roles.items()):
+    [base.name, base.description, base.greeting, *aliases] = tr('role_' + base_name.lower())
+    base.greeting = base.greeting.format(*[ command_name(command) for command in dir(base) if command[:1].isupper() ])
+    base.__role__ = True
+    roles[base.name] = base
+    if CREATE_NORMALIZED_ALIASES:
+      import unidecode
+      normalized = unidecode.unidecode(base.name)
+      if normalized != base.name:
+        aliases.append(normalized)
+      length = len(aliases)
+      for idx in range(length):
+        alias = aliases[idx]
+        normalized = unidecode.unidecode(alias)
+        if normalized != alias:
+          aliases.append(normalized)
+    for alias in aliases:
+      if alias not in roles:
+        roles[alias] = base
+      else:
+        print("ERROR: Can't create alias {} to role {}!".format(alias, base.name))
+
+  for admin in admins:
+    players[admin.id] = Player(True, admin)
 
 ######################### SERIALIZATION ########################
 
@@ -389,14 +432,14 @@ async def Vote(me, message, args):
   if player:
     await on_voted(me, player.extern.mention)
 
-@cmd(AdminCommand())
+@cmd(SetupCommand())
 async def StartImmediate(message, args):
   try:
     members = await get_available_members()
     current_count = len(members)
     global played_roles
     if not played_roles:
-      played_roles = DEFAULT_ROLES[:current_count + EXCESS_CARDS]
+      played_roles = DEFAULT_ROLES[:current_count + EXCESS_ROLES]
     needed_count = needed_players_count()
     if current_count > needed_count:
       await question(message, tr('start_needless').format(current_count, needed_count))
@@ -651,7 +694,7 @@ class Minion(WolfSide):
     for player in players.values():
       if isinstance(player.role, Wolf):
         wolves.append(player.extern.name)
-    await player.extern.send(tr('wolves_reveal').format(join_with_and(wolves)))
+    await player.extern.send(tr('wolves_reveal').format(join_with_and(wolves)) if wolves else tr('no_wolves') + tr('minion_kill_self'))
 
 @role
 class Wolf(WolfSide):
@@ -769,50 +812,6 @@ async def announce_winners(channel, winners):
   await low_reveal_all(channel)
   await EndGame(None, None)
 
-############################ INIT ##############################
-
-def initialize(admins):
-  random.seed()
-
-  for cmd_name, base in list(commands.items()):
-    [name, description, *aliases] = tr('cmd_' + cmd_name.lower())
-    description = description.format(BOT_PREFIX + name)
-    base.add_texts(name, description)
-    commands[name] = base
-    if aliases:
-      commands[name].description += tr('aliases_list').format('`, `!'.join(aliases))
-    main_commands.append(name)
-    for alias in aliases:
-      if alias not in commands:
-        commands[alias] = base.make_alias(alias, description)
-      else:
-        print("ERROR: Can't create alias {} to command {}!".format(alias, name))
-
-  for base_name, base in list(roles.items()):
-    [base.name, base.description, base.greeting, *aliases] = tr('role_' + base_name.lower())
-    base.greeting = base.greeting.format(*[ command_name(command) for command in dir(base) if command[:1].isupper() ])
-    base.__role__ = True
-    roles[base.name] = base
-    if CREATE_NORMALIZED_ALIASES:
-      import unidecode
-      normalized = unidecode.unidecode(base.name)
-      if normalized != base.name:
-        aliases.append(normalized)
-      length = len(aliases)
-      for idx in range(length):
-        alias = aliases[idx]
-        normalized = unidecode.unidecode(alias)
-        if normalized != alias:
-          aliases.append(normalized)
-    for alias in aliases:
-      if alias not in roles:
-        roles[alias] = base
-      else:
-        print("ERROR: Can't create alias {} to role {}!".format(alias, base.name))
-
-  for admin in admins:
-    players[admin.id] = Player(True, admin)
-
 ########################### EVENTS #############################
 
 async def on_used():
@@ -876,21 +875,25 @@ async def wolf_channel(channel):
 async def process_message(message):
   content = message.content
   if content.startswith(BOT_PREFIX):
-    async with lock:
-      full = content[len(BOT_PREFIX):]
-      arr = full.split(" ", 1)
-      if len(arr) == 0:
-        return
-      if len(arr) == 1:
-        cmd = arr[0]
-        args = ''
-      else:
-        [cmd, args] = arr
-      cmd = cmd.lower()
-      if cmd in commands:
-        await commands[cmd].func(message, args)
-      else:
-        await confused(message.channel, BOT_PREFIX + cmd)
+    try:
+      async with lock:
+        full = content[len(BOT_PREFIX):]
+        arr = full.split(" ", 1)
+        if len(arr) == 0:
+          return
+        if len(arr) == 1:
+          cmd = arr[0]
+          args = ''
+        else:
+          [cmd, args] = arr
+        cmd = cmd.lower()
+        if cmd in commands:
+          await commands[cmd].func(message, args)
+        else:
+          await confused(message.channel, BOT_PREFIX + cmd)
+    except:
+      await debug(traceback.format_exc())
+      await message.reply(tr('exception'))
 
 async def process_and_wait(message):
   await process_message(message)

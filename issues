@@ -6,12 +6,22 @@
 - Remove multiple roles
 - Handle @ in names
 - No numbers in command name
-- Comma in 'ơi'
-- sắp sửa -> chuẩn bị
+- Insomniac should be added to wolf group
+- Test case for starting with default roles
+- Print starting role with start message
+- History command
+- Vote info command
+- Manually add players to the game
+- Help for admin on startup
+- Command class for observer to execute
+- Change command classes to decorators: returning the actual command and the is_listed function
 
 # DOING
 
 # DONE
+- Forbid starting game when game already started
+- Comma in 'ơi'
+- sắp sửa -> chuẩn bị
 - Remove multiple roles
 - Add examples to wronguse messages
 - Use dynamic command names in messages
