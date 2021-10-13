@@ -124,10 +124,12 @@ class RoleCommand(PlayerCommand):
     self.required_status = required_status
 
   def is_listed(self, player, channel):
-    return super().is_listed(player, channel) and name_channel(channel) == self.required_channel and hasattr(player.role, self.name)
+    return super().is_listed(player, channel) and name_channel(channel) in self.required_channel and hasattr(player.role, self.name)
 
   def decorate(self, name, func, description):
     async def check(player, message, args):
+      if not name_channel(message.channel) in self.required_channel:
+        return await question(message, tr(self.required_channel + '_only').format(BOT_PREFIX + name))
       if self.required_status != status:
         return await question(message, tr(self.required_status + '_only'))
       if not hasattr(player.role, func.__name__):
@@ -153,6 +155,21 @@ class Player:
     self.role = None
     self.real_role = None
     self.vote = None
+
+class Channel:
+  @classmethod
+  async def create(cls, name, *players):
+    self = Channel()
+    self.extern = await create_channel(name, *( player.extern for player in players ))
+    self.players = list(players)
+    return self
+
+  async def add(self, player):
+    self.players.append(player)
+    await add_member(self.extern, player.extern)
+  async def delete(self):
+    self.players = None
+    await self.extern.delete()
 
 ########################## DECORATORS ##########################
 
@@ -225,7 +242,7 @@ def name_channel(channel):
   if is_public_channel(channel):
     return 'public'
   for id, c in tmp_channels.items():
-    if channel == c:
+    if channel.id == c.extern.id:
       return id
 
 async def confirm(message, text):
@@ -280,6 +297,7 @@ async def on_used():
       if (hasattr(player.role, 'used') and not player.role.used) or (hasattr(player.role, 'discussed') and not player.role.discussed):
         return
   await wake_up()
+  return True
 
 def clear_vote_countdown():
   global vote_countdown_task
@@ -402,6 +420,8 @@ def initialize(admins):
   async def vote(me, message, args):
     if status != 'day':
       return await question(message, tr('day_only'))
+    if not is_public_channel(message.channel):
+      return await question(message, tr('public_only').format(get_command_name('vote')))
     player = await find_player(message, args)
     if player:
       await on_voted(me, player.extern.mention)
@@ -439,7 +459,7 @@ def initialize(admins):
 
       for id, channel in tmp_channels.items():
         channel_name = id + '_channel'
-        await channel.send(tr(channel_name).format(join_with_and([member.mention for member in channel.members if not member.bot])) + tr('end_discussion_info').format(BOT_PREFIX))
+        await channel.extern.send(tr(channel_name).format(join_with_and([player.extern.mention for player in channel.players if not player.extern.bot])) + tr('end_discussion_info').format(BOT_PREFIX))
         if channel_name in channel_events:
           await channel_events[channel_name](channel)
       await on_used()
@@ -674,11 +694,11 @@ def initialize(admins):
 
     async def on_start(self, player):
       if not 'wolf' in tmp_channels:
-        tmp_channels['wolf'] = await create_channel(tr('wolf'), player.extern)
+        tmp_channels['wolf'] = await Channel.create(tr('wolf'), player)
       else:
         channel = tmp_channels['wolf']
-        await add_member(channel, player.extern)
-        await channel.send(tr('channel_greeting').format(player.extern.mention, channel.name))
+        await channel.add(player)
+        await channel.extern.send(tr('channel_greeting').format(player.extern.mention, channel.extern.name))
 
 ######################### SERIALIZATION ########################
 
@@ -704,7 +724,7 @@ def initialize(admins):
   def state_to_json(fp):
     tmp_channels_export = {}
     for name, channel in tmp_channels.items():
-      tmp_channels_export[name] = { 'name': channel.name, 'members': [ mem.id for mem in channel.members ] }
+      tmp_channels_export[name] = { 'name': channel.extern.name, 'members': [ player.extern.id for player in channel.players ] }
     obj = {
       'vote_list': vote_list,
       'played_roles': played_roles,
@@ -746,7 +766,7 @@ def initialize(admins):
         player.vote = decoded_player['vote']
 
     for name, channel in obj['channels'].items():
-      tmp_channels[name] = await create_channel(channel['name'], *[ players[id].extern for id in channel['members'] ])
+      tmp_channels[name] = await Channel.create(channel['name'], *( players[id] for id in channel['members'] ))
 
     names = ['vote_list', 'played_roles', 'excess_roles', 'status', 'SEER_REVEAL', 'EXCESS_ROLES' ]
     for name in names:
@@ -768,11 +788,11 @@ def initialize(admins):
   async def wolf_channel(channel):
     for role in excess_roles:
       if issubclass(roles[role], Wolf):
-        for mem in channel.members:
-          if not mem.bot:
-            lone_wolf = players[channel.members[0].id]
+        for player in channel.players:
+          if not player.extern.bot:
+            lone_wolf = players[player.extern.id]
             lone_wolf.role.used = False
-            await channel.send(tr('wolf_get_reveal').format(BOT_PREFIX, EXCESS_ROLES))
+        await channel.extern.send(tr('wolf_get_reveal').format(BOT_PREFIX, EXCESS_ROLES))
 
   async def announce_winners(channel, winners):
     if winners:

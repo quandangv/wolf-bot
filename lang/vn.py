@@ -31,6 +31,8 @@ no_roles = [ "Làng trống trơnn", "Chưa có chức năng nào cả" ]
 wolf_get_reveal = "Bạn là một con sói cô độc. Vì vậy bạn sẽ được dùng lệnh `{}latbai STT-lá-bài` để soi một trong {} lá ở ngoài"
 reveal_remaining = ". Bạn còn **{}** lượt lật bài"
 no_reveal_remaining = ". Bạn đã hết chức năng lật bài"
+discussion_wait_other = ", hãy đợi mọi người trong group cùng ngưng bàn luận"
+discussion_all_ended = ", hãy đợi mọi người trong group cùng ngưng bàn luận"
 
 start = [ "Bắt đầu trò chơi với {}", "Trò chơi gồm {} sẽ được bắt đầu ngay bây giờ", "{} chơi ha", "Trò chơi bắt đầu! Đêm nay sói sẽ xuất hiện giữa {}" ]
 start_needmore = [ "hiện tại có **{}** người chơi, trong khi mình cần **{}** người lận", "mình cần **{1}** người chơi, mới có **{0}** người à" ]
@@ -65,7 +67,7 @@ vote_success = [ "{} đòi quăng {} vào chảo lửa!", "{} đòi treo cổ {}
 unvote_success = "{} đổi ý và rút lại phiếu bầu"
 insomniac_reveal = [ "Sau một đêm dài, bạn xem lại chức năng của mình và thấy: bạn là **{}**!", "Trước khi trời sáng, bạn vội xem lại chức năng của mình và thấy nó là **{}**!" ]
 reveal_success = "lá bài số **{}** là **{}**"
-discussion_ended = "bạn đã ngưng bàn luận, hãy đợi mọi người trong group cùng ngưng bàn luận"
+discussion_ended = "bạn đã ngưng bàn luận"
 save_success = "đã lưu trạng thái với tên **{}**"
 load_success = "đã tải thành công trạng thái **{}**"
 
@@ -114,7 +116,7 @@ cmd_load = ( "tai", "CMDLOAD" )
 cmd_reveal_all = ( "tietlo", "`{0}` liệt kê thông tin chức năng của mọi người và danh sách các lá bài bên ngoài (Debug)" )
 
 role_villager = ( "dân thường", "Một con dân thường không có chức năng. Nhờ vậy, bạn sẽ được yên giấc vào ban đêm", "Ban đêm bạn không phải làm gì cả. Sáng dậy, bạn có thể vote người để treo cổ", "dân làng", "dân" )
-role_wolf = ( "sói", "Sói chống lại dân làng. Chúng sẽ thắng nếu người bị treo cổ là phe dân", "Bạn sẽ được biết con sói còn lại. Ban ngày, hãy tìm cách treo cổ một người dân để chiến thắng" )
+role_wolf = ( "sói", "Sói chống lại dân làng. Chúng sẽ thắng nếu người bị treo cổ là phe dân", "Bạn sẽ được thêm vào group sói. Ban ngày, hãy tìm cách treo cổ một người dân để chiến thắng" )
 role_tanner = ( "kẻ chán đời", "Một người với mục tiêu duy nhất là bị treo cổ. Nếu làng treo cổ nó, nó sẽ thắng và mọi người đều thua", "Sáng hôm sau, hãy cố gắng thuyết phục làng treo cổ mình", "chán đời" )
 role_insomniac = ( "cú đêm", "Đây là người ngủ trễ nhất làng. Trước khi ngủ, họ sẽ được xem lại chức năng của mình", "Bạn sẽ được thông báo chức năng cuối cùng của mình trước khi trời sáng", "kẻ mất ngủ" )
 role_thief = ( "trộm", "Người này sẽ đánh cắp chức năng của một người khác trong làng, thay thế bằng chức năng hiện có của mình", "Hãy dùng lệnh `{}trom người-khác` để ăn cắp lá bài của họ", "kẻ trộm" )
