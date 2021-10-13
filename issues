@@ -3,6 +3,11 @@
 - Force fixed or randomized order of action for roles
 - Test case for no winners
 - Delete messages to wrong channel
+- Remove multiple roles
+- Handle @ in names
+- No numbers in command name
+- Comma in 'ơi'
+- sắp sửa -> chuẩn bị
 
 # DOING
 

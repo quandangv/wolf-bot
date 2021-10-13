@@ -394,6 +394,7 @@ async def StartImmediate(message, args):
   try:
     members = await get_available_members()
     current_count = len(members)
+    global played_roles
     if not played_roles:
       played_roles = DEFAULT_ROLES[:current_count + EXCESS_CARDS]
     needed_count = needed_players_count()
@@ -551,7 +552,7 @@ class Seer(Villager):
     if self.reveal_count:
       return await question(message, tr('seer_reveal_already'))
     if self.used:
-      return await question(message, tr('ability_used').format(command_name('see')))
+      return await question(message, tr('ability_used').format(command_name('See')))
     if me.extern.name == args:
       return await question(message, tr('seer_self'))
     player = await find_player(message, args)
@@ -875,25 +876,21 @@ async def wolf_channel(channel):
 async def process_message(message):
   content = message.content
   if content.startswith(BOT_PREFIX):
-    try:
-      async with lock:
-        full = content[len(BOT_PREFIX):]
-        arr = full.split(" ", 1)
-        if len(arr) == 0:
-          return
-        if len(arr) == 1:
-          cmd = arr[0]
-          args = ''
-        else:
-          [cmd, args] = arr
-        cmd = cmd.lower()
-        if cmd in commands:
-          await commands[cmd].func(message, args)
-        else:
-          await confused(message.channel, BOT_PREFIX + cmd)
-    except BaseException as e:
-      await debug(str(e))
-      await message.reply(tr('exception'))
+    async with lock:
+      full = content[len(BOT_PREFIX):]
+      arr = full.split(" ", 1)
+      if len(arr) == 0:
+        return
+      if len(arr) == 1:
+        cmd = arr[0]
+        args = ''
+      else:
+        [cmd, args] = arr
+      cmd = cmd.lower()
+      if cmd in commands:
+        await commands[cmd].func(message, args)
+      else:
+        await confused(message.channel, BOT_PREFIX + cmd)
 
 async def process_and_wait(message):
   await process_message(message)
