@@ -269,8 +269,8 @@ loop.run_until_complete(asyncio.gather(
 
   *check_private_single_player_cmd(harry, '!clone', 'david', 'clone_wronguse(!clone)', 'clone_self', 'clone_success(david, thief) thief_greeting(!steal)', False),
   expect_response(harry, '!steal ignacio', bot_dm, '[@bot] confirm(@harry) thief_success(ignacio, insomniac) '),
-  expect_response(anne, '!enddiscussion', channels['wolf '], '[wolf ] confirm(@anne) discussion_ended '),
-  expect_response(bob, '!enddiscussion', channels['wolf '], [ '[wolf ] confirm(@bob) discussion_ended ', '[@ignacio] insomniac_reveal(thief) ', '[game] wake_up vote(!vote) ' ]),
+  expect_response(anne, '!enddiscussion', channels['wolf '], '[wolf ] confirm(@anne) discussion_ended discussion_wait_other '),
+  expect_response(bob, '!enddiscussion', channels['wolf '], [ '[wolf ] confirm(@bob) discussion_ended discussion_all_ended ', '[@ignacio] insomniac_reveal(thief) ', '[game] wake_up vote(!vote) ' ]),
 
   expect_response(harry, '!swap frank', bot_dm, '[@bot] question(@harry) night_only '),
   expect_response(not_player, '!vote frank', bot_dm, '[@bot] question(@not_player) not_playing '),
@@ -304,8 +304,7 @@ def shuffle_copy(arr):
 
 loop.run_until_complete(asyncio.gather(
   expect_response(anne, '!removerole', game, '[game] question(@anne) remove_wronguse(!removerole) '),
-  expect_response(anne, '!removerole villager', game, '[game] remove_success(villager) '),
-  expect_response(anne, '!removerole villager', game, '[game] remove_success(villager) '),
+  expect_response(anne, '!removerole villager, villager', game, '[game] remove_success(villager, villager) '),
   expect_response(anne, '!removerole villager', game, '[game] remove_success(villager) '),
   expect_response(anne, '!removerole wolf', game, '[game] remove_success(wolf) '),
   expect_response(anne, '!removerole minion', game, '[game] question(@anne) remove_notfound(minion) '),
@@ -341,8 +340,8 @@ loop.run_until_complete(asyncio.gather(
   expect_response(bob, '!clone harry', bot_dm, [ '[wolf ] channel_greeting(@bob, wolf ) ', '[@bot] confirm(@bob) clone_success(harry, wolf) wolf_greeting' ]),
   expect_response(carl, '!take 1', bot_dm, '[@bot] confirm(@carl) drunk_success(1) '),
   expect_response(david, '!swap elsa george', bot_dm, '[@bot] confirm(@david) troublemaker_success(elsa, george) '),
-  expect_response(harry, '!enddiscussion', channels['wolf '], '[wolf ] confirm(@harry) discussion_ended '),
-  expect_response(bob, '!enddiscussion', channels['wolf '], '[wolf ] confirm(@bob) discussion_ended '),
+  expect_response(harry, '!enddiscussion', channels['wolf '], '[wolf ] confirm(@harry) discussion_ended discussion_wait_other '),
+  expect_response(bob, '!enddiscussion', channels['wolf '], '[wolf ] confirm(@bob) discussion_ended discussion_all_ended '),
   expect_response(elsa, '!steal ignacio', bot_dm, [ '[@anne] insomniac_reveal(insomniac) ', '[game] wake_up vote(!vote) ', '[@bot] confirm(@elsa) thief_success(ignacio, minion) ' ]),
   expect_response(not_player, '!vote frank', bot_dm, '[@bot] question(@not_player) not_playing '),
   expect_response(harry, '!vote frank', bot_dm, '[@bot] question(@harry) public_only(!vote) '),

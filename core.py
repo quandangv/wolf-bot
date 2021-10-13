@@ -332,37 +332,35 @@ async def Help(message, args):
 @cmd(SetupCommand())
 async def AddRole(message, args):
   role_list = []
-  async def add_single(role):
+  for role in args.split(','):
     role = role.strip()
     if not role:
-      await question(message, tr('add_wronguse').format(command_name('AddRole')))
+      return await question(message, tr('add_wronguse').format(command_name('AddRole')))
     elif role in roles:
       name = roles[role].name
       played_roles.append(name)
       role_list.append(name)
-      return True
     else:
-      await confused(message.channel, role)
-  args = args.split(',')
-  for role in args:
-    if not await add_single(role):
-      return
+      return await confused(message.channel, role)
   await message.channel.send(tr('add_success').format(join_with_and(role_list)))
 
 @cmd(SetupCommand())
 async def RemoveRole(message, args):
-  args = args.strip()
-  if not args:
-    await question(message, tr('remove_wronguse').format(command_name('RemoveRole')))
-  elif args in roles:
-    name = roles[args].name
-    if name in played_roles:
-      played_roles.pop(played_roles.index(name))
-      await message.channel.send(tr('remove_success').format(args))
+  role_list = []
+  for role in args.split(','):
+    role = role.strip()
+    if not role:
+      return await question(message, tr('remove_wronguse').format(command_name('RemoveRole')))
+    elif role in roles:
+      name = roles[role].name
+      if name in played_roles:
+        played_roles.pop(played_roles.index(name))
+        role_list.append(name)
+      else:
+        return await question(message, tr('remove_notfound').format(role))
     else:
-      await question(message, tr('remove_notfound').format(args))
-  else:
-    await confused(message.channel, args)
+      return await confused(message.channel, args)
+  await message.channel.send(tr('remove_success').format(join_with_and(role_list)))
 
 @cmd(Command())
 async def ListRoles(message, args):
