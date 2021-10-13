@@ -3,17 +3,16 @@
 - Force fixed or randomized order of action for roles
 - Test case for no winners
 - Delete messages to wrong channel
-- Log errors to debug channel
-- Command for bot to suicide
 - Role names in save file should be class name
 - Move roles and commands outside of init function
-- Description for save and load command
 - Add examples to wronguse messages
 - Use dynamic command names in messages
 
 # DOING
 
 # DONE
+- Log errors to debug channel
+- Description for save and load command
 - Create group for wolves without the admins
 - Fix crashes
 - Save and reload state of the game

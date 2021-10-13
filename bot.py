@@ -12,6 +12,7 @@ intents.members = True
 intents.presences = True
 client = discord.Client(intents=intents)
 guild = None
+debug_channel = None
 
 MAX_MESSAGE_LEN = 2000
 
@@ -20,6 +21,7 @@ MAX_MESSAGE_LEN = 2000
 @client.event
 async def on_ready():
   global guild
+  global debug_channel
   print("We have logged in as {0.user}".format(client))
   debug_channel = client.get_channel(DEBUG_CHANNEL)
   guild = client.get_channel(GAME_CHANNEL).guild
@@ -47,8 +49,9 @@ def core_injection(func):
   setattr(core, func.__name__, func)
   return func
 
+@core.action
 async def debug(msg):
-  await client.get_channel(DEBUG_CHANNEL).send(msg)
+  await debug_channel.send(msg)
 
 @core.action
 def tr(key):

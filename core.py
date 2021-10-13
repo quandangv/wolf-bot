@@ -39,6 +39,7 @@ def tr(key): raise missing_action_error('tr')
 async def get_available_members(): raise missing_action_error('get_available_members')
 async def create_channel(name, *players): raise missing_action_error('create_channel')
 async def add_member(channel, player): raise missing_action_error('add_member')
+async def debug(message): raise missing_action_error('debug')
 def is_dm_channel(channel): raise missing_action_error('is_dm_channel')
 def is_public_channel(channel): raise missing_action_error('is_public_channel')
 def main_channel(): raise missing_action_error('get_main_channel')
@@ -57,7 +58,7 @@ def action(func):
       return True
   if not(accept_name('get_available_members') or accept_name('tr') or accept_name('add_member')
       or accept_name('shuffle_copy') or accept_name('create_channel') or accept_name('main_channel')
-      or accept_name('is_dm_channel') or accept_name('is_public_channel')):
+      or accept_name('is_dm_channel') or accept_name('is_public_channel') or accept_name('debug')):
     raise ValueError("Action not used: {}".format(name))
   return func
 
@@ -428,41 +429,45 @@ def initialize(admins):
 
   @cmd(AdminCommand())
   async def start_immediate(message, args):
-    members = await get_available_members()
-    current_count = len(members)
-    needed_count = needed_players_count()
-    if current_count > needed_count:
-      await question(message, tr('start_needless').format(current_count, needed_count))
-    elif current_count < needed_count:
-      await question(message, tr('start_needmore').format(current_count, needed_count))
-    else:
-      await message.channel.send(tr('start').format(join_with_and(
-        [member.mention for member in members]
-      )))
-      global status
-      global player_count
-      status = 'night'
-      player_count = current_count
+    try:
+      members = await get_available_members()
+      current_count = len(members)
+      needed_count = needed_players_count()
+      if current_count > needed_count:
+        await question(message, tr('start_needless').format(current_count, needed_count))
+      elif current_count < needed_count:
+        await question(message, tr('start_needmore').format(current_count, needed_count))
+      else:
+        await message.channel.send(tr('start').format(join_with_and(
+          [member.mention for member in members]
+        )))
+        global status
+        global player_count
+        status = 'night'
+        player_count = current_count
 
-      shuffled_roles = shuffle_copy(played_roles)
-      for idx, member in enumerate(members):
-        player = get_player(member)
-        player.role = roles[shuffled_roles[idx]]()
-        player.real_role = player.role.name
-        await player.extern.send(tr('role').format(player.role.name) + player.role.greeting.format(BOT_PREFIX))
-        if hasattr(player.role, 'on_start'):
-          await player.role.on_start(player)
+        shuffled_roles = shuffle_copy(played_roles)
+        for idx, member in enumerate(members):
+          player = get_player(member)
+          player.role = roles[shuffled_roles[idx]]()
+          player.real_role = player.role.name
+          await player.extern.send(tr('role').format(player.role.name) + player.role.greeting.format(BOT_PREFIX))
+          if hasattr(player.role, 'on_start'):
+            await player.role.on_start(player)
 
-      excess_roles.clear()
-      for idx in range(EXCESS_ROLES):
-        excess_roles.append(shuffled_roles[-idx - 1])
+        excess_roles.clear()
+        for idx in range(EXCESS_ROLES):
+          excess_roles.append(shuffled_roles[-idx - 1])
 
-      for id, channel in tmp_channels.items():
-        channel_name = id + '_channel'
-        await channel.extern.send(tr(channel_name).format(join_with_and([player.extern.mention for player in channel.players if not player.extern.bot])) + tr('end_discussion_info').format(BOT_PREFIX))
-        if channel_name in channel_events:
-          await channel_events[channel_name](channel)
-      await on_used()
+        for id, channel in tmp_channels.items():
+          channel_name = id + '_channel'
+          await channel.extern.send(tr(channel_name).format(join_with_and([player.extern.mention for player in channel.players if not player.extern.bot])) + tr('end_discussion_info').format(BOT_PREFIX))
+          if channel_name in channel_events:
+            await channel_events[channel_name](channel)
+        await on_used()
+    except BaseException as e:
+      await end_game(None, None)
+      raise e
 
   @cmd(AdminCommand())
   async def close_vote(_, __):
@@ -845,21 +850,25 @@ def initialize(admins):
 async def process_message(message):
   content = message.content
   if content.startswith(BOT_PREFIX):
-    async with lock:
-      full = content[len(BOT_PREFIX):]
-      arr = full.split(" ", 1)
-      if len(arr) == 0:
-        return
-      if len(arr) == 1:
-        cmd = arr[0]
-        args = ''
-      else:
-        [cmd, args] = arr
-      cmd = cmd.lower()
-      if cmd in commands:
-        await commands[cmd].func(message, args)
-      else:
-        await confused(message.channel, BOT_PREFIX + cmd)
+    try:
+      async with lock:
+        full = content[len(BOT_PREFIX):]
+        arr = full.split(" ", 1)
+        if len(arr) == 0:
+          return
+        if len(arr) == 1:
+          cmd = arr[0]
+          args = ''
+        else:
+          [cmd, args] = arr
+        cmd = cmd.lower()
+        if cmd in commands:
+          await commands[cmd].func(message, args)
+        else:
+          await confused(message.channel, BOT_PREFIX + cmd)
+    except BaseException as e:
+      await debug(str(e))
+      await message.reply(tr('exception'))
 
 async def process_and_wait(message):
   await process_message(message)

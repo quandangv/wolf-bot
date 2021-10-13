@@ -6,6 +6,7 @@ _and = "và "
 alias = "`{}` là tên gọi khác của lệnh `{}`.\n"
 aliases_list = ". Còn có tên gọi khác là `!{}`"
 wolf = [ "Sói", "Những chú sói dui dẻ", "Schói", "SÓI" ]
+exception = "Chúng tôi đã gặp phải trục trặc kỹ thuật, lỗi đã được nhắn vào kênh Debug"
 
 role = [ "Hé lô, bạn là **{}** nha. ", "Ván này bạn làm **{}** nhé. ", "Chúc mừng! Bạn được làm **{}**! " ]
 wolf_channel = [ "Xin chào những chú sói nho nhỏ, đàn sói của các bạn gồm có {}. ", "Hé lô sói! Các sói {} hãy làm quen với nhau đi! ", "Chào {}. Chúc mừng các bạn đã trở thành sói! " ]
