@@ -8,6 +8,9 @@
 - Role names in save file should be class name
 - Create group for wolves without the admins
 - Move roles and commands outside of init function
+- Description for save and load command
+- Add examples to wronguse messages
+- Use dynamic command names in messages
 
 # DOING
 

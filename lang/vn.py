@@ -108,7 +108,7 @@ cmd_see = ( "soi", "`{0} người-chơi` để soi chức năng của người �
 cmd_swap = ( "trao", "``{0} người-1 người-2` để tráo chức năng của 2 người" )
 cmd_steal = ( "trom", "`{0} người-khác` để đổi chức năng của mình với người đó" )
 cmd_take = ( "lay", "``{0} STT-lá-bài` để đổi chức năng của mình với một lá bài bên ngoài" )
-cmd_save = ( "luu", "" )
+cmd_save = ( "luu", "CMDSAVE" )
 cmd_load = ( "tai", "CMDLOAD" )
 
 cmd_reveal_all = ( "tietlo", "`{0}` liệt kê thông tin chức năng của mọi người và danh sách các lá bài bên ngoài (Debug)" )

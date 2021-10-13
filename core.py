@@ -97,6 +97,8 @@ class AdminCommand(Command):
     async def check(message, args):
       if not players[message.author.id].is_admin:
         await question(message, tr('require_admin'))
+      elif not is_public_channel(message.channel):
+        await question(message, tr('public_only').format(BOT_PREFIX + name))
       else:
         await func(message, args)
     return super().decorate(name, check, description)
@@ -122,7 +124,7 @@ class RoleCommand(PlayerCommand):
     self.required_status = required_status
 
   def is_listed(self, player, channel):
-    return super().is_listed(player, channel) and hasattr(player.role, self.name)
+    return super().is_listed(player, channel) and name_channel(channel) == self.required_channel and hasattr(player.role, self.name)
 
   def decorate(self, name, func, description):
     async def check(player, message, args):
