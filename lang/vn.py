@@ -103,6 +103,7 @@ cmd_list_roles = ( "chucnang", "`{0}` để liệt kê các vai trò có trong l
 cmd_end_game = ( "ngungchoi", "`{0}` sẽ lập tức dừng trò chơi" )
 cmd_end_discussion = ( "ngungbanluan", "Nhắn `{0}` trong group kín để ra hiệu ngưng bàn luận cho quản trò", "ngungban" )
 cmd_close_vote = ( "dongvote", "`{0}` để lập tức ngưng bỏ phiếu", "ngungvote" )
+cmd_wake_up = ( "thucday", "`{0}` buộc cả làng thức dậy ngay lập tức" )
 cmd_vote = ( "vote", "`{0} người-chơi` để bỏ phiếu giết người đó", "giet" )
 cmd_unvote = ( "unvote", "`{0}` để rút lại phiếu bầu" )
 cmd_clone = ( "nhanban", "`{0} người-chơi` để nhân bản chức năng của người đó", "saochep" )
