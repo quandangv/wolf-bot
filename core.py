@@ -31,6 +31,7 @@ DEBUG = False
 VOTE_COUNTDOWN = 60
 LANDSLIDE_VOTE_COUNTDOWN = 10
 ROLE_VARIABLES = [ 'used', 'discussed', 'reveal_count' ]
+DEFAULT_ROLES = [ 'Wolf', 'Thief', 'Troublemaker', 'Drunk', 'Wolf', 'Villager', 'Seer', 'Clone', 'Minion', 'Insomniac', 'Tanner' ]
 
 ############################ ACTIONS ###########################
 
@@ -365,7 +366,10 @@ async def RemoveRole(message, args):
 @cmd(Command())
 async def ListRoles(message, args):
   if not played_roles:
-    return await confirm(message, tr('no_roles'))
+    msg = tr('no_roles')
+    if players:
+      msg += tr('default_roles').format(DEFAULT_ROLES)
+    return await confirm(message, msg)
   await confirm(message, tr('list_roles').format(join_with_and(played_roles), needed_players_count()))
 
 @cmd(PlayerCommand())
@@ -390,6 +394,8 @@ async def StartImmediate(message, args):
   try:
     members = await get_available_members()
     current_count = len(members)
+    if not played_roles:
+      played_roles = DEFAULT_ROLES[:current_count + EXCESS_CARDS]
     needed_count = needed_players_count()
     if current_count > needed_count:
       await question(message, tr('start_needless').format(current_count, needed_count))

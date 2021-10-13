@@ -3,11 +3,11 @@
 - Force fixed or randomized order of action for roles
 - Test case for no winners
 - Delete messages to wrong channel
-- Remove multiple roles
 
 # DOING
 
 # DONE
+- Remove multiple roles
 - Add examples to wronguse messages
 - Use dynamic command names in messages
 - Camel case command names
