@@ -101,8 +101,6 @@ class AdminCommand(Command):
     async def check(message, args):
       if not players[message.author.id].is_admin:
         await question(message, tr('require_admin'))
-      elif not is_public_channel(message.channel):
-        await question(message, tr('public_only').format(BOT_PREFIX + self.name))
       else:
         await func(message, args)
     super().decorate(check)
@@ -132,8 +130,9 @@ class RoleCommand(PlayerCommand):
 
   def decorate(self, func):
     async def check(player, message, args):
-      if not name_channel(message.channel) in self.required_channel:
-        return await question(message, tr(self.required_channel + '_only').format(BOT_PREFIX + self.name))
+      channel_name = name_channel(message.channel)
+      if not channel_name in self.required_channel:
+        return await question(message, tr('no_' + channel_name).format(BOT_PREFIX + self.name))
       if self.required_status != status:
         return await question(message, tr(self.required_status + '_only'))
       if not hasattr(player.role, func.__name__):
@@ -149,6 +148,8 @@ class SetupCommand(AdminCommand):
     async def check(message, args):
       if status:
         return await question(message, tr('forbid_game_started').format(BOT_PREFIX + self.name))
+      elif not is_public_channel(message.channel):
+        return await question(message, tr('public_only').format(BOT_PREFIX + self.name))
       await func(message, args)
     super().decorate(check)
 
@@ -197,7 +198,7 @@ def single_arg(message_key, *message_args):
       try:
         [arg] = arr[-1].split()
       except ValueError:
-        return await question(arr[-2], tr(message_key).format(BOT_PREFIX, *message_args))
+        return await question(arr[-2], tr(message_key).format(command_name(func.__name__), *message_args))
       await func(*arr[:-1], arg)
     result.__name__ = func.__name__
     return result
@@ -206,7 +207,7 @@ def single_arg(message_key, *message_args):
 def single_use(func):
   async def result(self, me, message, args):
     if self.used:
-      return await question(message, tr('ability_used').format(get_command_name(func.__name__)))
+      return await question(message, tr('ability_used').format(command_name(func.__name__)))
     await func(self, me, message, args)
   result.__name__ = func.__name__
   return result
@@ -303,13 +304,13 @@ def Take(): pass
 @cmd(RoleCommand('dm'))
 def See(): pass
 
-@cmd(RoleCommand('dm'))
+@cmd(RoleCommand('dm, wolf'))
 def Reveal(): pass
 
 @cmd(RoleCommand('dm'))
 def Clone(): pass
 
-@cmd(RoleCommand('wolf'))
+@cmd(RoleCommand('dm, wolf'))
 def EndDiscussion(): pass
 
 @cmd(Command())
@@ -334,7 +335,7 @@ async def AddRole(message, args):
   async def add_single(role):
     role = role.strip()
     if not role:
-      await question(message, tr('add_wronguse').format(BOT_PREFIX))
+      await question(message, tr('add_wronguse').format(command_name('AddRole')))
     elif role in roles:
       name = roles[role].name
       played_roles.append(name)
@@ -352,7 +353,7 @@ async def AddRole(message, args):
 async def RemoveRole(message, args):
   args = args.strip()
   if not args:
-    await question(message, tr('remove_wronguse').format(BOT_PREFIX))
+    await question(message, tr('remove_wronguse').format(command_name('RemoveRole')))
   elif args in roles:
     name = roles[args].name
     if name in played_roles:
@@ -381,7 +382,7 @@ async def Vote(me, message, args):
   if status != 'day':
     return await question(message, tr('day_only'))
   if not is_public_channel(message.channel):
-    return await question(message, tr('public_only').format(get_command_name('vote')))
+    return await question(message, tr('public_only').format(command_name('vote')))
   player = await find_player(message, args)
   if player:
     await on_voted(me, player.extern.mention)
@@ -410,7 +411,7 @@ async def StartImmediate(message, args):
         player = get_player(member)
         player.role = roles[shuffled_roles[idx]]()
         player.real_role = player.role.name
-        await player.extern.send(tr('role').format(player.role.name) + player.role.greeting.format(BOT_PREFIX))
+        await player.extern.send(tr('role').format(player.role.name) + player.role.greeting)
         if hasattr(player.role, 'on_start'):
           await player.role.on_start(player)
 
@@ -420,7 +421,7 @@ async def StartImmediate(message, args):
 
       for id, channel in tmp_channels.items():
         channel_name = id + '_channel'
-        await channel.extern.send(tr(channel_name).format(join_with_and([player.extern.mention for player in channel.players if not player.extern.bot])) + tr('end_discussion_info').format(BOT_PREFIX))
+        await channel.extern.send(tr(channel_name).format(join_with_and([player.extern.mention for player in channel.players if not player.extern.bot])) + tr('end_discussion_info').format(command_name('EndDiscussion')))
         if channel_name in channel_events:
           await channel_events[channel_name](channel)
       await on_used()
@@ -512,7 +513,7 @@ async def WakeUp(_, __):
   status = 'day'
   global vote_list
   vote_list = { None: player_count }
-  await main_channel().send(tr('wake_up') + tr('vote').format(BOT_PREFIX))
+  await main_channel().send(tr('wake_up') + tr('vote').format(command_name('Vote')))
 
 @cmd(DebugCommand())
 async def RevealAll(message, args):
@@ -541,13 +542,26 @@ class Seer(Villager):
     transfer_to_self(self, 'used', data, False)
     transfer_to_self(self, 'reveal_count', data, 0)
 
+  @single_arg('see_wronguse')
+  async def See(self, me, message, args):
+    if self.reveal_count:
+      return await question(message, tr('seer_reveal_already'))
+    if self.used:
+      return await question(message, tr('ability_used').format(command_name('see')))
+    if me.extern.name == args:
+      return await question(message, tr('seer_self'))
+    player = await find_player(message, args)
+    if player:
+      await set_used(self)
+      return await confirm(message, tr('see_success').format(args, player.real_role))
+
   @single_arg('reveal_wronguse', EXCESS_ROLES)
   async def Reveal(self, me, message, args):
     if self.used:
       return await question(message, tr('seer_see_already'))
     if self.reveal_count >= SEER_REVEAL:
       return await question(message, tr('out_of_reveal').format(SEER_REVEAL))
-    number = await select_excess_card(message, 'reveal_wronguse', args)
+    number = await select_excess_card(message, 'reveal_wronguse', 'Reveal', args)
     if number:
       self.reveal_count += 1
       if self.reveal_count >= SEER_REVEAL:
@@ -555,19 +569,6 @@ class Seer(Villager):
         await set_used(self)
       else:
         await confirm(message, tr('reveal_success').format(number, excess_roles[number - 1]) + tr('reveal_remaining').format(SEER_REVEAL - self.reveal_count))
-
-  @single_arg('see_wronguse')
-  async def See(self, me, message, args):
-    if self.reveal_count:
-      return await question(message, tr('seer_reveal_already'))
-    if self.used:
-      return await question(message, tr('ability_used').format(get_command_name('see')))
-    if me.extern.name == args:
-      return await question(message, tr('seer_self'))
-    player = await find_player(message, args)
-    if player:
-      await set_used(self)
-      return await confirm(message, tr('see_success').format(args, player.real_role))
 
 @role
 class Clone(Villager):
@@ -585,7 +586,7 @@ class Clone(Villager):
       me.real_role = me.role.name
       if hasattr(me.role, 'on_start'):
         await me.role.on_start(me)
-      return await confirm(message, tr('clone_success').format(args, me.role.name) + me.role.greeting.format(BOT_PREFIX))
+      return await confirm(message, tr('clone_success').format(args, me.role.name) + me.role.greeting)
 
 @role
 class Troublemaker(Villager):
@@ -596,7 +597,7 @@ class Troublemaker(Villager):
   async def Swap(self, me, message, args):
     players = args.split()
     if len(players) != 2:
-      return await question(message, tr('troublemaker_wronguse').format(BOT_PREFIX))
+      return await question(message, tr('troublemaker_wronguse').format(command_name('Swap')))
     if me.extern.name in players:
       return await question(message, tr('no_swap_self'))
     players = [ await find_player(message, name) for name in players ]
@@ -630,7 +631,7 @@ class Drunk(Villager):
   @single_use
   @single_arg('drunk_wronguse', EXCESS_ROLES)
   async def Take(self, me, message, args):
-    number = await select_excess_card(message, 'drunk_wronguse', args)
+    number = await select_excess_card(message, 'drunk_wronguse', 'Take', args)
     if number:
       me.real_role, excess_roles[number-1] = excess_roles[number-1], me.real_role
       await set_used(self)
@@ -661,7 +662,7 @@ class Wolf(WolfSide):
   @single_use
   @single_arg('reveal_wronguse', EXCESS_ROLES)
   async def Reveal(self, me, message, args):
-    number = await select_excess_card(message, 'reveal_wronguse', args)
+    number = await select_excess_card(message, 'reveal_wronguse', 'Reveal', args)
     if number:
       await confirm(message, tr('reveal_success').format(number, excess_roles[number - 1]))
       await set_used(self)
@@ -707,7 +708,7 @@ def join_with_and(arr):
 def needed_players_count():
   return max(0, len(played_roles) - EXCESS_ROLES)
 
-def get_command_name(name):
+def command_name(name):
   return BOT_PREFIX + commands[name].name
 
 async def find_player(message, name):
@@ -718,11 +719,11 @@ async def find_player(message, name):
       return player
   return await question(message, tr('player_notfound').format(name))
 
-async def select_excess_card(message, wronguse_msg, args):
+async def select_excess_card(message, wronguse_msg, cmd_name, args):
   try:
     number = int(args)
   except ValueError:
-    return await question(message, tr(wronguse_msg).format(BOT_PREFIX, EXCESS_ROLES))
+    return await question(message, tr(wronguse_msg).format(command_name(cmd_name), EXCESS_ROLES))
   if number < 1 or number > EXCESS_ROLES:
     return await question(message, tr('choice_outofrange').format(EXCESS_ROLES))
   return number
@@ -779,6 +780,7 @@ def initialize(admins):
 
   for base_name, base in list(roles.items()):
     [base.name, base.description, base.greeting, *aliases] = tr('role_' + base_name.lower())
+    base.greeting = base.greeting.format(*[ command_name(command) for command in dir(base) if command[:1].isupper() ])
     base.__role__ = True
     roles[base.name] = base
     if CREATE_NORMALIZED_ALIASES:
@@ -856,7 +858,8 @@ async def wolf_channel(channel):
         if not player.extern.bot:
           lone_wolf = players[player.extern.id]
           lone_wolf.role.used = False
-      await channel.extern.send(tr('wolf_get_reveal').format(BOT_PREFIX, EXCESS_ROLES))
+      await channel.extern.send(tr('wolf_get_reveal').format(command_name('Reveal'), EXCESS_ROLES))
+      break
 
 ############################# MAIN #############################
 
