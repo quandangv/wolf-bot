@@ -216,7 +216,7 @@ def single_use(func):
 class RoleEncoder(json.JSONEncoder):
   def encode_role(self, obj):
     result = { name: getattr(obj, name) for name in ROLE_VARIABLES if hasattr(obj, name) }
-    result['type'] = obj.name
+    result['type'] = type(obj).__name__
     return result
 
   def default(self, obj):
@@ -228,7 +228,7 @@ class RoleEncoder(json.JSONEncoder):
         result['vote'] = obj.vote
       if obj.role:
         result['role'] = self.encode_role(obj.role)
-        result['real_role'] = obj.real_role
+        result['real_role'] = roles[obj.real_role].__name__
       return result
     return json.JSONEncoder.default(self, obj)
 
@@ -239,11 +239,11 @@ def state_to_json(fp):
   obj = {
     'vote_list': vote_list,
     'played_roles': played_roles,
-    'excess_roles': excess_roles,
     'status': status,
     'SEER_REVEAL': SEER_REVEAL,
     'EXCESS_ROLES': EXCESS_ROLES,
 
+    'excess_roles': [ roles[role].__name__ for role in excess_roles ],
     'channels': tmp_channels_export,
     'players': list(players.values()),
   }
@@ -272,14 +272,16 @@ async def json_to_state(fp, player_mapping = {}):
       role_obj = decoded_player['role']
       role = roles[role_obj['type']]
       player.role = role() if len(role_obj) == 1 else role(role_obj)
-      player.real_role = decoded_player['real_role']
+      player.real_role = roles[decoded_player['real_role']].name
     if 'vote' in decoded_player:
       player.vote = decoded_player['vote']
 
   for name, channel in obj['channels'].items():
     tmp_channels[name] = await Channel.create(channel['name'], *( players[id] for id in channel['members'] ))
+  global excess_roles
+  excess_roles = [ roles[role].name for role in obj['excess_roles'] ]
 
-  names = ['vote_list', 'played_roles', 'excess_roles', 'status', 'SEER_REVEAL', 'EXCESS_ROLES' ]
+  names = ['vote_list', 'played_roles', 'status', 'SEER_REVEAL', 'EXCESS_ROLES' ]
   for name in names:
     if name in obj:
       globals()[name] = obj[name]
