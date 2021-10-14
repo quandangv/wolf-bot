@@ -7,7 +7,8 @@ import traceback
 commands = {}
 roles = {}
 channel_events = {}
-main_commands = []
+admin_commands = []
+other_commands = []
 
 vote_list = {}
 tmp_channels = {}
@@ -243,9 +244,10 @@ def initialize(admins):
     base.name = name
     base.description = description
     commands[name] = base
+    if not isinstance(base, RoleCommand) and not isinstance(base, DebugCommand):
+      (admin_commands if isinstance(base, AdminCommand) else other_commands).append(BOT_PREFIX + name)
     if aliases:
       commands[name].description += tr('aliases_list').format('`, `!'.join(aliases))
-    main_commands.append(name)
     for alias in aliases:
       if alias not in commands:
         commands[alias] = base.make_alias(alias, description)
@@ -254,7 +256,8 @@ def initialize(admins):
 
   for base_name, base in list(roles.items()):
     [base.name, base.description, base.greeting, *aliases] = tr('role_' + base_name.lower())
-    base.greeting = base.greeting.format(*[ command_name(command) for command in dir(base) if command[:1].isupper() ])
+    base.commands = [ command_name(command) for command in dir(base) if command[:1].isupper() ]
+    base.greeting = base.greeting.format(*base.commands)
     base.__role__ = True
     roles[base.name] = base
     if CREATE_NORMALIZED_ALIASES:
@@ -389,9 +392,11 @@ async def Help(message, args):
       await confused(message.channel, args)
   else:
     player = get_player(message.author)
-    command_list = [ BOT_PREFIX + cmd for cmd in main_commands
-        if commands[cmd].is_listed(player, message.channel)
-    ]
+    command_list = other_commands[:]
+    if player.is_admin:
+      command_list += admin_commands
+    if player.role:
+      command_list = player.role.commands + command_list
     await confirm(message, tr('help_list').format('`, `'.join(command_list)) + tr('help_detail').format(command_name('Help')))
 @cmd(SetupCommand())
 async def AddRole(message, args):
