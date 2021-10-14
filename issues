@@ -2,18 +2,15 @@
 - Allow non-admin to setup game
 - Force fixed or randomized order of action for roles
 - Test case for no winners
-- Delete messages to wrong channel
 - Test case for starting with default roles
 - Print starting role with start message
-- History command
 - Manually add players to the game
-- Help for admin on startup
-- Command class for observer to execute
-- Change command classes to decorators: returning the actual command and the is_listed function
 
 # DOING
 
 # DONE
+- History command
+- Help for admin on startup
 - Remove multiple roles
 - Handle @ in names
 - Vote info command

@@ -10,6 +10,9 @@ channel_events = {}
 admin_commands = []
 other_commands = []
 
+history = []
+og_roles = {}
+og_excess = []
 vote_list = {}
 tmp_channels = {}
 players = {}
@@ -311,6 +314,9 @@ def state_to_json(fp):
     'status': status,
     'SEER_REVEAL': SEER_REVEAL,
     'EXCESS_ROLES': EXCESS_ROLES,
+    'history': history,
+    'og_roles': og_roles,
+    'og_excess': og_excess,
 
     'excess_roles': [ roles[role].__name__ for role in excess_roles ],
     'channels': tmp_channels_export,
@@ -350,7 +356,7 @@ async def json_to_state(fp, player_mapping = {}):
   global excess_roles
   excess_roles = [ roles[role].name for role in obj['excess_roles'] ]
 
-  names = ['vote_list', 'played_roles', 'status', 'SEER_REVEAL', 'EXCESS_ROLES' ]
+  names = ['vote_list', 'played_roles', 'status', 'SEER_REVEAL', 'EXCESS_ROLES', 'history', 'og_roles', 'og_excess' ]
   for name in names:
     if name in obj:
       globals()[name] = obj[name]
@@ -478,12 +484,16 @@ async def StartImmediate(message, args):
       global player_count
       status = 'night'
       player_count = current_count
+      history.clear()
+      og_roles.clear()
+      og_excess.clear()
 
       shuffled_roles = shuffle_copy(played_roles)
       for idx, member in enumerate(members):
         player = get_player(member)
         player.role = roles[shuffled_roles[idx]]()
         player.real_role = player.role.name
+        og_roles[player.extern.mention] = player.real_role
         await player.extern.send(tr('role').format(player.role.name) + player.role.greeting)
         if hasattr(player.role, 'on_start'):
           await player.role.on_start(player)
@@ -491,6 +501,7 @@ async def StartImmediate(message, args):
       excess_roles.clear()
       for idx in range(EXCESS_ROLES):
         excess_roles.append(shuffled_roles[-idx - 1])
+        og_excess.append(shuffled_roles[-idx - 1])
 
       for id, channel in tmp_channels.items():
         channel_name = id + '_channel'
@@ -563,6 +574,19 @@ async def CloseVote(_, __):
       elif is_village_side(p.real_role):
         villagers.append(p)
     await announce_winners(channel, wolves if wolves else villagers)
+
+@cmd(Command())
+@check_context('public', None)
+async def History(message, args):
+  if history:
+    reveal_item = tr('reveal_item')
+    command_item = tr('command_item')
+    command_item_empty = tr('command_item_empty')
+    roles = '\n'.join([ reveal_item.format(player, role) for player, role in og_roles.items() ])
+    commands = '\n'.join([ command_item.format(h[0], h[1], h[2]) if h[2] != None else command_item_empty.format(h[0], h[1]) for h in history ])
+    await message.channel.send(tr('history').format(roles, join_with_and(og_excess), commands))
+  else:
+    await question(message, tr('no_history'))
 
 @cmd(AdminCommand())
 async def Save(message, args):
@@ -638,6 +662,9 @@ def get_player(extern):
     return players[id]
   players[id] = player = Player(False, extern)
   return player
+
+def record_history(message, result):
+  history.append((message.author.name, message.content, result))
 
 def join_with_and(arr):
   return arr[0] if len(arr) == 1 else ", ".join(arr[:-1]) + ", " + tr('_and') + arr[-1]
@@ -728,8 +755,9 @@ class Seer(Villager):
       return await question(message, tr('seer_self'))
     player = await find_player(message, args)
     if player:
+      record_history(message, player.real_role)
+      await confirm(message, tr('see_success').format(args, player.real_role))
       await set_used(self)
-      return await confirm(message, tr('see_success').format(args, player.real_role))
 
   @check_context('dm')
   @single_arg('reveal_wronguse', EXCESS_ROLES)
@@ -740,12 +768,14 @@ class Seer(Villager):
       return await question(message, tr('out_of_reveal').format(SEER_REVEAL))
     number = await select_excess_card(message, 'reveal_wronguse', 'Reveal', args)
     if number:
+      result = excess_roles[number - 1]
+      record_history(message, result)
       self.reveal_count += 1
       if self.reveal_count >= SEER_REVEAL:
-        await confirm(message, tr('reveal_success').format(number, excess_roles[number - 1]) + tr('no_reveal_remaining'))
+        await confirm(message, tr('reveal_success').format(number, result) + tr('no_reveal_remaining'))
         await set_used(self)
       else:
-        await confirm(message, tr('reveal_success').format(number, excess_roles[number - 1]) + tr('reveal_remaining').format(SEER_REVEAL - self.reveal_count))
+        await confirm(message, tr('reveal_success').format(number, result) + tr('reveal_remaining').format(SEER_REVEAL - self.reveal_count))
 
 @role
 class Clone(Villager):
@@ -760,6 +790,7 @@ class Clone(Villager):
       return await question(message, tr('clone_self'))
     player = await find_player(message, args)
     if player:
+      record_history(message, player.real_role)
       me.role = roles[player.real_role]()
       me.real_role = me.role.name
       if hasattr(me.role, 'on_start'):
@@ -781,6 +812,7 @@ class Troublemaker(Villager):
       return await question(message, tr('no_swap_self'))
     players = [ await find_player(message, name) for name in players ]
     if players[0] and players[1]:
+      record_history(message, None)
       players[0].real_role, players[1].real_role = players[1].real_role, players[0].real_role
       await set_used(self)
       return await confirm(message, tr('troublemaker_success')
@@ -799,6 +831,7 @@ class Thief(Villager):
       return await question(message, tr('no_swap_self'))
     player = await find_player(message, args)
     if player:
+      record_history(message, player.real_role)
       me.real_role, player.real_role = player.real_role, me.real_role
       await set_used(self)
       return await confirm(message, tr('thief_success').format(args, me.real_role))
@@ -814,6 +847,7 @@ class Drunk(Villager):
   async def Take(self, me, message, args):
     number = await select_excess_card(message, 'drunk_wronguse', 'Take', args)
     if number:
+      record_history(message, None)
       me.real_role, excess_roles[number-1] = excess_roles[number-1], me.real_role
       await set_used(self)
       return await confirm(message, tr('drunk_success').format(args))
@@ -852,6 +886,7 @@ class Wolf(WolfSide):
   async def Reveal(self, me, message, args):
     number = await select_excess_card(message, 'reveal_wronguse', 'Reveal', args)
     if number:
+      record_history(message, excess_roles[number-1])
       await confirm(message, tr('reveal_success').format(number, excess_roles[number - 1]))
       await set_used(self)
 

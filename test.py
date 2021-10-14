@@ -189,8 +189,8 @@ loop.run_until_complete(asyncio.gather(
   expect_response(anne, '!save _test_empty', game, '[game] confirm(@anne) save_success(_test_empty) '),
   expect_response(anne, '!listroles', game, "[game] confirm(@anne) no_roles default_roles(['Wolf', 'Thief', 'Troublemaker', 'Drunk', 'Wolf', 'Villager', 'Seer', 'Clone', 'Minion', 'Insomniac', 'Tanner']) "),
   #expect_response(anne, '!startimmediate', game, '[game] question(@anne) start_needless(9, 0) '),
-  expect_response(anne, '!help', game, '[game] confirm(@anne) help_list(!help`, `!listroles`, `!unvote`, `!vote`, `!votedetail`, `!votecount`, `!addrole`, `!removerole`, `!startimmediate`, `!closevote`, `!save`, `!load`, `!endgame`, `!wakeup) help_detail(!help) '),
-  expect_response(carl, '!help', game, '[game] confirm(@carl) help_list(!help`, `!listroles`, `!unvote`, `!vote`, `!votedetail`, `!votecount) help_detail(!help) '),
+  expect_response(anne, '!help', game, '[game] confirm(@anne) help_list(!help`, `!listroles`, `!unvote`, `!vote`, `!votedetail`, `!votecount`, `!history`, `!addrole`, `!removerole`, `!startimmediate`, `!closevote`, `!save`, `!load`, `!endgame`, `!wakeup) help_detail(!help) '),
+  expect_response(carl, '!help', game, '[game] confirm(@carl) help_list(!help`, `!listroles`, `!unvote`, `!vote`, `!votedetail`, `!votecount`, `!history) help_detail(!help) '),
 
   expect_response(anne, '!help help', game, '[game] confirm(@anne) help_desc(!help)aliases_list(help_alias) '),
   expect_response(anne, '!help tanner', game, '[game] confirm(@anne) tanner_desc'),
@@ -302,7 +302,8 @@ members.pop()
 
 loop.run_until_complete(asyncio.gather(
   expect_response(carl, '', game, [ '[game] vote_result(vote_item(@anne, 1) \nvote_item(@harry, 5) \nvote_item(@elsa, 2) ) ', '[game] lynch(@harry) ', '[game] reveal_player(@harry, insomniac) ', '[game] winners(@bob, @elsa) ', '[game] reveal_all(anne:villager\ncarl:seer\nbob:wolf\ndavid:thief\nelsa:wolf\nfrank:troublemaker\ngeorge:villager\nharry:insomniac\nignacio:thief) \nexcess_roles(drunk, villager, villager) ' ]),
-  expect_response(carl, '!vote elsa', game, '[game] question(@carl) not_playing ')
+  expect_response(carl, '!vote elsa', game, '[game] question(@carl) not_playing '),
+  expect_response(carl, '!history', game, '[game] history(@anne:wolf\n@bob:wolf\n@carl:seer\n@david:villager\n@elsa:thief\n@frank:troublemaker\n@george:drunk\n@harry:clone\n@ignacio:insomniac, villager, villager, villager, command_item(elsa, !steal anne, wolf) \ncommand_item(carl, !see anne, thief) \ncommand_item_empty(frank, !swap anne david) \ncommand_item_empty(george, !take 1) \ncommand_item(harry, !clone david, thief) \ncommand_item(harry, !steal ignacio, insomniac) ) '),
 ))
 
 @core.action

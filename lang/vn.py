@@ -29,6 +29,10 @@ no_wolves = [ "Làng hôm nay ko có sói nha. ", "Không có con sói nào cả
 minion_kill_self = "Hãy khiến mọi người giết mình để thắng"
 reveal_all = "Chức năng của mọi người: \n{}"
 excess_roles = "Các lá bài thừa là **{}**"
+no_history = "không tìm thấy lịch sử ván trước"
+history = "Chức năng ban đầu:\n{}\nCác lá bài bên ngoài:{}\nCác lệnh thực hiện:\n{}"
+command_item = "- {} gọi `{}` ra **{}**"
+command_item_empty = "- {} gọi `{}`"
 
 vote = [ "Dùng lệnh `{} người-chơi` để bỏ phiếu treo cổ người đó", "Bạn ghét đứa nào thì cứ `{} đứa-đó` nha" ]
 help_list = [ "các lệnh được thực hiện là `{}`.", "ngoài cắn người, bạn còn có thể dùng lệnh `{}`. (giỡn thoi nha)", "hãy thử một trong các lệnh `{}`" ]
@@ -126,6 +130,7 @@ cmd_load = ( "tai", "`{0}  tên-file` để tải trạng thái của game" )
 cmd_revealall = ( "tietlo", "`{0}` liệt kê thông tin chức năng của mọi người và danh sách các lá bài bên ngoài (Debug)" )
 cmd_votecount = ( "sophieu", "`{0}` để xem lại tổng sống phiếu của mọi người" )
 cmd_votedetail = ( "chitietphieu", "`{0}` để xem chi tiết ai vote ai" )
+cmd_history = ( "lichsu", "`{0}` để xem diễn biến chi tiết của ván trước" )
 
 role_villager = ( "dân thường", "Một con dân thường không có chức năng. Nhờ vậy, bạn sẽ được yên giấc vào ban đêm", "Ban đêm bạn không phải làm gì cả. Sáng dậy, bạn có thể vote người để treo cổ", "dân làng", "dân" )
 role_wolf = ( "sói", "Sói chống lại dân làng. Chúng sẽ thắng nếu người bị treo cổ là phe dân", "Bạn sẽ được thêm vào group sói. Ban ngày, hãy tìm cách treo cổ một người dân để chiến thắng" )
