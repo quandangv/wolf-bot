@@ -392,7 +392,7 @@ async def Help(message, args):
     command_list = [ BOT_PREFIX + cmd for cmd in main_commands
         if commands[cmd].is_listed(player, message.channel)
     ]
-    await confirm(message, tr('help_list').format('`, `'.join(command_list)))
+    await confirm(message, tr('help_list').format('`, `'.join(command_list)) + tr('help_detail').format(command_name('Help')))
 @cmd(SetupCommand())
 async def AddRole(message, args):
   role_list = []

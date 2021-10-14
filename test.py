@@ -189,8 +189,8 @@ loop.run_until_complete(asyncio.gather(
   expect_response(anne, '!save _test_empty', game, '[game] confirm(@anne) save_success(_test_empty) '),
   expect_response(anne, '!listroles', game, "[game] confirm(@anne) no_roles default_roles(['Wolf', 'Thief', 'Troublemaker', 'Drunk', 'Wolf', 'Villager', 'Seer', 'Clone', 'Minion', 'Insomniac', 'Tanner']) "),
   #expect_response(anne, '!startimmediate', game, '[game] question(@anne) start_needless(9, 0) '),
-  expect_response(anne, '!help', game, '[game] confirm(@anne) help_list(!help`, `!addrole`, `!removerole`, `!listroles`, `!startimmediate`, `!votedetail`, `!votecount`, `!closevote`, `!save`, `!load`, `!endgame`, `!wakeup`, `!revealall) '),
-  expect_response(carl, '!help', game, '[game] confirm(@carl) help_list(!help`, `!listroles`, `!votedetail`, `!votecount`, `!revealall) '),
+  expect_response(anne, '!help', game, '[game] confirm(@anne) help_list(!help`, `!addrole`, `!removerole`, `!listroles`, `!startimmediate`, `!votedetail`, `!votecount`, `!closevote`, `!save`, `!load`, `!endgame`, `!wakeup`, `!revealall) help_detail(!help) '),
+  expect_response(carl, '!help', game, '[game] confirm(@carl) help_list(!help`, `!listroles`, `!votedetail`, `!votecount`, `!revealall) help_detail(!help) '),
 
   expect_response(anne, '!help help', game, '[game] confirm(@anne) help_desc(!help)aliases_list(help_alias) '),
   expect_response(anne, '!help tanner', game, '[game] confirm(@anne) tanner_desc'),

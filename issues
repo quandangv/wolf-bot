@@ -3,10 +3,6 @@
 - Force fixed or randomized order of action for roles
 - Test case for no winners
 - Delete messages to wrong channel
-- Remove multiple roles
-- Handle @ in names
-- No numbers in command name
-- Insomniac should be added to wolf group
 - Test case for starting with default roles
 - Print starting role with start message
 - History command
@@ -18,6 +14,8 @@
 # DOING
 
 # DONE
+- Remove multiple roles
+- Handle @ in names
 - Vote info command
 - Forbid starting game when game already started
 - Comma in 'ơi'

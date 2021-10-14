@@ -31,6 +31,7 @@ excess_roles = "Các lá bài thừa là **{}**"
 
 vote = [ "Dùng lệnh `{} người-chơi` để bỏ phiếu treo cổ người đó", "Bạn ghét đứa nào thì cứ `{} đứa-đó` nha" ]
 help_list = [ "các lệnh được thực hiện là `{}`.", "ngoài cắn người, bạn còn có thể dùng lệnh `{}`. (giỡn thoi nha)", "hãy thử một trong các lệnh `{}`" ]
+help_detail = ". Để tìm hiểu thêm về từng lệnh, hãy nhắn `{0}  tên-lệnh`"
 list_roles = [ "Ván này mình chơi **{}**; cần có **{}** người chơi", "Trong làng có **{}**; đủ cho **{}** người chơi" ]
 no_roles = [ "Làng trống trơnn", "Chưa có chức năng nào cả" ]
 default_roles = ". Quản trò sẽ dùng các chức năng mặc định là **{}**"
