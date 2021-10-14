@@ -10,23 +10,16 @@ channel_events = {}
 admin_commands = []
 other_commands = []
 
+lock = asyncio.Lock()
+vote_countdown_task = None
+vote_countdown_monitor = None
 history = []
-og_roles = {}
-og_excess = []
 vote_list = {}
 tmp_channels = {}
 players = {}
 played_roles = []
-excess_roles = []
 status = None
 player_count = 0
-
-lock = asyncio.Lock()
-vote_countdown_task = None
-vote_countdown_monitor = None
-
-EXCESS_ROLES = 3
-SEER_REVEAL = 2
 
 THIS_MODULE = sys.modules[__name__]
 BOT_PREFIX = '!'
@@ -36,6 +29,13 @@ DEBUG = False
 VOTE_COUNTDOWN = 60
 LANDSLIDE_VOTE_COUNTDOWN = 10
 ROLE_VARIABLES = [ 'used', 'discussed', 'reveal_count' ]
+
+excess_roles = []
+og_roles = {}
+og_excess = []
+
+EXCESS_ROLES = 3
+SEER_REVEAL = 2
 DEFAULT_ROLES = [ 'Wolf', 'Thief', 'Troublemaker', 'Drunk', 'Wolf', 'Villager', 'Seer', 'Clone', 'Minion', 'Insomniac', 'Tanner' ]
 
 ############################ ACTIONS ###########################
@@ -67,18 +67,6 @@ def action(func):
       or accept_name('is_dm_channel') or accept_name('is_public_channel') or accept_name('debug')):
     raise ValueError("Action not used: {}".format(name))
   return func
-
-########################### COMMANDS ###########################
-
-def is_debug(): return DEBUG
-def check_debug(func):
-  async def wrapper(*args):
-    if not DEBUG:
-      await question(message, tr('debug_command'))
-    else:
-      await func(*args)
-  return (wrapper, is_debug)
-
 
 ########################### CLASSES ############################
 
@@ -232,7 +220,6 @@ def check_context(required_channel, required_status = 'night'):
       else:
         await func(*others, message=message, args=args)
     handler.__name__ = func.__name__
-    handler.unchecked = func
     return handler
   return decorator
 
@@ -312,9 +299,9 @@ def state_to_json(fp):
     'vote_list': vote_list,
     'played_roles': played_roles,
     'status': status,
+    'history': history,
     'SEER_REVEAL': SEER_REVEAL,
     'EXCESS_ROLES': EXCESS_ROLES,
-    'history': history,
     'og_roles': og_roles,
     'og_excess': og_excess,
 
@@ -322,6 +309,7 @@ def state_to_json(fp):
     'channels': tmp_channels_export,
     'players': list(players.values()),
   }
+  # Function to add gametype-specific data to obj
   return json.dump(obj, fp, cls = RoleEncoder, indent = 2)
 
 async def json_to_state(fp, player_mapping = {}):
@@ -363,6 +351,7 @@ async def json_to_state(fp, player_mapping = {}):
   if 'null' in vote_list:
     vote_list[None] = vote_list['null']
     del vote_list['null']
+  # Function to retrieve gametype-specific data from obj
 
 ########################## COMMANDS ############################
 
@@ -404,6 +393,7 @@ async def Help(message, args):
     if player.role:
       command_list = player.role.commands + command_list
     await confirm(message, tr('help_list').format('`, `'.join(command_list)) + tr('help_detail').format(command_name('Help')))
+
 @cmd(SetupCommand())
 async def AddRole(message, args):
   role_list = []
@@ -465,6 +455,7 @@ async def Vote(me, message, args):
 
 @cmd(SetupCommand())
 async def StartImmediate(message, args):
+  # Function to start custom game
   try:
     members = await get_available_members()
     current_count = len(members)
@@ -543,6 +534,7 @@ async def low_vote_count(key):
 
 @cmd(AdminCommand())
 async def CloseVote(_, __):
+  # Function to either end game or start next night
   global vote_countdown_task
   if vote_countdown_task:
     vote_countdown_task.cancel()
@@ -608,6 +600,7 @@ async def Load(message, args):
 
 @cmd(AdminCommand())
 async def EndGame(_, __):
+  # Function to clear gametype-specific data
   global status
   status = None
   for player in players.values():
@@ -619,6 +612,7 @@ async def EndGame(_, __):
 
 @cmd(AdminCommand())
 async def WakeUp(_, __):
+  # Function to start gametype-specific day
   for player in players.values():
     if player.role and hasattr(player.role, 'before_dawn'):
       await player.role.before_dawn(player)
@@ -630,6 +624,7 @@ async def WakeUp(_, __):
 
 @cmd(DebugCommand())
 async def RevealAll(message, args):
+  # Function to reveal all data
   await low_reveal_all(message.channel)
 
 async def low_reveal_all(channel):
@@ -669,9 +664,6 @@ def record_history(message, result):
 def join_with_and(arr):
   return arr[0] if len(arr) == 1 else ", ".join(arr[:-1]) + ", " + tr('_and') + arr[-1]
 
-def needed_players_count():
-  return max(0, len(played_roles) - EXCESS_ROLES)
-
 def command_name(name):
   return BOT_PREFIX + commands[name].name
 
@@ -684,15 +676,6 @@ async def find_player(message, name):
         return await question(message, tr('player_norole').format(player.mention))
       return player
   return await question(message, tr('player_notfound').format(name))
-
-async def select_excess_card(message, wronguse_msg, cmd_name, args):
-  try:
-    number = int(args)
-  except ValueError:
-    return await question(message, tr(wronguse_msg).format(command_name(cmd_name), EXCESS_ROLES))
-  if number < 1 or number > EXCESS_ROLES:
-    return await question(message, tr('choice_outofrange').format(EXCESS_ROLES))
-  return number
 
 async def set_used(role):
   role.used = True
@@ -711,12 +694,6 @@ async def await_vote_countdown():
 def transfer_to_self(self, name, data, default):
   setattr(self, name, data[name] if data else default)
 
-def is_wolf_side(role):
-  return issubclass(roles[role], WolfSide)
-
-def is_village_side(role):
-  return issubclass(roles[role], Villager)
-
 async def announce_winners(channel, winners):
   if winners:
     await channel.send(tr('winners').format(join_with_and([ p.extern.mention for p in winners ])))
@@ -724,6 +701,26 @@ async def announce_winners(channel, winners):
     await channel.send(tr('no_winners'))
   await low_reveal_all(channel)
   await EndGame(None, None)
+
+# Game specific
+
+async def select_excess_card(message, wronguse_msg, cmd_name, args):
+  try:
+    number = int(args)
+  except ValueError:
+    return await question(message, tr(wronguse_msg).format(command_name(cmd_name), EXCESS_ROLES))
+  if number < 1 or number > EXCESS_ROLES:
+    return await question(message, tr('choice_outofrange').format(EXCESS_ROLES))
+  return number
+
+def is_wolf_side(role):
+  return issubclass(roles[role], WolfSide)
+
+def is_village_side(role):
+  return issubclass(roles[role], Villager)
+
+def needed_players_count():
+  return max(0, len(played_roles) - EXCESS_ROLES)
 
 ############################ ROLES #############################
 
