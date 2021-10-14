@@ -50,6 +50,7 @@ landslide_vote_countdown = "{} chuẩn bị lên dàn, mọi người còn **{}*
 vote_countdown_cancelled = "Mọi người cứ từ từ bỏ phiếu đi"
 vote_result = "Cả làng đã bỏ phiếu xong! Kết quả là:\n{}"
 vote_item = "- {} với **{}** phiếu bầu"
+vote_detail_item = "- {} vote {}"
 
 add_wronguse = "bạn muốn thêm chức năng gì thì phải nhắn là `{0} chức-năng`. Ví dụ như `{0} dan lang`"
 remove_wronguse = "bạn muốn bỏ chức năng nào thì phải nhắn là `{0} chức-năng`. Ví dụ như `{0} tien tri`"
@@ -76,6 +77,7 @@ reveal_success = "lá bài số **{}** là **{}**"
 discussion_ended = "bạn đã ngưng bàn luận"
 save_success = "đã lưu trạng thái với tên **{}**"
 load_success = "đã tải thành công trạng thái **{}**"
+vote_detail = "Các phiếu bầu hiện tại là:\n{}"
 
 no_swap_self = "bạn không được tráo chức năng với chính mình"
 seer_self = "bạn không được soi chính mình"

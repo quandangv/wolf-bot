@@ -499,11 +499,17 @@ async def StartImmediate(message, args):
 
 @cmd(Command())
 @check_context('public', 'day')
+async def VoteDetail(message, args):
+  item = tr('vote_detail_item')
+  await main_channel().send(tr('vote_detail').format('\n'.join([ item.format(player.extern.mention, player.vote) for player in players.values() if player.vote ])))
+
+@cmd(Command())
+@check_context('public', 'day')
 async def VoteCount(message, args):
-  most_vote = await low_vote_count()
+  most_vote = await low_vote_count('vote_detail')
   await main_channel().send(tr('most_vote').format(most_vote) if most_vote else tr('vote_tie'))
 
-async def low_vote_count():
+async def low_vote_count(key):
   vote_detail = []
   most_vote = None
   max_vote = 0
@@ -516,7 +522,7 @@ async def low_vote_count():
         most_vote = p
       elif votes == max_vote:
         most_vote = None
-  await main_channel().send(tr('vote_result').format("\n".join(vote_detail)))
+  await main_channel().send(tr(key).format("\n".join(vote_detail)))
   return most_vote
 
 @cmd(AdminCommand())
@@ -526,7 +532,7 @@ async def CloseVote(_, __):
     vote_countdown_task.cancel()
     clear_vote_countdown()
   channel = main_channel()
-  most_vote = await low_vote_count()
+  most_vote = await low_vote_count('vote_result')
   if most_vote:
     await channel.send(tr('lynch').format(most_vote))
     for lynched in players.values():

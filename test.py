@@ -71,6 +71,11 @@ members = [ anne, bob, carl, david, elsa, frank, george, harry, ignacio ]
 admins = [ anne ]
 
 @core.action
+async def debug(msg):
+  print("ERROR:")
+  print(msg)
+
+@core.action
 def main_channel():
   return game
 
@@ -184,8 +189,8 @@ loop.run_until_complete(asyncio.gather(
   expect_response(anne, '!save _test_empty', game, '[game] confirm(@anne) save_success(_test_empty) '),
   expect_response(anne, '!listroles', game, "[game] confirm(@anne) no_roles default_roles(['Wolf', 'Thief', 'Troublemaker', 'Drunk', 'Wolf', 'Villager', 'Seer', 'Clone', 'Minion', 'Insomniac', 'Tanner']) "),
   #expect_response(anne, '!startimmediate', game, '[game] question(@anne) start_needless(9, 0) '),
-  expect_response(anne, '!help', game, '[game] confirm(@anne) help_list(!help`, `!addrole`, `!removerole`, `!listroles`, `!startimmediate`, `!votecount`, `!closevote`, `!save`, `!load`, `!endgame`, `!wakeup`, `!revealall) '),
-  expect_response(carl, '!help', game, '[game] confirm(@carl) help_list(!help`, `!listroles`, `!votecount`, `!revealall) '),
+  expect_response(anne, '!help', game, '[game] confirm(@anne) help_list(!help`, `!addrole`, `!removerole`, `!listroles`, `!startimmediate`, `!votedetail`, `!votecount`, `!closevote`, `!save`, `!load`, `!endgame`, `!wakeup`, `!revealall) '),
+  expect_response(carl, '!help', game, '[game] confirm(@carl) help_list(!help`, `!listroles`, `!votedetail`, `!votecount`, `!revealall) '),
 
   expect_response(anne, '!help help', game, '[game] confirm(@anne) help_desc(!help)aliases_list(help_alias) '),
   expect_response(anne, '!help tanner', game, '[game] confirm(@anne) tanner_desc'),
@@ -287,7 +292,8 @@ loop.run_until_complete(asyncio.gather(
   expect_response(elsa, '!vote harry', game, '[game] vote_success(@elsa, @harry) '),
   expect_response(david, '!vote harry', game, '[game] vote_success(@david, @harry) '),
   expect_response(ignacio, '!vote elsa', game, [ '[game] vote_success(@ignacio, @elsa) ', '[game] vote_countdown({}) '.format(core.VOTE_COUNTDOWN) ]),
-  expect_response(not_player, '!votecount', game, [ '[game] vote_result(vote_item(@anne, 1) \nvote_item(@harry, 4) \nvote_item(@elsa, 1) ) ', '[game] most_vote(@harry) ' ]),
+  expect_response(not_player, '!votecount', game, [ '[game] vote_detail(vote_item(@anne, 1) \nvote_item(@harry, 4) \nvote_item(@elsa, 1) ) ', '[game] most_vote(@harry) ' ]),
+  expect_response(not_player, '!votedetail', game, [ '[game] vote_detail(vote_detail_item(@anne, @harry) \nvote_detail_item(@david, @harry) \nvote_detail_item(@elsa, @harry) \nvote_detail_item(@frank, @harry) \nvote_detail_item(@harry, @anne) \nvote_detail_item(@ignacio, @elsa) ) ' ]),
   expect_response(bob, '!vote harry', game, [ '[game] vote_success(@bob, @harry) ', '[game] landslide_vote_countdown(@harry, {}) '.format(core.LANDSLIDE_VOTE_COUNTDOWN) ]),
   expect_response(carl, '!vote elsa', game, '[game] vote_success(@carl, @elsa) ')
 ))
@@ -357,6 +363,6 @@ loop.run_until_complete(asyncio.gather(
   expect_response(ignacio, '!vote elsa', game, [ '[game] vote_success(@ignacio, @elsa) ', '[game] vote_countdown({}) '.format(core.VOTE_COUNTDOWN) ]),
   expect_response(bob, '!vote elsa', game, '[game] vote_success(@bob, @elsa) '),
   expect_response(carl, '!vote elsa', game, '[game] vote_success(@carl, @elsa) '),
-  expect_response(not_player, '!votecount', game, [ '[game] vote_result(vote_item(@frank, 1) \nvote_item(@anne, 1) \nvote_item(@harry, 3) \nvote_item(@elsa, 3) ) ', '[game] vote_tie ' ]),
+  expect_response(not_player, '!votecount', game, [ '[game] vote_detail(vote_item(@frank, 1) \nvote_item(@anne, 1) \nvote_item(@harry, 3) \nvote_item(@elsa, 3) ) ', '[game] vote_tie ' ]),
   expect_response(george, '!vote david', game, [ '[game] vote_success(@george, @david) ', '[game] vote_result(vote_item(@frank, 1) \nvote_item(@anne, 1) \nvote_item(@harry, 3) \nvote_item(@david, 1) \nvote_item(@elsa, 3) ) ', '[game] no_lynch ', '[game] winners(@carl, @bob, @elsa, @harry) ', '[game] reveal_all(anne:insomniac\ncarl:wolf\nbob:wolf\ndavid:troublemaker\nelsa:minion\nfrank:villager\ngeorge:thief\nharry:wolf\nignacio:seer) \nexcess_roles(drunk, villager, villager) ' ]),
 ))
