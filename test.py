@@ -1,4 +1,5 @@
 import core
+import one_night
 import asyncio
 import time
 import lang.vn as lang
@@ -144,6 +145,7 @@ async def get_available_members():
 def shuffle_copy(arr):
   return arr[::-1]
 
+one_night.connect(core)
 core.initialize(admins)
 loop = asyncio.get_event_loop()
 
@@ -203,6 +205,7 @@ loop.run_until_complete(asyncio.gather(
   expect_response(anne, '!addrole', game, '[game] question(@anne) add_wronguse(!addrole) '),
   expect_response(anne, '!vote carl', game, '[game] question(@anne) not_playing '),
   expect_response(carl, '!addrole', game, '[game] question(@carl) require_admin '),
+  expect_response(anne, '!addrole', game, '[game] question(@anne) add_wronguse(!addrole) '),
 
   expect_response(anne, '!addrole villager', bot_dm, '[@bot] question(@anne) public_only(!addrole) '),
   expect_response(anne, '!addrole villager, villager, villager', game, '[game] add_success(villager, villager, villager) '),
@@ -226,7 +229,6 @@ loop.run_until_complete(asyncio.gather(
     '[game] start(@anne, @bob, @carl, @david, @elsa, @frank, @george, @harry, @ignacio) ',
     '[@anne] role(wolf) wolf_greeting',
     '[@bob] role(wolf) wolf_greeting',
-    '[wolf ] channel_greeting(@bob, wolf ) ',
     '[@carl] role(seer) seer_greeting(!reveal, !see)',
     '[@david] role(villager) villager_greeting',
     '[@elsa] role(thief) thief_greeting(!steal)',
@@ -279,7 +281,7 @@ loop.run_until_complete(asyncio.gather(
 
   expect_response(harry, '!swap frank', bot_dm, '[@bot] question(@harry) wrong_role(!swap) '),
   expect_response(not_player, '!vote frank', bot_dm, '[@bot] question(@not_player) not_playing '),
-  expect_response(harry, '!vote frank', bot_dm, '[@bot] question(@harry) public_only(!vote) '),
+  expect_response(harry, '!vote frank', bot_dm, '[@harry] question(@harry) public_only(!vote) '),
   expect_response(harry, '!vote frank', game, '[game] vote_success(@harry, @frank) '),
   expect_response(harry, '!vote anne', game, '[game] vote_success(@harry, @anne) '),
   expect_response(anne, '!vote harry', game, '[game] vote_success(@anne, @harry) '),
@@ -293,7 +295,7 @@ loop.run_until_complete(asyncio.gather(
   expect_response(david, '!vote harry', game, '[game] vote_success(@david, @harry) '),
   expect_response(ignacio, '!vote elsa', game, [ '[game] vote_success(@ignacio, @elsa) ', '[game] vote_countdown({}) '.format(core.VOTE_COUNTDOWN) ]),
   expect_response(not_player, '!votecount', game, [ '[game] vote_detail(vote_item(@anne, 1) \nvote_item(@harry, 4) \nvote_item(@elsa, 1) ) ', '[game] most_vote(@harry) ' ]),
-  expect_response(not_player, '!votedetail', game, [ '[game] vote_detail(vote_detail_item(@anne, @harry) \nvote_detail_item(@david, @harry) \nvote_detail_item(@elsa, @harry) \nvote_detail_item(@frank, @harry) \nvote_detail_item(@harry, @anne) \nvote_detail_item(@ignacio, @elsa) ) ' ]),
+  expect_response(not_player, '!votedetail', game, [ '[game] vote_detail(vote_detail_item(anne, @harry) \nvote_detail_item(david, @harry) \nvote_detail_item(elsa, @harry) \nvote_detail_item(frank, @harry) \nvote_detail_item(harry, @anne) \nvote_detail_item(ignacio, @elsa) ) ' ]),
   expect_response(bob, '!vote harry', game, [ '[game] vote_success(@bob, @harry) ', '[game] landslide_vote_countdown(@harry, {}) '.format(core.LANDSLIDE_VOTE_COUNTDOWN) ]),
   expect_response(carl, '!vote elsa', game, '[game] vote_success(@carl, @elsa) ')
 ))
@@ -352,7 +354,6 @@ loop.run_until_complete(asyncio.gather(
   expect_response(bob, '!enddiscussion', channels['wolf '], '[wolf ] confirm(@bob) discussion_ended discussion_all_ended '),
   expect_response(elsa, '!steal ignacio', bot_dm, [ '[@anne] insomniac_reveal(insomniac) ', '[game] wake_up vote(!vote) ', '[@bot] confirm(@elsa) thief_success(ignacio, minion) ' ]),
   expect_response(not_player, '!vote frank', bot_dm, '[@bot] question(@not_player) not_playing '),
-  expect_response(harry, '!vote frank', bot_dm, '[@bot] question(@harry) public_only(!vote) '),
   expect_response(harry, '!vote frank', game, '[game] vote_success(@harry, @frank) '),
   expect_response(harry, '!vote anne', game, '[game] vote_success(@harry, @anne) '),
   expect_response(anne, '!vote harry', game, '[game] vote_success(@anne, @harry) '),

@@ -56,7 +56,7 @@ landslide_vote_countdown = "{} chuẩn bị lên dàn, mọi người còn **{}*
 vote_countdown_cancelled = "Mọi người cứ từ từ bỏ phiếu đi"
 vote_result = "Cả làng đã bỏ phiếu xong! Kết quả là:\n{}"
 vote_item = "- {} với **{}** phiếu bầu"
-vote_detail_item = "- {} vote {}"
+vote_detail_item = "- **{}** vote {}"
 
 add_wronguse = "bạn muốn thêm chức năng gì thì phải nhắn là `{0} chức-năng`. Ví dụ như `{0} dan lang`"
 remove_wronguse = "bạn muốn bỏ chức năng nào thì phải nhắn là `{0} chức-năng`. Ví dụ như `{0} tien tri`"
