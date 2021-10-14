@@ -289,7 +289,7 @@ loop.run_until_complete(asyncio.gather(
   expect_response(anne, '!load _test_empty', game, '[game] confirm(@anne) load_success(_test_empty) '),
   expect_response(anne, '!load _test ', game, '[game] confirm(@anne) load_success(_test) '),
 
-  expect_response(elsa, '!vote harry', game, '[game] vote_success(@elsa, @harry) '),
+  expect_response(elsa, '!vote @harry', game, '[game] vote_success(@elsa, @harry) '),
   expect_response(david, '!vote harry', game, '[game] vote_success(@david, @harry) '),
   expect_response(ignacio, '!vote elsa', game, [ '[game] vote_success(@ignacio, @elsa) ', '[game] vote_countdown({}) '.format(core.VOTE_COUNTDOWN) ]),
   expect_response(not_player, '!votecount', game, [ '[game] vote_detail(vote_item(@anne, 1) \nvote_item(@harry, 4) \nvote_item(@elsa, 1) ) ', '[game] most_vote(@harry) ' ]),

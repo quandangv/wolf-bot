@@ -10,7 +10,6 @@
 - Test case for starting with default roles
 - Print starting role with start message
 - History command
-- Vote info command
 - Manually add players to the game
 - Help for admin on startup
 - Command class for observer to execute
@@ -19,6 +18,7 @@
 # DOING
 
 # DONE
+- Vote info command
 - Forbid starting game when game already started
 - Comma in 'ơi'
 - sắp sửa -> chuẩn bị

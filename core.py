@@ -644,6 +644,8 @@ def command_name(name):
   return BOT_PREFIX + commands[name].name
 
 async def find_player(message, name):
+  if name.startswith('@'):
+    name = name[1:]
   for player in players.values():
     if player.extern.name == name:
       if not player.role:
