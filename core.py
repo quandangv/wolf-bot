@@ -57,15 +57,12 @@ def missing_action_error(name):
       .format(name))
 
 def action(func):
+  accepted_names = [ 'get_available_members', 'shuffle_copy', 'is_dm_channel', 'tr', 'add_member', 'create_channel', 'main_channel', 'is_public_channel', 'debug' ]
   name = func.__name__
-  def accept_name(text):
-    if name == text:
-      globals()[name] = func
-      return True
-  if not(accept_name('get_available_members') or accept_name('tr') or accept_name('add_member')
-      or accept_name('shuffle_copy') or accept_name('create_channel') or accept_name('main_channel')
-      or accept_name('is_dm_channel') or accept_name('is_public_channel') or accept_name('debug')):
+  if not name in accepted_names:
     raise ValueError("Action not used: {}".format(name))
+  else:
+    globals()[name] = func
   return func
 
 ########################### CLASSES ############################
