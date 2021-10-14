@@ -64,6 +64,18 @@ def action(func):
     raise ValueError("Action not used: {}".format(name))
   return func
 
+########################### COMMANDS ###########################
+
+def is_debug(): return DEBUG
+def check_debug(func):
+  async def wrapper(*args):
+    if not DEBUG:
+      await question(message, tr('debug_command'))
+    else:
+      await func(*args)
+  return (wrapper, is_debug)
+
+
 ########################### CLASSES ############################
 
 class Command:
@@ -116,27 +128,18 @@ class PlayerCommand(Command):
       if not player.role:
         await question(message, tr('not_playing'))
       else:
-        await func(player, message, args)
+        await func(player, message=message, args=args)
     super().decorate(check)
 
 class RoleCommand(PlayerCommand):
-  def __init__(self, required_channel, required_status = 'night'):
-    self.required_channel = required_channel
-    self.required_status = required_status
-
   def is_listed(self, player, channel):
-    return super().is_listed(player, channel) and name_channel(channel) in self.required_channel and hasattr(player.role, self.name)
+    return super().is_listed(player, channel) and hasattr(player.role, self.name)
 
   def decorate(self, func):
     async def check(player, message, args):
-      channel_name = name_channel(message.channel)
-      if not channel_name in self.required_channel:
-        return await question(message, tr('no_' + channel_name).format(BOT_PREFIX + self.name))
-      if self.required_status != status:
-        return await question(message, tr(self.required_status + '_only'))
       if not hasattr(player.role, func.__name__):
         return await question(message, tr('wrong_role').format(BOT_PREFIX + self.name))
-      await getattr(player.role, func.__name__)(player, message, args)
+      await getattr(player.role, func.__name__)(player, message=message, args=args)
     super().decorate(check)
 
 class SetupCommand(AdminCommand):
@@ -193,23 +196,40 @@ def channel_event(func):
 
 def single_arg(message_key, *message_args):
   def decorator(func):
-    async def result(*arr):
+    async def sa_result(*others, message, args):
       try:
-        [arg] = arr[-1].split()
+        [args] = args.split()
       except ValueError:
-        return await question(arr[-2], tr(message_key).format(command_name(func.__name__), *message_args))
-      await func(*arr[:-1], arg)
-    result.__name__ = func.__name__
-    return result
+        return await question(message, tr(message_key).format(command_name(func.__name__), *message_args))
+      await func(*others, message, args)
+    sa_result.__name__ = func.__name__
+    return sa_result
   return decorator
 
 def single_use(func):
-  async def result(self, me, message, args):
+  async def su_result(self, me, message, args):
     if self.used:
       return await question(message, tr('ability_used').format(command_name(func.__name__)))
-    await func(self, me, message, args)
-  result.__name__ = func.__name__
-  return result
+    await func(self, me, message=message, args=args)
+  su_result.__name__ = func.__name__
+  return su_result
+
+def check_context(required_channel, required_status = 'night'):
+  def decorator(func):
+    async def handler(*others, message, args):
+      channel_name = name_channel(message.channel)
+      if channel_name != required_channel:
+        cmd = command_name(func.__name__)
+        if channel_name != 'dm':
+          await question(message, tr('wrong_role').format(cmd))
+        await message.author.send(tr('question').format(message.author.mention) + tr(required_channel + '_only').format(cmd))
+      elif required_status != status:
+        await question(message, tr(required_status + '_only'))
+      else:
+        await func(*others, message=message, args=args)
+    handler.__name__ = func.__name__
+    return handler
+  return decorator
 
 ############################ INIT ##############################
 
@@ -336,25 +356,25 @@ async def json_to_state(fp, player_mapping = {}):
 
 ########################## COMMANDS ############################
 
-@cmd(RoleCommand('dm'))
+@cmd(RoleCommand())
 def Swap(): pass
 
-@cmd(RoleCommand('dm'))
+@cmd(RoleCommand())
 def Steal(): pass
 
-@cmd(RoleCommand('dm'))
+@cmd(RoleCommand())
 def Take(): pass
 
-@cmd(RoleCommand('dm'))
+@cmd(RoleCommand())
 def See(): pass
 
-@cmd(RoleCommand('dm, wolf'))
+@cmd(RoleCommand())
 def Reveal(): pass
 
-@cmd(RoleCommand('dm'))
+@cmd(RoleCommand())
 def Clone(): pass
 
-@cmd(RoleCommand('dm, wolf'))
+@cmd(RoleCommand())
 def EndDiscussion(): pass
 
 @cmd(Command())
@@ -571,163 +591,6 @@ async def low_reveal_all(channel):
   reveal_item = tr('reveal_item')
   await channel.send(tr('reveal_all').format('\n'.join([ reveal_item.format(player.extern.name, player.real_role) for player in players.values() if player.role ])) + '\n' + tr('excess_roles').format(', '.join([name for name in excess_roles])))
 
-############################ ROLES #############################
-
-@role
-class Villager: pass
-
-@role
-class Tanner: pass
-
-@role
-class Insomniac(Villager):
-  async def before_dawn(self, player):
-    await player.extern.send(tr('insomniac_reveal').format(player.real_role))
-
-@role
-class Seer(Villager):
-  def __init__(self, data = None):
-    transfer_to_self(self, 'used', data, False)
-    transfer_to_self(self, 'reveal_count', data, 0)
-
-  @single_arg('see_wronguse')
-  async def See(self, me, message, args):
-    if self.reveal_count:
-      return await question(message, tr('seer_reveal_already'))
-    if self.used:
-      return await question(message, tr('ability_used').format(command_name('See')))
-    if me.extern.name == args:
-      return await question(message, tr('seer_self'))
-    player = await find_player(message, args)
-    if player:
-      await set_used(self)
-      return await confirm(message, tr('see_success').format(args, player.real_role))
-
-  @single_arg('reveal_wronguse', EXCESS_ROLES)
-  async def Reveal(self, me, message, args):
-    if self.used:
-      return await question(message, tr('seer_see_already'))
-    if self.reveal_count >= SEER_REVEAL:
-      return await question(message, tr('out_of_reveal').format(SEER_REVEAL))
-    number = await select_excess_card(message, 'reveal_wronguse', 'Reveal', args)
-    if number:
-      self.reveal_count += 1
-      if self.reveal_count >= SEER_REVEAL:
-        await confirm(message, tr('reveal_success').format(number, excess_roles[number - 1]) + tr('no_reveal_remaining'))
-        await set_used(self)
-      else:
-        await confirm(message, tr('reveal_success').format(number, excess_roles[number - 1]) + tr('reveal_remaining').format(SEER_REVEAL - self.reveal_count))
-
-@role
-class Clone(Villager):
-  def __init__(self, data = None):
-    transfer_to_self(self, 'used', data, False)
-
-  @single_use
-  @single_arg('clone_wronguse')
-  async def Clone(self, me, message, args):
-    if me.extern.name == args:
-      return await question(message, tr('clone_self'))
-    player = await find_player(message, args)
-    if player:
-      me.role = roles[player.real_role]()
-      me.real_role = me.role.name
-      if hasattr(me.role, 'on_start'):
-        await me.role.on_start(me)
-      return await confirm(message, tr('clone_success').format(args, me.role.name) + me.role.greeting)
-
-@role
-class Troublemaker(Villager):
-  def __init__(self, data = None):
-    transfer_to_self(self, 'used', data, False)
-
-  @single_use
-  async def Swap(self, me, message, args):
-    players = args.split()
-    if len(players) != 2:
-      return await question(message, tr('troublemaker_wronguse').format(command_name('Swap')))
-    if me.extern.name in players:
-      return await question(message, tr('no_swap_self'))
-    players = [ await find_player(message, name) for name in players ]
-    if players[0] and players[1]:
-      players[0].real_role, players[1].real_role = players[1].real_role, players[0].real_role
-      await set_used(self)
-      return await confirm(message, tr('troublemaker_success')
-          .format(*[ p.extern.name for p in players]))
-
-@role
-class Thief(Villager):
-  def __init__(self, data = None):
-    transfer_to_self(self, 'used', data, False)
-
-  @single_use
-  @single_arg('thief_wronguse')
-  async def Steal(self, me, message, args):
-    if me.extern.name == args:
-      return await question(message, tr('no_swap_self'))
-    player = await find_player(message, args)
-    if player:
-      me.real_role, player.real_role = player.real_role, me.real_role
-      await set_used(self)
-      return await confirm(message, tr('thief_success').format(args, me.real_role))
-
-@role
-class Drunk(Villager):
-  def __init__(self, data = None):
-    transfer_to_self(self, 'used', data, False)
-
-  @single_use
-  @single_arg('drunk_wronguse', EXCESS_ROLES)
-  async def Take(self, me, message, args):
-    number = await select_excess_card(message, 'drunk_wronguse', 'Take', args)
-    if number:
-      me.real_role, excess_roles[number-1] = excess_roles[number-1], me.real_role
-      await set_used(self)
-      return await confirm(message, tr('drunk_success').format(args))
-
-class WolfSide: pass
-
-@role
-class Minion(WolfSide):
-  async def on_start(self, player):
-    wolves = []
-    for player in players.values():
-      if isinstance(player.role, Wolf):
-        wolves.append(player.extern.name)
-    await player.extern.send(tr('wolves_reveal').format(join_with_and(wolves)) if wolves else tr('no_wolves') + tr('minion_kill_self'))
-
-@role
-class Wolf(WolfSide):
-  def __init__(self, data = None):
-    transfer_to_self(self, 'used', data, True)
-    transfer_to_self(self, 'discussed', data, False)
-
-  async def EndDiscussion(self, me, message, _):
-    self.discussed = True
-    for player in tmp_channels['wolf'].players:
-      if not player.role.discussed:
-        await confirm(message, tr('discussion_ended') + tr('discussion_wait_other'))
-        break
-    else:
-      await confirm(message, tr('discussion_ended') + tr('discussion_all_ended'))
-    await on_used()
-
-  @single_use
-  @single_arg('reveal_wronguse', EXCESS_ROLES)
-  async def Reveal(self, me, message, args):
-    number = await select_excess_card(message, 'reveal_wronguse', 'Reveal', args)
-    if number:
-      await confirm(message, tr('reveal_success').format(number, excess_roles[number - 1]))
-      await set_used(self)
-
-  async def on_start(self, player):
-    if not 'wolf' in tmp_channels:
-      tmp_channels['wolf'] = await Channel.create(tr('wolf'), player)
-    else:
-      channel = tmp_channels['wolf']
-      await channel.add(player)
-      await channel.extern.send(tr('channel_greeting').format(player.extern.mention, channel.extern.name))
-
 ############################# UTILS ############################
 
 def name_channel(channel):
@@ -811,6 +674,171 @@ async def announce_winners(channel, winners):
     await channel.send(tr('no_winners'))
   await low_reveal_all(channel)
   await EndGame(None, None)
+
+############################ ROLES #############################
+
+@role
+class Villager: pass
+
+@role
+class Tanner: pass
+
+@role
+class Insomniac(Villager):
+  async def before_dawn(self, player):
+    await player.extern.send(tr('insomniac_reveal').format(player.real_role))
+
+@role
+class Seer(Villager):
+  def __init__(self, data = None):
+    transfer_to_self(self, 'used', data, False)
+    transfer_to_self(self, 'reveal_count', data, 0)
+
+  @check_context('dm')
+  @single_arg('see_wronguse')
+  async def See(self, me, message, args):
+    if self.reveal_count:
+      return await question(message, tr('seer_reveal_already'))
+    if self.used:
+      return await question(message, tr('ability_used').format(command_name('See')))
+    if me.extern.name == args:
+      return await question(message, tr('seer_self'))
+    player = await find_player(message, args)
+    if player:
+      await set_used(self)
+      return await confirm(message, tr('see_success').format(args, player.real_role))
+
+  @check_context('dm')
+  @single_arg('reveal_wronguse', EXCESS_ROLES)
+  async def Reveal(self, me, message, args):
+    if self.used:
+      return await question(message, tr('seer_see_already'))
+    if self.reveal_count >= SEER_REVEAL:
+      return await question(message, tr('out_of_reveal').format(SEER_REVEAL))
+    number = await select_excess_card(message, 'reveal_wronguse', 'Reveal', args)
+    if number:
+      self.reveal_count += 1
+      if self.reveal_count >= SEER_REVEAL:
+        await confirm(message, tr('reveal_success').format(number, excess_roles[number - 1]) + tr('no_reveal_remaining'))
+        await set_used(self)
+      else:
+        await confirm(message, tr('reveal_success').format(number, excess_roles[number - 1]) + tr('reveal_remaining').format(SEER_REVEAL - self.reveal_count))
+
+@role
+class Clone(Villager):
+  def __init__(self, data = None):
+    transfer_to_self(self, 'used', data, False)
+
+  @check_context('dm')
+  @single_use
+  @single_arg('clone_wronguse')
+  async def Clone(self, me, message, args):
+    if me.extern.name == args:
+      return await question(message, tr('clone_self'))
+    player = await find_player(message, args)
+    if player:
+      me.role = roles[player.real_role]()
+      me.real_role = me.role.name
+      if hasattr(me.role, 'on_start'):
+        await me.role.on_start(me)
+      return await confirm(message, tr('clone_success').format(args, me.role.name) + me.role.greeting)
+
+@role
+class Troublemaker(Villager):
+  def __init__(self, data = None):
+    transfer_to_self(self, 'used', data, False)
+
+  @check_context('dm')
+  @single_use
+  async def Swap(self, me, message, args):
+    players = args.split()
+    if len(players) != 2:
+      return await question(message, tr('troublemaker_wronguse').format(command_name('Swap')))
+    if me.extern.name in players:
+      return await question(message, tr('no_swap_self'))
+    players = [ await find_player(message, name) for name in players ]
+    if players[0] and players[1]:
+      players[0].real_role, players[1].real_role = players[1].real_role, players[0].real_role
+      await set_used(self)
+      return await confirm(message, tr('troublemaker_success')
+          .format(*[ p.extern.name for p in players]))
+
+@role
+class Thief(Villager):
+  def __init__(self, data = None):
+    transfer_to_self(self, 'used', data, False)
+
+  @check_context('dm')
+  @single_use
+  @single_arg('thief_wronguse')
+  async def Steal(self, me, message, args):
+    if me.extern.name == args:
+      return await question(message, tr('no_swap_self'))
+    player = await find_player(message, args)
+    if player:
+      me.real_role, player.real_role = player.real_role, me.real_role
+      await set_used(self)
+      return await confirm(message, tr('thief_success').format(args, me.real_role))
+
+@role
+class Drunk(Villager):
+  def __init__(self, data = None):
+    transfer_to_self(self, 'used', data, False)
+
+  @check_context('dm')
+  @single_use
+  @single_arg('drunk_wronguse', EXCESS_ROLES)
+  async def Take(self, me, message, args):
+    number = await select_excess_card(message, 'drunk_wronguse', 'Take', args)
+    if number:
+      me.real_role, excess_roles[number-1] = excess_roles[number-1], me.real_role
+      await set_used(self)
+      return await confirm(message, tr('drunk_success').format(args))
+
+class WolfSide: pass
+
+@role
+class Minion(WolfSide):
+  async def on_start(self, player):
+    wolves = []
+    for player in players.values():
+      if isinstance(player.role, Wolf):
+        wolves.append(player.extern.name)
+    await player.extern.send(tr('wolves_reveal').format(join_with_and(wolves)) if wolves else tr('no_wolves') + tr('minion_kill_self'))
+
+@role
+class Wolf(WolfSide):
+  def __init__(self, data = None):
+    transfer_to_self(self, 'used', data, True)
+    transfer_to_self(self, 'discussed', data, False)
+
+  @check_context('wolf')
+  async def EndDiscussion(self, me, message, args):
+    self.discussed = True
+    for player in tmp_channels['wolf'].players:
+      if not player.role.discussed:
+        await confirm(message, tr('discussion_ended') + tr('discussion_wait_other'))
+        break
+    else:
+      await confirm(message, tr('discussion_ended') + tr('discussion_all_ended'))
+    await on_used()
+
+  @check_context('wolf')
+  @single_use
+  @single_arg('reveal_wronguse', EXCESS_ROLES)
+  async def Reveal(self, me, message, args):
+    number = await select_excess_card(message, 'reveal_wronguse', 'Reveal', args)
+    if number:
+      await confirm(message, tr('reveal_success').format(number, excess_roles[number - 1]))
+      await set_used(self)
+
+  async def on_start(self, player):
+    if not 'wolf' in tmp_channels:
+      tmp_channels['wolf'] = await Channel.create(tr('wolf'), player)
+    else:
+      channel = tmp_channels['wolf']
+      await channel.add(player)
+      await channel.extern.send(tr('channel_greeting').format(player.extern.mention, channel.extern.name))
 
 ########################### EVENTS #############################
 

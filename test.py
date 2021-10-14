@@ -164,7 +164,7 @@ async def expect_response(author, message, channel, response):
 
 def check_private_single_arg_cmd(author, cmd, target, wronguse_msg, no_self_msg, success_msg, single_use = True):
   result = [
-    expect_response(author, cmd, game, '[game] question({}) no_public({}) '.format(author.mention, cmd)),
+    expect_response(author, cmd, game, [ '[game] question({0}) wrong_role({1}) '.format(author.mention, cmd), '[{0}] question({0}) dm_only({1}) '.format(author.mention, cmd) ]),
     expect_response(author, cmd, bot_dm, '[@bot] question({}) {} '.format(author.mention, wronguse_msg)),
     expect_response(author, cmd + ' foo bar', bot_dm, '[@bot] question({}) {} '.format(author.mention, wronguse_msg)),
     expect_response(author, cmd + ' ' + target, bot_dm, '[@bot] confirm({}) {}'.format(author.mention, success_msg)),
@@ -239,7 +239,7 @@ loop.run_until_complete(asyncio.gather(
   expect_response(anne, '!addrole villager ', game, '[game] question(@anne) forbid_game_started(!addrole) '),
   expect_response(anne, '!revealall', bot_dm, '[@bot] reveal_all(anne:wolf\ncarl:seer\nbob:wolf\ndavid:villager\nelsa:thief\nfrank:troublemaker\ngeorge:drunk\nharry:clone\nignacio:insomniac) \nexcess_roles(villager, villager, villager) '),
 
-  expect_response(anne, '!swap', game, '[game] question(@anne) no_public(!swap) '),
+  expect_response(anne, '!swap', game, '[game] question(@anne) wrong_role(!swap) '),
   expect_response(anne, '!swap carl', bot_dm, '[@bot] question(@anne) wrong_role(!swap) '),
 
   *check_private_single_player_cmd(elsa, '!steal', 'anne', 'thief_wronguse(!steal)', 'no_swap_self', 'thief_success(anne, wolf) '),
@@ -272,7 +272,7 @@ loop.run_until_complete(asyncio.gather(
   expect_response(anne, '!enddiscussion', channels['wolf '], '[wolf ] confirm(@anne) discussion_ended discussion_wait_other '),
   expect_response(bob, '!enddiscussion', channels['wolf '], [ '[wolf ] confirm(@bob) discussion_ended discussion_all_ended ', '[@ignacio] insomniac_reveal(thief) ', '[game] wake_up vote(!vote) ' ]),
 
-  expect_response(harry, '!swap frank', bot_dm, '[@bot] question(@harry) night_only '),
+  expect_response(harry, '!swap frank', bot_dm, '[@bot] question(@harry) wrong_role(!swap) '),
   expect_response(not_player, '!vote frank', bot_dm, '[@bot] question(@not_player) not_playing '),
   expect_response(harry, '!vote frank', bot_dm, '[@bot] question(@harry) public_only(!vote) '),
   expect_response(harry, '!vote frank', game, '[game] vote_success(@harry, @frank) '),
@@ -331,9 +331,9 @@ loop.run_until_complete(asyncio.gather(
 
 loop.run_until_complete(asyncio.gather(
   expect_response(anne, '!revealall', bot_dm, '[@bot] reveal_all(anne:insomniac\ncarl:drunk\nbob:clone\ndavid:troublemaker\nelsa:thief\nfrank:villager\ngeorge:seer\nharry:wolf\nignacio:minion) \nexcess_roles(wolf, villager, villager) '),
-  expect_response(harry, '!reveal 1', game, '[game] question(@harry) no_public(!reveal) '),
-  expect_response(harry, '!reveal 1', bot_dm, '[@bot] confirm(@harry) reveal_success(1, wolf) '),
-  expect_response(harry, '!reveal 1', bot_dm, '[@bot] question(@harry) ability_used(!reveal) '),
+  expect_response(harry, '!reveal 1', game, [ '[game] question(@harry) wrong_role(!reveal) ', '[@harry] question(@harry) wolf_only(!reveal) ' ]),
+  expect_response(harry, '!reveal 1', channels['wolf '], '[wolf ] confirm(@harry) reveal_success(1, wolf) '),
+  expect_response(harry, '!reveal 1', channels['wolf '], '[wolf ] question(@harry) ability_used(!reveal) '),
   expect_response(george, '!reveal 2', bot_dm, '[@bot] confirm(@george) reveal_success(2, villager) reveal_remaining(1) '),
   expect_response(george, '!see harry', bot_dm, '[@bot] question(@george) seer_reveal_already '),
   expect_response(george, '!reveal 1', bot_dm, '[@bot] confirm(@george) reveal_success(1, wolf) no_reveal_remaining '),
