@@ -286,12 +286,11 @@ class RoleEncoder(json.JSONEncoder):
         result['role'] = self.encode_role(obj.role)
         result['real_role'] = roles[obj.real_role].__name__
       return result
+    if isinstance(obj, Channel):
+      return { 'name': obj.extern.name, 'members': [ player.extern.id for player in obj.players ] }
     return json.JSONEncoder.default(self, obj)
 
 def state_to_json(fp):
-  tmp_channels_export = {}
-  for name, channel in tmp_channels.items():
-    tmp_channels_export[name] = { 'name': channel.extern.name, 'members': [ player.extern.id for player in channel.players ] }
   obj = {
     'vote_list': vote_list,
     'played_roles': played_roles,
@@ -303,7 +302,7 @@ def state_to_json(fp):
     'og_excess': og_excess,
 
     'excess_roles': [ roles[role].__name__ for role in excess_roles ],
-    'channels': tmp_channels_export,
+    'channels': tmp_channels,
     'players': list(players.values()),
   }
   # Function to add gametype-specific data to obj
