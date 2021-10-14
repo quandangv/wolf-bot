@@ -944,3 +944,6 @@ async def process_message(message):
 async def process_and_wait(message):
   await process_message(message)
   await await_vote_countdown()
+
+async def greeting():
+  await main_channel().send(tr('greeting').format(command_name('Help'), command_name('StartImmediate')))

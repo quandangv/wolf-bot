@@ -366,3 +366,6 @@ loop.run_until_complete(asyncio.gather(
   expect_response(not_player, '!votecount', game, [ '[game] vote_detail(vote_item(@frank, 1) \nvote_item(@anne, 1) \nvote_item(@harry, 3) \nvote_item(@elsa, 3) ) ', '[game] vote_tie ' ]),
   expect_response(george, '!vote david', game, [ '[game] vote_success(@george, @david) ', '[game] vote_result(vote_item(@frank, 1) \nvote_item(@anne, 1) \nvote_item(@harry, 3) \nvote_item(@david, 1) \nvote_item(@elsa, 3) ) ', '[game] no_lynch ', '[game] winners(@carl, @bob, @elsa, @harry) ', '[game] reveal_all(anne:insomniac\ncarl:wolf\nbob:wolf\ndavid:troublemaker\nelsa:minion\nfrank:villager\ngeorge:thief\nharry:wolf\nignacio:seer) \nexcess_roles(drunk, villager, villager) ' ]),
 ))
+
+loop.run_until_complete(core.greeting())
+assert posts == [ '[game] greeting(!help, !startimmediate) ' ]

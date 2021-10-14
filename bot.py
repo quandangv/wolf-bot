@@ -26,6 +26,7 @@ async def on_ready():
   debug_channel = client.get_channel(DEBUG_CHANNEL)
   guild = client.get_channel(GAME_CHANNEL).guild
   core.initialize([guild.get_member(id) for id in ADMINS])
+  await core.greeting()
 
 @client.event
 async def on_message(message):

@@ -12,6 +12,7 @@ role = [ "Hé lô, bạn là **{}** nha. ", "Ván này bạn làm **{}** nhé. "
 wolf_channel = [ "Xin chào những chú sói nho nhỏ, đàn sói của các bạn gồm có {}. ", "Hé lô sói! Các sói {} hãy làm quen với nhau đi! ", "Chào {}. Chúc mừng các bạn đã trở thành sói! " ]
 channel_greeting = [ "Chào mừng {} đến group **{}**!", "Hello {}! Xin chào đến với group **{}**" ]
 end_discussion_info = [ "Khi nào bàn luận xong, mỗi bạn hãy nhắn một lệnh `{}` để quản trò biết nhé", "Chừng nào bàn xong, mọi người phải nhắn `{}` để t biết nha" ]
+greeting = [ "Hé lô mọi người! Mọi người có thể dùng lệnh `{0}` để được giúp đỡ, còn admin thì có thể nhắn `{1}` để bắt đầu chơi ngay", "Xin chào cả làng! Các dân làng có thể nhắn `{0}` để tìm hiểu thêm về các lệnh, còn dân làng admin thì có thể dùng lệnh `{1}` để chơi ngay" ]
 
 wake_up = [ "Ò ó ooo, sáng rồi nè, dậy treo cổ mấy con sói đii. ", "Dậy đi dậy đii, đêm nay làng ta ko ai chết nha. ", "Cả làng dậy đi! " ]
 winners = [ "Chúc mừng {} đã chiến thắng!", "{} đã giành lấy chiến thắng trong bàn này" ]
