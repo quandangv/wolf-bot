@@ -228,6 +228,7 @@ def check_context(required_channel, required_status = 'night'):
       else:
         await func(*others, message=message, args=args)
     handler.__name__ = func.__name__
+    handler.unchecked = func
     return handler
   return decorator
 
@@ -392,7 +393,6 @@ async def Help(message, args):
         if commands[cmd].is_listed(player, message.channel)
     ]
     await confirm(message, tr('help_list').format('`, `'.join(command_list)))
-
 @cmd(SetupCommand())
 async def AddRole(message, args):
   role_list = []
@@ -497,13 +497,13 @@ async def StartImmediate(message, args):
     await EndGame(None, None)
     raise e
 
-@cmd(AdminCommand())
-async def CloseVote(_, __):
-  global vote_countdown_task
-  if vote_countdown_task:
-    vote_countdown_task.cancel()
-    clear_vote_countdown()
-  channel = main_channel()
+@cmd(Command())
+@check_context('public', 'day')
+async def VoteCount(message, args):
+  most_vote = await low_vote_count()
+  await main_channel().send(tr('most_vote').format(most_vote) if most_vote else tr('vote_tie'))
+
+async def low_vote_count():
   vote_detail = []
   most_vote = None
   max_vote = 0
@@ -516,7 +516,17 @@ async def CloseVote(_, __):
         most_vote = p
       elif votes == max_vote:
         most_vote = None
-  await channel.send(tr('vote_result').format("\n".join(vote_detail)))
+  await main_channel().send(tr('vote_result').format("\n".join(vote_detail)))
+  return most_vote
+
+@cmd(AdminCommand())
+async def CloseVote(_, __):
+  global vote_countdown_task
+  if vote_countdown_task:
+    vote_countdown_task.cancel()
+    clear_vote_countdown()
+  channel = main_channel()
+  most_vote = await low_vote_count()
   if most_vote:
     await channel.send(tr('lynch').format(most_vote))
     for lynched in players.values():
@@ -916,7 +926,7 @@ async def process_message(message):
           [cmd, args] = arr
         cmd = cmd.lower()
         if cmd in commands:
-          await commands[cmd].func(message, args)
+          await commands[cmd].func(message=message, args=args)
         else:
           await confused(message.channel, BOT_PREFIX + cmd)
     except:

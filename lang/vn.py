@@ -18,6 +18,8 @@ winners = [ "Chúc mừng {} đã chiến thắng!", "{} đã giành lấy chi�
 no_winners = [ "Hahaha trò chơi không ai thắng cả", "Ván này mọi người đều thua nha :)" ]
 lynch = [ "Và thế là {} bị quăng vào chảo lửa", "{} quá thất vọng với quyết định của dân làng và lăn ra chết", "Làng treo cổ {}, rồi đem đi chôn cất", "Mọi người đuổi {0} ra khỏi làng. Từ đó không ai nhìn thấy {0} nữa" ]
 no_lynch = [ "Làng không biết giết ai cả, tất cả mọi người đều đi ngủ", "Hôm nay làng ăn chay và không giết ai cả", "Không tìm ra con sói, mọi người trong làng đều về nhà ngủ" ]
+most_vote = "{} đang có nhiều phiếu bầu nhất"
+vote_tie = "Nhiều người đang bằng phiếu bầu"
 
 reveal_player = [ "{} chính là **{}**!", "{} là một con **{}**" ]
 reveal_item = "- {} là **{}**"
@@ -118,6 +120,8 @@ cmd_take = ( "lay", "`{0}  STT-lá-bài` để đổi chức năng của mình v
 cmd_save = ( "luu", "`{0}  tên-file` để lưu trạng thái của game" )
 cmd_load = ( "tai", "`{0}  tên-file` để tải trạng thái của game" )
 cmd_revealall = ( "tietlo", "`{0}` liệt kê thông tin chức năng của mọi người và danh sách các lá bài bên ngoài (Debug)" )
+cmd_votecount = ( "sophieu", "`{0}` để xem lại tổng sống phiếu của mọi người" )
+cmd_votedetail = ( "chitietphieu", "`{0}` để xem chi tiết ai vote ai" )
 
 role_villager = ( "dân thường", "Một con dân thường không có chức năng. Nhờ vậy, bạn sẽ được yên giấc vào ban đêm", "Ban đêm bạn không phải làm gì cả. Sáng dậy, bạn có thể vote người để treo cổ", "dân làng", "dân" )
 role_wolf = ( "sói", "Sói chống lại dân làng. Chúng sẽ thắng nếu người bị treo cổ là phe dân", "Bạn sẽ được thêm vào group sói. Ban ngày, hãy tìm cách treo cổ một người dân để chiến thắng" )
