@@ -17,7 +17,6 @@ def connect(core):
   record_history = core.record_history
   on_used = core.on_used
   join_with_and = core.join_with_and
-
   core.DEFAULT_ROLES = [ 'Wolf', 'Thief', 'Troublemaker', 'Drunk', 'Wolf', 'Villager', 'Seer', 'Clone', 'Minion', 'Insomniac', 'Tanner' ]
 
   def is_wolf_side(role):
@@ -139,9 +138,9 @@ def connect(core):
 
   @core.role
   class Seer(Villager):
-    def __init__(self, data = None):
-      core.transfer_to_self(self, 'used', data, False)
-      core.transfer_to_self(self, 'reveal_count', data, 0)
+    def __init__(self):
+      self.used = False
+      self.reveal_count = 0
 
     @core.check_context('dm')
     @core.single_arg('see_wronguse')
@@ -180,8 +179,8 @@ def connect(core):
 
   @core.role
   class Clone(Villager):
-    def __init__(self, data = None):
-      core.transfer_to_self(self, 'used', data, False)
+    def __init__(self):
+      self.used = False
 
     @core.check_context('dm')
     @core.single_use
@@ -200,8 +199,8 @@ def connect(core):
 
   @core.role
   class Troublemaker(Villager):
-    def __init__(self, data = None):
-      core.transfer_to_self(self, 'used', data, False)
+    def __init__(self):
+      self.used = False
 
     @core.check_context('dm')
     @core.single_use
@@ -222,8 +221,8 @@ def connect(core):
 
   @core.role
   class Thief(Villager):
-    def __init__(self, data = None):
-      core.transfer_to_self(self, 'used', data, False)
+    def __init__(self):
+      self.used = False
 
     @core.check_context('dm')
     @core.single_use
@@ -241,8 +240,8 @@ def connect(core):
 
   @core.role
   class Drunk(Villager):
-    def __init__(self, data = None):
-      core.transfer_to_self(self, 'used', data, False)
+    def __init__(self):
+      self.used = False
 
     @core.check_context('dm')
     @core.single_use
@@ -270,9 +269,9 @@ def connect(core):
 
   @core.role
   class Wolf(WolfSide):
-    def __init__(self, data = None):
-      core.transfer_to_self(self, 'used', data, True)
-      core.transfer_to_self(self, 'discussed', data, False)
+    def __init__(self):
+      self.used = True
+      self.discussed = False
 
     @core.check_context('wolf')
     async def EndDiscussion(self, me, message, args):

@@ -263,7 +263,7 @@ def initialize(admins):
 
 class RoleEncoder(json.JSONEncoder):
   def encode_role(self, obj):
-    result = { name: getattr(obj, name) for name in ROLE_VARIABLES if hasattr(obj, name) }
+    result = vars(obj)
     result['type'] = type(obj).__name__
     return result
 
@@ -317,7 +317,10 @@ async def json_to_state(fp, player_mapping = {}):
     if 'role' in decoded_player:
       role_obj = decoded_player['role']
       role = roles[role_obj['type']]
-      player.role = role() if len(role_obj) == 1 else role(role_obj)
+      player.role = role()
+      for key, val in role_obj.items():
+        if key != 'type':
+          setattr(player.role, key, val)
       player.real_role = roles[decoded_player['real_role']].name
     if 'vote' in decoded_player:
       player.vote = decoded_player['vote']
@@ -634,9 +637,6 @@ async def await_vote_countdown():
     try:
       await vote_countdown_task
     except asyncio.CancelledError: pass
-
-def transfer_to_self(self, name, data, default):
-  setattr(self, name, data[name] if data else default)
 
 async def announce_winners(channel, winners):
   if winners:
