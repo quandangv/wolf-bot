@@ -188,28 +188,55 @@ def single_arg(message_key, *message_args):
   return decorator
 
 def single_use(func):
-  async def su_result(self, me, message, args):
+  async def su_result(self, *others, message, args):
     if self.used:
       return await question(message, tr('ability_used').format(command_name(func.__name__)))
-    await func(self, me, message=message, args=args)
+    await func(self, *others, message=message, args=args)
   su_result.__name__ = func.__name__
   return su_result
 
-def check_context(required_channel, required_status = 'night'):
+def check_status(required_status = 'night'):
   def decorator(func):
     async def handler(*others, message, args):
-      channel_name = name_channel(message.channel)
-      if channel_name != required_channel:
-        cmd = command_name(func.__name__)
-        if channel_name != 'dm':
-          await question(message, tr('wrong_role').format(cmd))
-        await message.author.send(tr('question').format(message.author.mention) + tr(required_channel + '_only').format(cmd))
-      elif required_status != status:
-        await question(message, tr(required_status + '_only'))
-      else:
-        await func(*others, message=message, args=args)
+      await (question(message, tr(required_status + '_only')) if required_status != status else func(*others, message=message, args=args))
     handler.__name__ = func.__name__
     return handler
+  return decorator
+
+async def warn_wrong_channel(message, required_channel, cmd):
+  cmd = command_name(cmd)
+  if not is_dm_channel(message.channel):
+    await question(message, tr('wrong_role').format(cmd))
+  await message.author.send(tr('question').format(message.author.mention) + tr(required_channel + '_only').format(cmd))
+
+def check_public(func):
+  async def p_handler(*others, message, args):
+    if is_public_channel(message.channel):
+      await func(*others, message=message, args=args)
+    else:
+      await warn_wrong_channel(message, 'public', func.__name__)
+  p_handler.__name__ = func.__name__
+  return p_handler
+
+def check_dm(func):
+  async def dm_handler(*others, message, args):
+    if is_dm_channel(message.channel):
+      await func(*others, message=message, args=args)
+    else:
+      await warn_wrong_channel(message, 'dm', func.__name__)
+  dm_handler.__name__ = func.__name__
+  return dm_handler
+
+def check_channel(channel_name):
+  def decorator(func):
+    async def c_handler(*others, message, args):
+      channel = tmp_channels[channel_name]
+      if message.channel.id == channel.extern.id:
+        await func(*others, channel, message=message, args=args)
+      else:
+        await warn_wrong_channel(message, channel_name, func.__name__)
+    c_handler.__name__ = func.__name__
+    return c_handler
   return decorator
 
 ############################ INIT ##############################
@@ -428,7 +455,8 @@ async def Unvote(me, message, args):
 
 @cmd(PlayerCommand())
 @single_arg('vote_wronguse')
-@check_context('public', 'day')
+@check_public
+@check_status('day')
 async def Vote(me, message, args):
   player = await find_player(message, args)
   if player:
@@ -482,13 +510,15 @@ async def StartImmediate(message, args):
     raise e
 
 @cmd(Command())
-@check_context('public', 'day')
+@check_public
+@check_status('day')
 async def VoteDetail(message, args):
   item = tr('vote_detail_item')
   await main_channel().send(tr('vote_detail').format('\n'.join([ item.format(player.extern.name, player.vote) for player in players.values() if player.vote ])))
 
 @cmd(Command())
-@check_context('public', 'day')
+@check_public
+@check_status('day')
 async def VoteCount(message, args):
   most_vote = await low_vote_count('vote_detail')
   await main_channel().send(tr('most_vote').format(most_vote) if most_vote else tr('vote_tie'))
@@ -525,7 +555,8 @@ async def CloseVote(_, __):
     await on_no_lynch()
 
 @cmd(Command())
-@check_context('public', None)
+@check_public
+@check_status(None)
 async def History(message, args):
   if history:
     reveal_item = tr('reveal_item')
@@ -583,15 +614,6 @@ async def RevealAll(message, args):
   await low_reveal_all(message.channel)
 
 ############################# UTILS ############################
-
-def name_channel(channel):
-  if is_dm_channel(channel):
-    return 'dm'
-  if is_public_channel(channel):
-    return 'public'
-  for id, c in tmp_channels.items():
-    if channel.id == c.extern.id:
-      return id
 
 async def confirm(message, text):
   await message.reply(tr('confirm').format(message.author.mention) + str(text))
