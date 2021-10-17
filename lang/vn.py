@@ -21,6 +21,8 @@ lynch = [ "Và thế là {} bị quăng vào chảo lửa", "{} quá thất vọ
 no_lynch = [ "Làng không biết giết ai cả, tất cả mọi người đều đi ngủ", "Hôm nay làng ăn chay và không giết ai cả", "Không tìm ra con sói, mọi người trong làng đều về nhà ngủ" ]
 most_vote = "{} đang có nhiều phiếu bầu nhất"
 vote_tie = "Nhiều người đang bằng phiếu bầu"
+wolf_need_consensus = [ ". Đàn sói mau thống nhất mục tiêu cắn", ". Các sói hãy thống nhất người để cắn" ]
+wolf_bite = ". Các con sói quyết định cắn **{}**"
 
 reveal_player = [ "{} chính là **{}**!", "{} là một con **{}**" ]
 reveal_item = "- {} là **{}**"
@@ -68,6 +70,8 @@ drunk_wronguse = "có {1} lá bài bên ngoài, bạn phải chọn STT lá bài
 reveal_wronguse = "có {1} lá bài bên ngoài, bạn phải chọn STT lá bài từ **1** đến **{1}** và dùng lệnh `{0} STT-lá-bài` để đổi xem lá đó. Ví dụ như `{0} {1}`"
 clone_wronguse = "bạn muốn nhân bản ai thì phải nhắn là `{0} người-đó`. Ví dụ như `{0} quandangv`"
 vote_wronguse = "bạn muốn treo cổ ai thì phải nhắn là `{0} người-đó`. Ví dụ như `{0} quandangv`"
+bite_wronguse = "bạn muốn cắn ai thì phải nhắn là `{0} người-đó`. Ví dụ như `{0} quandangv`"
+defend_wronguse = "bạn muốn bảo vệ ai thì phải nhắn là `{0} người-đó`. Ví dụ như `{0} quandangv`"
 
 add_success = [ "Đã thêm **{}** vào danh sách chức năng", "Con **{}** vừa xuất hiện trong làng" ]
 remove_success = [ "Đã bỏ một **{}** ra khỏi làng", "Con **{}** đã rời khỏi làng" ]
@@ -101,13 +105,16 @@ player_notfound = [ "'{}' là ai dạ?", "Hong tìm thấy '{}'" ]
 player_norole = "không tìm thấy chức năng của {} để tráo, hình như nó ko có chơi á"
 debug_command = [ "lệnh này chỉ được dùng để debug, bạn không được dùng đâu" ]
 night_only = [ "bạn chỉ được dùng lệnh này vào ban đêm, hãy quay lại khi trời tối nhé", "tối mới được dùng lệnh này nha" ]
-day_only = [ "bạn chỉ được dùng lệnh này vào ban ngày, đợi làng thức dậy nha", "đợi sáng dậy mới được dùng lệnh này nha" ]
+day_only = [ "bạn chỉ được dùng lệnh này vào ban ngày, đợi làng thức dậy nha", "bạn phải đợi sáng dậy mới được dùng lệnh này" ]
 ability_used = [ "bạn đã sử dụng chức năng `{}` rồi mà", "`{0}` gồi, hong cho `{0}` nữa" ]
 choice_outofrange = "bạn phải chọn STT từ **1** đến **{}**"
 seer_reveal_already = "bạn đã lật lá bài ở ngoài, bạn không được soi người khác nữa"
 seer_see_already = "bạn đã soi chức năng của người khác, không được lật lá bài ở ngoài nữa"
 out_of_reveal = "bạn đã lật lá bài ở ngoài {} lần, bạn không được lật thêm nữa"
 invalid_file_name = "tên file không hợp lệ!"
+defend_repeat = "đêm qua bạn đã bảo vệ người này rồi mà"
+no_defend_self = "bạn không được bảo vệ chính mình"
+target_dead = [ "mục tiêu của bạn đã chết", "**{}** chết rồi mà" ]
 
 cmd_help = ( "giupdo", "`{0}` liệt kê các lệnh bạn được thực hiện.\nCòn `{0} câu-lệnh` sẽ nhắn thông tin trợ giúp về lệnh\nVà `{0}  chức-năng` sẽ giải thích chức năng đó", "trogiup" )
 cmd_startimmediate = ( "choingay", "`{0}` để bắt đầu chơi ngay" )

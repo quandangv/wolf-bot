@@ -10,6 +10,14 @@ def connect(core):
   record_history = core.record_history
   on_used = core.on_used
   join_with_and = core.join_with_and
+  GUARD_DEFEND_SELF = True
+
+  async def find_player(message, name):
+    player = await find_player(message, name)
+    if player.alive:
+      return player
+    else:
+      await question(message, tr('target_dead').format(player.extern.name))
 
   class ClassicRole:
     async def on_start(self, player, first_time = True):
@@ -23,17 +31,18 @@ def connect(core):
 
   @core.role
   class Wolf(WolfSide):
+    def __init__(self):
+      self.wolf_phase = True
     def new_night(self):
-      # The target of the wolf
       self.target = None
 
-    @core.check_context('wolf')
+    @core.check_channel('wolf')
     @core.check_status
     @core.single_arg('bite_wronguse')
     def Bite(self, me, tmp_channel, message, args):
       player = find_player(message, args)
       if player:
-        self.target = player.extern.name
+        self.target = player
         msg = tr('vote_bite').format(me.extern.mention, self.target)
         for wolf in tmp_channel.players:
           if wolf.target != self.target:
@@ -47,5 +56,25 @@ def connect(core):
 
   @core.role
   class Guard(Villager):
+    def __init__(self):
+      self.prev_target = None
+      self.wolf_phase = True
     def new_night(self):
-      self.
+      self.target = None
+
+    @core.check_dm
+    @core.check_status()
+    @core.single_use
+    @core.single_arg('defend_wronguse')
+    async def Defend(self, me, tmp_channel, message, args):
+      player = find_player(message, args)
+      if player:
+        if player == prev_target:
+          await question(message, tr('defend_repeat'))
+        if not GUARD_DEFEND_SELF and me.extern.id == player.extern.id:
+          await question(message, tr('no_defend_self'))
+        self.target = self.prev_target = player
+
+    def wolf_phase_end(self, wolf_channel):
+      if self.target == wolf_channel.target:
+        self.target.alive = True
