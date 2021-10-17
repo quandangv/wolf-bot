@@ -5,11 +5,11 @@
 - Test case for starting with default roles
 - Print starting role with start message
 - Manually add players to the game
-- Rename Role.used to Role.target
 
 # DOING
 
 # DONE
+- Rename Role.used to Role.target
 - History command
 - Help for admin on startup
 - Remove multiple roles

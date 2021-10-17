@@ -25,7 +25,7 @@ def connect(core):
   class Wolf(WolfSide):
     def new_night(self):
       # The target of the wolf
-      self.used = None
+      self.target = None
 
     @core.check_context('wolf')
     @core.check_status
@@ -33,16 +33,16 @@ def connect(core):
     def Bite(self, me, tmp_channel, message, args):
       player = find_player(message, args)
       if player:
-        self.used = player.extern.name
-        msg = tr('vote_bite').format(me.extern.mention, self.used)
+        self.target = player.extern.name
+        msg = tr('vote_bite').format(me.extern.mention, self.target)
         for wolf in tmp_channel.players:
-          if wolf.used != self.used:
+          if wolf.target != self.target:
             await tmp_channel.extern.send(msg + tr('wolf_need_consensus'))
             await on_used()
             break
         else:
           await tmp_channel.extern.send(msg + tr('wolf_bite'))
-          tmp_channel.target = self.used
+          tmp_channel.target = self.target
           await on_used()
 
   @core.role

@@ -115,7 +115,7 @@ def connect(core):
         for player in channel.players:
           if not player.extern.bot:
             lone_wolf = players[player.extern.id]
-            lone_wolf.role.used = False
+            lone_wolf.role.target = None
         await channel.extern.send(tr('wolf_get_reveal').format(command_name('Reveal'), EXCESS_ROLES))
         break
 
@@ -139,7 +139,7 @@ def connect(core):
   @core.role
   class Seer(Villager):
     def __init__(self):
-      self.used = False
+      self.target = None
       self.reveal_count = 0
 
     @core.check_dm
@@ -148,7 +148,7 @@ def connect(core):
     async def See(self, me, message, args):
       if self.reveal_count:
         return await question(message, tr('seer_reveal_already'))
-      if self.used:
+      if self.target:
         return await question(message, tr('ability_used').format(command_name('See')))
       if me.extern.name == args:
         return await question(message, tr('seer_self'))
@@ -156,14 +156,14 @@ def connect(core):
       if player:
         record_history(message, player.real_role)
         await confirm(message, tr('see_success').format(args, player.real_role))
-        self.used = True
+        self.target = player.extern.name
         await on_used()
 
     @core.check_dm
     @core.check_status()
     @core.single_arg('reveal_wronguse', EXCESS_ROLES)
     async def Reveal(self, me, message, args):
-      if self.used:
+      if self.target:
         return await question(message, tr('seer_see_already'))
       if self.reveal_count >= SEER_REVEAL:
         return await question(message, tr('out_of_reveal').format(SEER_REVEAL))
@@ -174,7 +174,7 @@ def connect(core):
         self.reveal_count += 1
         if self.reveal_count >= SEER_REVEAL:
           await confirm(message, tr('reveal_success').format(number, result) + tr('no_reveal_remaining'))
-          self.used = True
+          self.target = number
           await on_used()
         else:
           await confirm(message, tr('reveal_success').format(number, result) + tr('reveal_remaining').format(SEER_REVEAL - self.reveal_count))
@@ -182,7 +182,7 @@ def connect(core):
   @core.role
   class Clone(Villager):
     def __init__(self):
-      self.used = False
+      self.target = None
 
     @core.check_dm
     @core.check_status()
@@ -203,14 +203,14 @@ def connect(core):
   @core.role
   class Troublemaker(Villager):
     def __init__(self):
-      self.used = False
+      self.target = None
 
     @core.check_dm
     @core.check_status()
     @core.single_use
     async def Swap(self, me, message, args):
       players = args.split()
-      if len(players) != 2:
+      if len(players) != 2 or players[0] == players[1]:
         return await question(message, tr('troublemaker_wronguse').format(command_name('Swap')))
       if me.extern.name in players:
         return await question(message, tr('no_swap_self'))
@@ -218,7 +218,7 @@ def connect(core):
       if players[0] and players[1]:
         record_history(message, None)
         players[0].real_role, players[1].real_role = players[1].real_role, players[0].real_role
-        self.used = True
+        self.target = players[0].extern.name
         await on_used()
         return await confirm(message, tr('troublemaker_success')
             .format(*[ p.extern.name for p in players]))
@@ -226,7 +226,7 @@ def connect(core):
   @core.role
   class Thief(Villager):
     def __init__(self):
-      self.used = False
+      self.target = None
 
     @core.check_dm
     @core.check_status()
@@ -239,14 +239,14 @@ def connect(core):
       if player:
         record_history(message, player.real_role)
         me.real_role, player.real_role = player.real_role, me.real_role
-        self.used = True
+        self.target = player.extern.name
         await on_used()
         return await confirm(message, tr('thief_success').format(args, me.real_role))
 
   @core.role
   class Drunk(Villager):
     def __init__(self):
-      self.used = False
+      self.target = None
 
     @core.check_dm
     @core.check_status()
@@ -257,7 +257,7 @@ def connect(core):
       if number:
         record_history(message, None)
         me.real_role, excess_roles[number-1] = excess_roles[number-1], me.real_role
-        self.used = True
+        self.target = number
         await on_used()
         return await confirm(message, tr('drunk_success').format(args))
 
@@ -276,7 +276,7 @@ def connect(core):
   @core.role
   class Wolf(WolfSide):
     def __init__(self):
-      self.used = True
+      self.target = True
       self.discussed = False
 
     @core.check_channel('wolf')
@@ -300,7 +300,7 @@ def connect(core):
       if number:
         record_history(message, excess_roles[number-1])
         await confirm(message, tr('reveal_success').format(number, excess_roles[number - 1]))
-        self.used = True
+        self.target = number
         await on_used()
 
     async def on_start(self, player, first_time = True):

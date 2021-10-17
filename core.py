@@ -27,7 +27,7 @@ SUPERMAJORITY = 2/3
 DEBUG = False
 VOTE_COUNTDOWN = 60
 LANDSLIDE_VOTE_COUNTDOWN = 10
-ROLE_VARIABLES = [ 'used', 'discussed', 'reveal_count' ]
+ROLE_VARIABLES = [ 'target', 'discussed', 'reveal_count' ]
 DEFAULT_ROLES = None
 
 ############################ ACTIONS ###########################
@@ -188,7 +188,7 @@ def single_arg(message_key, *message_args):
 
 def single_use(func):
   async def su_result(self, *others, message, args):
-    if self.used:
+    if self.target:
       return await question(message, tr('ability_used').format(command_name(func.__name__)))
     await func(self, *others, message=message, args=args)
   su_result.__name__ = func.__name__
@@ -698,7 +698,7 @@ def missing_injection_error(name):
 async def on_used():
   for player in players.values():
     if player.role:
-      if (hasattr(player.role, 'used') and not player.role.used) or (hasattr(player.role, 'discussed') and not player.role.discussed):
+      if (hasattr(player.role, 'target') and not player.role.target) or (hasattr(player.role, 'discussed') and not player.role.discussed):
         return
   await WakeUp(None, None)
   return True
