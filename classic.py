@@ -39,7 +39,7 @@ def connect(core):
     @core.check_channel('wolf')
     @core.check_status
     @core.single_arg('bite_wronguse')
-    def Bite(self, me, tmp_channel, message, args):
+    async def Bite(self, me, tmp_channel, message, args):
       player = find_player(message, args)
       if player:
         self.target = player
@@ -56,9 +56,9 @@ def connect(core):
 
   @core.role
   class Guard(Villager):
+    wolf_phase = True
     def __init__(self):
       self.prev_target = None
-      self.wolf_phase = True
     def new_night(self):
       self.target = None
 

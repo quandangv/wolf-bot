@@ -27,7 +27,6 @@ SUPERMAJORITY = 2/3
 DEBUG = False
 VOTE_COUNTDOWN = 60
 LANDSLIDE_VOTE_COUNTDOWN = 10
-ROLE_VARIABLES = [ 'target', 'discussed', 'reveal_count' ]
 DEFAULT_ROLES = None
 
 ############################ ACTIONS ###########################
@@ -288,11 +287,19 @@ def initialize(admins):
   for admin in admins:
     players[admin.id] = Player(True, admin)
 
+######################## DETACH & ATTACH #######################
+
+#def detach():
+
+
 ######################### SERIALIZATION ########################
 
 class RoleEncoder(json.JSONEncoder):
   def encode_role(self, obj):
-    result = vars(obj)
+    if hasattr(obj, '__slots__'):
+      result = { slot: getattr(obj, slot) for slot in obj.__slots__ }
+    else:
+      result = {}
     result['type'] = type(obj).__name__
     return result
 

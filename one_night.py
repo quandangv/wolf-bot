@@ -138,6 +138,7 @@ def connect(core):
 
   @core.role
   class Seer(Villager):
+    __slots__ = ('target', 'reveal_count')
     def __init__(self):
       self.target = None
       self.reveal_count = 0
@@ -181,6 +182,7 @@ def connect(core):
 
   @core.role
   class Clone(Villager):
+    __slots__ = ('target',)
     def __init__(self):
       self.target = None
 
@@ -202,6 +204,7 @@ def connect(core):
 
   @core.role
   class Troublemaker(Villager):
+    __slots__ = ('target',)
     def __init__(self):
       self.target = None
 
@@ -225,6 +228,7 @@ def connect(core):
 
   @core.role
   class Thief(Villager):
+    __slots__ = ('target',)
     def __init__(self):
       self.target = None
 
@@ -245,6 +249,7 @@ def connect(core):
 
   @core.role
   class Drunk(Villager):
+    __slots__ = ('target',)
     def __init__(self):
       self.target = None
 
@@ -275,6 +280,7 @@ def connect(core):
 
   @core.role
   class Wolf(WolfSide):
+    __slots__ = ('target', 'discussed')
     def __init__(self):
       self.target = True
       self.discussed = False
