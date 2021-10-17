@@ -17,7 +17,7 @@ def connect(core):
   record_history = core.record_history
   on_used = core.on_used
   join_with_and = core.join_with_and
-  core.DEFAULT_ROLES = [ 'Wolf', 'Thief', 'Troublemaker', 'Drunk', 'Wolf', 'Villager', 'Seer', 'Clone', 'Minion', 'Insomniac', 'Tanner' ]
+  core.DEFAULT_ROLES = [ 'Wolf', 'Thief', 'Troublemaker', 'Drunk', 'Wolf', 'Villager', 'Seer', 'Clone', 'Minion', 'Insomniac', 'Tanner', 'Villager' ]
 
   def is_wolf_side(role):
     return issubclass(roles[role], WolfSide)
@@ -271,7 +271,7 @@ def connect(core):
       for player in players.values():
         if isinstance(player.role, Wolf):
           wolves.append(player.extern.name)
-      await player.extern.send(tr('wolves_reveal').format(join_with_and(wolves)) if wolves else tr('no_wolves') + tr('minion_kill_self'))
+      await player.extern.send(tr('wolves_reveal').format(join_with_and(wolves)) if wolves else tr('no_wolves'))
 
   @core.role
   class Wolf(WolfSide):

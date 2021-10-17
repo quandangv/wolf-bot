@@ -472,7 +472,7 @@ async def StartImmediate(message, args):
     current_count = len(members)
     global played_roles
     if not played_roles:
-      played_roles = DEFAULT_ROLES[:default_roles_needed(current_count)]
+      played_roles = [ roles[DEFAULT_ROLES[idx]].name for idx in range(default_roles_needed(current_count))]
     needed_count = needed_players_count(played_roles)
     if current_count > needed_count:
       await question(message, tr('start_needless').format(current_count, needed_count))
@@ -726,13 +726,18 @@ async def on_voted(me, vote):
       await CloseVote(None, None)
     elif my_vote_count - next_most > not_voted:
       if vote_countdown_task:
-        vote_countdown_task.cancel()
+        if vote_countdown_task.time > LANDSLIDE_VOTE_COUNTDOWN:
+          vote_countdown_task.cancel()
+        else:
+          return
       await channel.send(tr('landslide_vote_countdown').format(me.vote, LANDSLIDE_VOTE_COUNTDOWN))
       vote_countdown_task = asyncio.create_task(close_vote_countdown(LANDSLIDE_VOTE_COUNTDOWN))
+      vote_countdown_task.time = LANDSLIDE_VOTE_COUNTDOWN
     elif not_voted / player_count <= 1 - SUPERMAJORITY:
       if not vote_countdown_task:
         await channel.send(tr('vote_countdown').format(VOTE_COUNTDOWN))
         vote_countdown_task = asyncio.create_task(close_vote_countdown(VOTE_COUNTDOWN))
+        vote_countdown_task.time = VOTE_COUNTDOWN
   else:
     await channel.send(tr('unvote_success').format(me.extern.mention))
     if vote_countdown_task:
