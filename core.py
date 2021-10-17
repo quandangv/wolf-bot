@@ -143,8 +143,8 @@ class Player:
     self.vote = None
 
 class Channel:
-  @classmethod
-  async def create(cls, name, *players):
+  @staticmethod
+  async def create(name, *players):
     self = Channel()
     self.extern = await create_channel(name, *( player.extern for player in players ))
     self.players = list(players)
@@ -244,7 +244,6 @@ def check_channel(channel_name):
 
 def initialize(admins):
   random.seed()
-
   for cmd_name, base in list(commands.items()):
     [name, description, *aliases] = tr('cmd_' + cmd_name.lower())
     description = description.format(BOT_PREFIX + name)
@@ -261,6 +260,9 @@ def initialize(admins):
       else:
         print("ERROR: Can't create alias {} to command {}!".format(alias, name))
 
+  connect(admins)
+
+def connect(admins):
   for base_name, base in list(roles.items()):
     [base.name, base.description, base.greeting, *aliases] = tr('role_' + base_name.lower())
     base.commands = [ command_name(command) for command in dir(base) if command[:1].isupper() ]
@@ -623,6 +625,9 @@ async def RevealAll(message, args):
   await low_reveal_all(message.channel)
 
 ############################# UTILS ############################
+
+def disconnect():
+  roles.clear()
 
 async def confirm(message, text):
   await message.reply(tr('confirm').format(message.author.mention) + str(text))

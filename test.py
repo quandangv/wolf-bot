@@ -377,10 +377,10 @@ def shuffle_copy(arr):
   result[0], result[4], result[8], result[-3], result[-1], result[-2] = result[-2], result[-1], result[-3], result[0], result[4], result[8]
   return result
 
-#classic.connect(core)
-#core.disconnect()
-#one_night.connect(core)
-#core.initialize(admins)
+classic.connect(core)
+core.disconnect()
+one_night.connect(core)
+core.connect(admins)
 
 loop.run_until_complete(asyncio.gather(
   expect_response(anne, '!load _test_empty', game, '[game] confirm(@anne) load_success(_test_empty) '),
