@@ -141,7 +141,6 @@ class Player:
     self.is_admin = is_admin
     self.extern = extern
     self.role = None
-    self.real_role = None
     self.vote = None
 
 class Channel:
@@ -198,7 +197,10 @@ def single_use(func):
 def check_status(required_status = 'night'):
   def decorator(func):
     async def handler(*others, message, args):
-      await (question(message, tr(required_status + '_only')) if required_status != status else func(*others, message=message, args=args))
+      if required_status != status:
+        await question(message, tr(required_status + '_only'))
+      else:
+        await func(*others, message=message, args=args)
     handler.__name__ = func.__name__
     return handler
   return decorator
@@ -230,9 +232,9 @@ def check_dm(func):
 def check_channel(channel_name):
   def decorator(func):
     async def c_handler(*others, message, args):
-      channel = tmp_channels[channel_name]
-      if message.channel.id == channel.extern.id:
-        await func(*others, channel, message=message, args=args)
+      tmp_channel = tmp_channels[channel_name]
+      if message.channel.id == tmp_channel.extern.id:
+        await func(*others, tmp_channel, message=message, args=args)
       else:
         await warn_wrong_channel(message, channel_name, func.__name__)
     c_handler.__name__ = func.__name__
@@ -737,6 +739,8 @@ async def on_voted(me, vote):
       vote_countdown_task.cancel()
       clear_vote_countdown()
       await channel.send(tr('vote_countdown_cancelled'))
+
+######################### COMMON ROLES #########################
 
 ############################# MAIN #############################
 

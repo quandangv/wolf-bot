@@ -84,6 +84,7 @@ discussion_ended = "bạn đã ngưng bàn luận"
 save_success = "đã lưu trạng thái với tên **{}**"
 load_success = "đã tải thành công trạng thái **{}**"
 vote_detail = "Các phiếu bầu hiện tại là:\n{}"
+vote_bite = [ "Hôm nay {} thèm thịt **{}**", "{} muốn cắn chết **{}**", "{} đề nghị đàn sói cắn **{}**" ]
 
 no_swap_self = "bạn không được tráo chức năng với chính mình"
 seer_self = "bạn không được soi chính mình"

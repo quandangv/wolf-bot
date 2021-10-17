@@ -281,9 +281,9 @@ def connect(core):
 
     @core.check_channel('wolf')
     @core.check_status()
-    async def EndDiscussion(self, me, channel, message, args):
+    async def EndDiscussion(self, me, tmp_channel, message, args):
       self.discussed = True
-      for player in core.tmp_channels['wolf'].players:
+      for player in tmp_channel.players:
         if not player.role.discussed:
           await confirm(message, tr('discussion_ended') + tr('discussion_wait_other'))
           break
@@ -295,7 +295,7 @@ def connect(core):
     @core.check_status()
     @core.single_use
     @core.single_arg('reveal_wronguse', EXCESS_ROLES)
-    async def Reveal(self, me, channel, message, args):
+    async def Reveal(self, me, tmp_channel, message, args):
       number = await select_excess_card(message, 'reveal_wronguse', 'Reveal', args)
       if number:
         record_history(message, excess_roles[number-1])
