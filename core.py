@@ -242,7 +242,7 @@ def check_channel(channel_name):
 
 ############################ INIT ##############################
 
-def initialize(admins):
+def initialize(admins, role_prefix):
   random.seed()
   for cmd_name, base in list(commands.items()):
     [name, description, *aliases] = tr('cmd_' + cmd_name.lower())
@@ -259,12 +259,11 @@ def initialize(admins):
         commands[alias] = base.make_alias(alias, description)
       else:
         print("ERROR: Can't create alias {} to command {}!".format(alias, name))
+  connect(admins, role_prefix)
 
-  connect(admins)
-
-def connect(admins):
+def connect(admins, role_prefix):
   for base_name, base in list(roles.items()):
-    [base.name, base.description, base.greeting, *aliases] = tr('role_' + base_name.lower())
+    [base.name, base.description, base.greeting, *aliases] = tr(role_prefix + base_name.lower())
     base.commands = [ command_name(command) for command in dir(base) if command[:1].isupper() ]
     base.greeting = base.greeting.format(*base.commands)
     base.__role__ = True
@@ -377,26 +376,11 @@ async def json_to_state(fp, player_mapping = {}):
 
 ########################## COMMANDS ############################
 
-@cmd(RoleCommand())
-def Swap(): pass
-
-@cmd(RoleCommand())
-def Steal(): pass
-
-@cmd(RoleCommand())
-def Take(): pass
-
-@cmd(RoleCommand())
-def See(): pass
-
-@cmd(RoleCommand())
-def Reveal(): pass
-
-@cmd(RoleCommand())
-def Clone(): pass
-
-@cmd(RoleCommand())
-def EndDiscussion(): pass
+ROLE_COMMANDS = [ 'Kill', 'Defend', 'See', 'Swap', 'Steal', 'Take', 'Clone', 'Reveal', 'EndDiscussion' ]
+for cmd_name in ROLE_COMMANDS:
+  def func(): pass
+  func.__name__ = cmd_name
+  cmd(RoleCommand())(func)
 
 @cmd(Command())
 async def Help(message, args):

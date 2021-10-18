@@ -39,7 +39,7 @@ def connect(core):
     @core.check_channel('wolf')
     @core.check_status
     @core.single_arg('bite_wronguse')
-    async def Bite(self, me, tmp_channel, message, args):
+    async def Kill(self, me, tmp_channel, message, args):
       player = find_player(message, args)
       if player:
         self.target = player

@@ -99,9 +99,12 @@ async def add_member(channel, member):
 
 @core.action
 def tr(key):
+  sample = None
   def strip_prefix(prefix):
     nonlocal key
+    nonlocal sample
     if key.startswith(prefix):
+      sample = getattr(lang, key)
       key = key[len(prefix):]
       return True
 
@@ -128,10 +131,8 @@ def tr(key):
   if key == 'reveal_item':
     return '{}:{}'
   if strip_prefix('cmd_'):
-    sample = getattr(lang, 'cmd_' + key)
     return [ add_formats(key, sample[0]), add_formats(key + '_desc', sample[1]), key + '_alias' ]
-  if strip_prefix('role_'):
-    sample = getattr(lang, 'role_' + key)
+  if strip_prefix('onenight_') or strip_prefix('classic_'):
     return [ add_formats(key, sample[0]), add_formats(key + '_desc', sample[1]), add_formats(key + '_greeting', sample[2]), key + ' alias' ]
   sample_result = getattr(lang, key)
   if isinstance(sample_result, list):
@@ -147,7 +148,7 @@ def shuffle_copy(arr):
   return arr[::-1]
 
 one_night.connect(core)
-core.initialize(admins)
+core.initialize(admins, 'onenight_')
 loop = asyncio.get_event_loop()
 
 async def low_expect_response(coroutine, response):
@@ -377,10 +378,13 @@ def shuffle_copy(arr):
   result[0], result[4], result[8], result[-3], result[-1], result[-2] = result[-2], result[-1], result[-3], result[0], result[4], result[8]
   return result
 
+core.disconnect()
 classic.connect(core)
+core.connect(admins, 'classic_')
+
 core.disconnect()
 one_night.connect(core)
-core.connect(admins)
+core.connect(admins, 'onenight_')
 
 loop.run_until_complete(asyncio.gather(
   expect_response(anne, '!load _test_empty', game, '[game] confirm(@anne) load_success(_test_empty) '),
