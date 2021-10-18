@@ -372,20 +372,45 @@ loop.run_until_complete(asyncio.gather(
   expect_response(george, '!vote david', game, [ '[game] vote_success(@george, @david) ', '[game] vote_result(vote_item(@frank, 1) \nvote_item(@anne, 1) \nvote_item(@harry, 3) \nvote_item(@david, 1) \nvote_item(@elsa, 3) ) ', '[game] no_lynch ', '[game] winners(@carl, @bob, @elsa, @harry) ', '[game] reveal_all(anne:insomniac\ncarl:wolf\nbob:wolf\ndavid:troublemaker\nelsa:minion\nfrank:villager\ngeorge:thief\nharry:wolf\nignacio:seer) \nexcess_roles(drunk, villager, villager) ' ]),
 ))
 
+core.disconnect()
+classic.connect(core)
+core.connect(admins, 'classic_')
+
+members = [ anne, bob, carl, david, elsa, frank ]
+loop.run_until_complete(asyncio.gather(
+  expect_response(anne, '!load _test_empty', game, '[game] confirm(@anne) load_success(_test_empty) '),
+  expect_response(anne, '!startimmediate', game, [
+      '[game] start(@anne, @bob, @carl, @david, @elsa, @frank) ',
+      '[@anne] role(villager) villager_greeting',
+      '[@bob] role(guard) guard_greeting(!defend)',
+      '[@carl] role(wolf) wolf_greeting(!kill)',
+      '[@david] role(villager) villager_greeting',
+      '[@elsa] role(villager) villager_greeting',
+      '[@frank] role(wolf) wolf_greeting(!kill)',
+      '[wolf ] wolf_channel(@carl, @frank) ',
+  ]),
+))
+
+loop.run_until_complete(asyncio.gather(
+  expect_response(bob, '!defend anne', game, [ '[game] question(@bob) wrong_role(!defend) ', '[@bob] question(@bob) dm_only(!defend) ' ]),
+  expect_response(bob, '!defend anne', bot_dm, '[@bot] confirm(@bob) defend_success(anne) '),
+  expect_response(bob, '!defend carl', bot_dm, '[@bot] question(@bob) ability_used(!defend) '),
+  expect_response(frank, '!kill anne', channels['wolf '], '[wolf ] vote_bite(@frank, anne) wolf_need_consensus '),
+  expect_response(carl, '!kill elsa', channels['wolf '], '[wolf ] vote_bite(@carl, elsa) wolf_need_consensus '),
+  expect_response(carl, '!kill anne', channels['wolf '], '[wolf ] vote_bite(@carl, anne) wolf_bite(anne) '),
+))
+
+core.disconnect()
+one_night.connect(core)
+core.connect(admins, 'onenight_')
+
 @core.action
 def shuffle_copy(arr):
   result = arr[:]
   result[0], result[4], result[8], result[-3], result[-1], result[-2] = result[-2], result[-1], result[-3], result[0], result[4], result[8]
   return result
 
-core.disconnect()
-classic.connect(core)
-core.connect(admins, 'classic_')
-
-core.disconnect()
-one_night.connect(core)
-core.connect(admins, 'onenight_')
-
+members = [ anne, bob, carl, david, elsa, frank, george, harry, ignacio ]
 loop.run_until_complete(asyncio.gather(
   expect_response(anne, '!load _test_empty', game, '[game] confirm(@anne) load_success(_test_empty) '),
   expect_response(anne, '!startimmediate', game, [

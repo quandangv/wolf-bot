@@ -60,20 +60,17 @@ def connect(core):
       og_excess.append(shuffled_roles[-idx - 1])
 
   @core.injection
-  async def on_lynch(most_vote):
-    for lynched in players.values():
-      if lynched.extern.mention == most_vote:
-        lynched_role = lynched.real_role
-        await core.main_channel().send(tr('reveal_player').format(lynched.extern.mention, lynched_role))
-        lynched_role = roles[lynched_role]
-        if issubclass(lynched_role, Villager) or issubclass(lynched_role, Minion):
-          winners = [ player for player in players.values() if is_wolf_side(player.real_role) ]
-        elif issubclass(lynched_role, Tanner):
-          winners = [ lynched ]
-        elif issubclass(lynched_role, WolfSide):
-          winners = [ player for player in players.values() if is_village_side(player.real_role) ]
-        await core.announce_winners(core.main_channel(), winners)
-        break
+  async def on_lynch(player):
+    lynched_role = player.real_role
+    await core.main_channel().send(tr('reveal_player').format(player.extern.mention, lynched_role))
+    lynched_role = roles[lynched_role]
+    if issubclass(lynched_role, Villager) or issubclass(lynched_role, Minion):
+      winners = [ player for player in players.values() if is_wolf_side(player.real_role) ]
+    elif issubclass(lynched_role, Tanner):
+      winners = [ player ]
+    elif issubclass(lynched_role, WolfSide):
+      winners = [ player for player in players.values() if is_village_side(player.real_role) ]
+    await core.announce_winners(core.main_channel(), winners)
 
   @core.injection
   async def on_no_lynch():
@@ -312,7 +309,8 @@ def connect(core):
     async def on_start(self, player, first_time = True):
       await super().on_start(player, first_time)
       if not 'wolf' in core.tmp_channels:
-        core.tmp_channels['wolf'] = await core.Channel.create(tr('wolf'), player)
+        channel = core.tmp_channels['wolf'] = await core.Channel.create(tr('wolf'), player)
+        channel.discussing = True
       else:
         channel = core.tmp_channels['wolf']
         await channel.add(player)

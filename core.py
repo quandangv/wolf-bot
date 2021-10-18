@@ -459,7 +459,6 @@ async def Vote(me, message, args):
 
 @cmd(SetupCommand())
 async def StartImmediate(message, args):
-  # Function to start custom game
   try:
     members = await get_available_members()
     current_count = len(members)
@@ -491,15 +490,21 @@ async def StartImmediate(message, args):
         await player.extern.send(tr('role').format(player.role.name) + player.role.greeting)
         if hasattr(player.role, 'on_start'):
           await player.role.on_start(player)
+        if hasattr(player.role, 'new_night'):
+          player.role.new_night()
 
       after_shuffle(shuffled_roles)
 
       for id, channel in tmp_channels.items():
         channel_name = id + '_channel'
-        await channel.extern.send(tr(channel_name).format(join_with_and([player.extern.mention for player in channel.players])) + tr('end_discussion_info').format(command_name('EndDiscussion')))
+        msg = tr(channel_name).format(join_with_and([player.extern.mention for player in channel.players]))
+        if hasattr(channel, 'discussing'):
+          msg += tr('end_discussion_info').format(command_name('EndDiscussion'))
+        await channel.extern.send(msg)
         if channel_name in channel_events:
           await channel_events[channel_name](channel)
       await on_used()
+      start_night()
   except BaseException as e:
     await EndGame(None, None)
     raise e
@@ -544,7 +549,10 @@ async def CloseVote(_, __):
   most_vote = await low_vote_count('vote_result')
   if most_vote:
     await main_channel().send(tr('lynch').format(most_vote))
-    await on_lynch(most_vote)
+    for lynched in players.values():
+      if lynched.extern.mention == most_vote:
+        await on_lynch(lynched)
+        break
   else:
     await main_channel().send(tr('no_lynch'))
     await on_no_lynch()
@@ -612,6 +620,8 @@ async def RevealAll(message, args):
 
 def disconnect():
   roles.clear()
+  channel_events.clear()
+  generate_injections()
 
 async def confirm(message, text):
   await message.reply(tr('confirm').format(message.author.mention) + str(text))
@@ -644,7 +654,7 @@ async def find_player(message, name):
   for player in players.values():
     if player.extern.name == name:
       if not player.role:
-        return await question(message, tr('player_norole').format(player.mention))
+        return await question(message, tr('player_norole').format(player.extern.mention))
       return player
   await question(message, tr('player_notfound').format(name))
 
@@ -674,17 +684,22 @@ async def announce_winners(channel, winners):
 def injection(func):
   globals()[func.__name__] = func
 
-def add_to_json(obj): pass
-def extract_from_json(obj): pass
-def before_shuffle(): pass
-def after_shuffle(): pass
-def default_roles_needed(player_count): raise missing_injection_error('default_roles_needed')
-def needed_players_count(played_roles): raise missing_injection_error('needed_players_count')
-async def on_lynch(most_vote): raise missing_injection_error('on_lynch')
-async def on_no_lynch(): pass
-async def show_history(channel, roles, commands): raise missing_injection_error('show_history')
-async def low_reveal_all(channel): raise missing_injection_error('low_reveal_all')
-async def role_help(message, role): raise missing_injection_error('role_help')
+def generate_injections():
+  def add_to_json(obj): pass
+  def extract_from_json(obj): pass
+  def before_shuffle(): pass
+  def after_shuffle(): pass
+  def default_roles_needed(player_count): raise missing_injection_error('default_roles_needed')
+  def needed_players_count(played_roles): raise missing_injection_error('needed_players_count')
+  async def on_lynch(player): raise missing_injection_error('on_lynch')
+  async def on_no_lynch(): pass
+  async def show_history(channel, roles, commands): raise missing_injection_error('show_history')
+  async def low_reveal_all(channel): raise missing_injection_error('low_reveal_all')
+  async def role_help(message, role): raise missing_injection_error('role_help')
+  def start_night(): pass
+  # Don't try this at home
+  globals().update(locals())
+generate_injections()
 
 def missing_injection_error(name):
   return NotImplementedError("Function `{}` not implemented! Implement it using the @injection decorator".format(name))
@@ -742,6 +757,16 @@ async def on_voted(me, vote):
       await channel.send(tr('vote_countdown_cancelled'))
 
 ######################### COMMON ROLES #########################
+
+class Wolf:
+  async def on_start(self, player, first_time = True):
+    if not 'wolf' in tmp_channels:
+      tmp_channels['wolf'] = await Channel.create(tr('wolf'), player)
+    else:
+      channel = tmp_channels['wolf']
+      await channel.add(player)
+      if not first_time:
+        await channel.extern.send(tr('channel_greeting').format(player.extern.mention, channel.extern.name))
 
 ############################# MAIN #############################
 

@@ -46,6 +46,7 @@ reveal_remaining = ". Bạn còn **{}** lượt lật bài"
 no_reveal_remaining = ". Bạn đã hết chức năng lật bài"
 discussion_wait_other = ", hãy đợi mọi người trong group cùng ngưng bàn luận"
 discussion_all_ended = ", các bạn đều đã ngưng bàn luận"
+wait = [ "đợi mình tí nha", "đợi tí mình trả lời" ]
 
 start = [ "Bắt đầu trò chơi với {}", "Trò chơi gồm {} sẽ được bắt đầu ngay bây giờ", "{} chơi ha", "Trò chơi bắt đầu! Đêm nay sói sẽ xuất hiện giữa {}" ]
 start_needmore = [ "hiện tại có **{}** người chơi, trong khi mình cần **{}** người lận", "mình cần **{1}** người chơi, mới có **{0}** người à" ]
@@ -88,6 +89,7 @@ save_success = "đã lưu trạng thái với tên **{}**"
 load_success = "đã tải thành công trạng thái **{}**"
 vote_detail = "Các phiếu bầu hiện tại là:\n{}"
 vote_bite = [ "Hôm nay {} thèm thịt **{}**", "{} muốn cắn chết **{}**", "{} đề nghị đàn sói cắn **{}**" ]
+defend_success = "đêm nay bạn sẽ bảo vệ **{}**"
 
 no_swap_self = "bạn không được tráo chức năng với chính mình"
 seer_self = "bạn không được soi chính mình"
