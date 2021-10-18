@@ -284,14 +284,15 @@ def connect(core):
 
     @core.check_channel('wolf')
     @core.check_status()
-    async def EndDiscussion(self, me, tmp_channel, message, args):
+    async def Sleep(self, me, tmp_channel, message, args):
       self.discussed = True
+      msg = tr('gone_to_sleep').format(me.extern.mention)
       for player in tmp_channel.players:
         if not player.role.discussed:
-          await confirm(message, tr('discussion_ended') + tr('discussion_wait_other'))
+          await message.channel.send(msg + tr('sleep_wait_other'))
           break
       else:
-        await confirm(message, tr('discussion_ended') + tr('discussion_all_ended'))
+        await message.channel.send(msg + tr('all_sleeping'))
       await on_used()
 
     @core.check_channel('wolf')

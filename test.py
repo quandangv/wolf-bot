@@ -238,7 +238,7 @@ loop.run_until_complete(asyncio.gather(
     '[@george] role(drunk) drunk_greeting(!take)',
     '[@harry] role(clone) clone_greeting(!clone)',
     '[@ignacio] role(insomniac) insomniac_greeting',
-    '[wolf ] wolf_channel(@anne, @bob) end_discussion_info(!enddiscussion) '
+    '[wolf ] wolf_channel(@anne, @bob) sleep_info(!sleep) '
   ])
 ))
 
@@ -279,8 +279,9 @@ loop.run_until_complete(asyncio.gather(
 
   *check_private_single_player_cmd(harry, '!clone', 'david', 'clone_wronguse(!clone)', 'clone_self', 'clone_success(david, thief) thief_greeting(!steal)', False),
   expect_response(harry, '!steal ignacio', bot_dm, '[@bot] confirm(@harry) thief_success(ignacio, insomniac) '),
-  expect_response(anne, '!enddiscussion', channels['wolf '], '[wolf ] confirm(@anne) discussion_ended discussion_wait_other '),
-  expect_response(bob, '!enddiscussion', channels['wolf '], [ '[wolf ] confirm(@bob) discussion_ended discussion_all_ended ', '[@ignacio] insomniac_reveal(thief) ', '[game] wake_up vote(!vote) ' ]),
+  expect_response(harry, '!sleep', bot_dm, '[@bot] confirm(@harry) good_night '),
+  expect_response(anne, '!sleep', channels['wolf '], '[wolf ] gone_to_sleep(@anne) sleep_wait_other '),
+  expect_response(bob, '!sleep', channels['wolf '], [ '[wolf ] gone_to_sleep(@bob) all_sleeping ', '[@ignacio] insomniac_reveal(thief) ', '[game] wake_up vote(!vote) ' ]),
 
   expect_response(harry, '!swap frank', bot_dm, '[@bot] question(@harry) wrong_role(!swap) '),
   expect_response(not_player, '!vote frank', bot_dm, '[@bot] question(@not_player) not_playing '),
@@ -337,7 +338,7 @@ loop.run_until_complete(asyncio.gather(
     '[@harry] role(wolf) wolf_greeting',
     '[@ignacio] role(minion) minion_greeting',
     '[@ignacio] wolves_reveal(harry) ',
-    '[wolf ] wolf_channel(@harry) end_discussion_info(!enddiscussion) ',
+    '[wolf ] wolf_channel(@harry) sleep_info(!sleep) ',
     '[wolf ] wolf_get_reveal(!reveal, 3) '
   ])
 ))
@@ -353,8 +354,8 @@ loop.run_until_complete(asyncio.gather(
   expect_response(bob, '!clone harry', bot_dm, [ '[wolf ] channel_greeting(@bob, wolf ) ', '[@bot] confirm(@bob) clone_success(harry, wolf) wolf_greeting' ]),
   expect_response(carl, '!take 1', bot_dm, '[@bot] confirm(@carl) drunk_success(1) '),
   expect_response(david, '!swap elsa george', bot_dm, '[@bot] confirm(@david) troublemaker_success(elsa, george) '),
-  expect_response(harry, '!enddiscussion', channels['wolf '], '[wolf ] confirm(@harry) discussion_ended discussion_wait_other '),
-  expect_response(bob, '!enddiscussion', channels['wolf '], '[wolf ] confirm(@bob) discussion_ended discussion_all_ended '),
+  expect_response(harry, '!sleep', channels['wolf '], '[wolf ] gone_to_sleep(@harry) sleep_wait_other '),
+  expect_response(bob, '!sleep', channels['wolf '], '[wolf ] gone_to_sleep(@bob) all_sleeping '),
   expect_response(elsa, '!steal ignacio', bot_dm, [ '[@anne] insomniac_reveal(insomniac) ', '[game] wake_up vote(!vote) ', '[@bot] confirm(@elsa) thief_success(ignacio, minion) ' ]),
   expect_response(not_player, '!vote frank', bot_dm, '[@bot] question(@not_player) not_playing '),
   expect_response(harry, '!vote frank', game, '[game] vote_success(@harry, @frank) '),
@@ -385,7 +386,7 @@ loop.run_until_complete(asyncio.gather(
       '[@bob] role(guard) guard_greeting(!defend)',
       '[@carl] role(wolf) wolf_greeting(!kill)',
       '[@david] role(villager) villager_greeting',
-      '[@elsa] role(villager) villager_greeting',
+      '[@elsa] role(witch) witch_greeting(!poison, !revive, !sleep)',
       '[@frank] role(wolf) wolf_greeting(!kill)',
       '[wolf ] wolf_channel(@carl, @frank) ',
   ]),
@@ -397,7 +398,7 @@ loop.run_until_complete(asyncio.gather(
   expect_response(bob, '!defend carl', bot_dm, '[@bot] question(@bob) ability_used(!defend) '),
   expect_response(frank, '!kill anne', channels['wolf '], '[wolf ] vote_bite(@frank, anne) wolf_need_consensus '),
   expect_response(carl, '!kill elsa', channels['wolf '], '[wolf ] vote_bite(@carl, elsa) wolf_need_consensus '),
-  expect_response(carl, '!kill anne', channels['wolf '], '[wolf ] vote_bite(@carl, anne) wolf_bite(anne) '),
+  expect_response(carl, '!kill anne', channels['wolf '], [ '[wolf ] vote_bite(@carl, anne) wolf_bite(anne) ', '[@elsa] witch_no_death ' ]),
 ))
 
 core.disconnect()

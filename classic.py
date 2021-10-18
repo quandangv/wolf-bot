@@ -175,5 +175,5 @@ def connect(core):
 
     @core.check_dm
     @core.check_status()
-    async def EndDiscussion(self, me, message, args):
+    async def Sleep(self, me, message, args):
       pass

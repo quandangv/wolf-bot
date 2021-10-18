@@ -120,7 +120,11 @@ class RoleCommand(PlayerCommand):
       if not hasattr(player.role, func.__name__):
         return await question(message, tr('wrong_role').format(BOT_PREFIX + self.name))
       await getattr(player.role, func.__name__)(player, message=message, args=args)
-    super().decorate(check)
+    async def check_sleep(player, message, args):
+      if not hasattr(player.role, func.__name__):
+        return await confirm(message, tr('good_night'))
+      await getattr(player.role, func.__name__)(player, message=message, args=args)
+    super().decorate(check_sleep if func.__name__ == 'Sleep' else check)
 
 class SetupCommand(AdminCommand):
   def is_listed(self, player, _):
@@ -371,7 +375,7 @@ async def json_to_state(fp, player_mapping = {}):
 
 ########################## COMMANDS ############################
 
-ROLE_COMMANDS = [ 'Kill', 'Defend', 'See', 'Swap', 'Steal', 'Take', 'Clone', 'Reveal', 'EndDiscussion', 'Revive', 'Poison' ]
+ROLE_COMMANDS = [ 'Kill', 'Defend', 'See', 'Swap', 'Steal', 'Take', 'Clone', 'Reveal', 'Sleep', 'Revive', 'Poison' ]
 for cmd_name in ROLE_COMMANDS:
   def func(): pass
   func.__name__ = cmd_name
@@ -494,7 +498,7 @@ async def StartImmediate(message, args):
         channel_name = id + '_channel'
         msg = tr(channel_name).format(join_with_and([player.extern.mention for player in channel.players]))
         if hasattr(channel, 'discussing'):
-          msg += tr('end_discussion_info').format(command_name('EndDiscussion'))
+          msg += tr('sleep_info').format(command_name('Sleep'))
         await channel.extern.send(msg)
         if channel_name in channel_events:
           await channel_events[channel_name](channel)

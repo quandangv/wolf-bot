@@ -5,11 +5,12 @@
 - Test case for starting with default roles
 - Print starting role with start message
 - Manually add players to the game
-- Rename EndDiscussion to Sleep
+- Use single_use for discussed, revived, and poisoned
 
 # DOING
 
 # DONE
+- Rename EndDiscussion to Sleep
 - Rename Role.used to Role.target
 - History command
 - Help for admin on startup
