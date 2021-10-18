@@ -23,6 +23,8 @@ most_vote = "{} đang có nhiều phiếu bầu nhất"
 vote_tie = "Nhiều người đang bằng phiếu bầu"
 wolf_need_consensus = [ ". Đàn sói mau thống nhất mục tiêu cắn", ". Các sói hãy thống nhất người để cắn" ]
 wolf_bite = ". Các con sói quyết định cắn **{}**"
+witch_no_death = "Đêm nay bạn không thấy ai chết cả"
+witch_death = "Đêm nay bạn nhận thấy có người chết"
 
 reveal_player = [ "{} chính là **{}**!", "{} là một con **{}**" ]
 reveal_item = "- {} là **{}**"
@@ -34,6 +36,7 @@ no_history = "không tìm thấy lịch sử ván trước"
 history = "Chức năng ban đầu:\n{}\nCác lá bài bên ngoài:{}\nCác lệnh thực hiện:\n{}"
 command_item = "- {} gọi `{}` ra **{}**"
 command_item_empty = "- {} gọi `{}`"
+witch_revive = ". Hãy nhắn lệnh `{}` để cứu họ"
 
 vote = [ "Dùng lệnh `{} người-chơi` để bỏ phiếu treo cổ người đó", "Bạn ghét đứa nào thì cứ `{} đứa-đó` nha" ]
 help_list = [ "các lệnh được thực hiện là `{}`.", "ngoài cắn người, bạn còn có thể dùng lệnh `{}`. (giỡn thoi nha)", "hãy thử một trong các lệnh `{}`" ]
@@ -72,6 +75,8 @@ clone_wronguse = "bạn muốn nhân bản ai thì phải nhắn là `{0} ngư�
 vote_wronguse = "bạn muốn treo cổ ai thì phải nhắn là `{0} người-đó`. Ví dụ như `{0} quandangv`"
 bite_wronguse = "bạn muốn cắn ai thì phải nhắn là `{0} người-đó`. Ví dụ như `{0} quandangv`"
 defend_wronguse = "bạn muốn bảo vệ ai thì phải nhắn là `{0} người-đó`. Ví dụ như `{0} quandangv`"
+revive_wronguse = "bạn muốn cứu người thì phải nhắn là `{0}`"
+poison_wronguse = "bạn muốn dùng bình giết ai thì phải nhắn là `{0} người-đó`. Ví dụ như `{0} quandangv`"
 
 add_success = [ "Đã thêm **{}** vào danh sách chức năng", "Con **{}** vừa xuất hiện trong làng" ]
 remove_success = [ "Đã bỏ một **{}** ra khỏi làng", "Con **{}** đã rời khỏi làng" ]
@@ -126,7 +131,7 @@ cmd_endgame = ( "ngungchoi", "`{0}` sẽ lập tức dừng trò chơi" )
 cmd_enddiscussion = ( "ngungbanluan", "Nhắn `{0}` trong group kín để ra hiệu ngưng bàn luận cho quản trò", "ngungban" )
 cmd_closevote = ( "dongvote", "`{0}` để lập tức ngưng bỏ phiếu", "ngungvote" )
 cmd_wakeup = ( "thucday", "`{0}` buộc cả làng thức dậy ngay lập tức" )
-cmd_vote = ( "vote", "`{0}  người-chơi` để bỏ phiếu giết người đó", "giet" )
+cmd_vote = ( "vote", "`{0}  người-chơi` để bỏ phiếu giết người đó", "treoco" )
 cmd_unvote = ( "unvote", "`{0}` để rút lại phiếu bầu" )
 cmd_clone = ( "nhanban", "`{0}  người-chơi` để nhân bản chức năng của người đó", "saochep" )
 cmd_reveal = ( "latbai", "`{0}  STT-lá-bài` để lật và xem lá bài đó", "xem" )
@@ -142,6 +147,8 @@ cmd_votedetail = ( "chitietphieu", "`{0}` để xem chi tiết ai vote ai" )
 cmd_history = ( "lichsu", "`{0}` để xem diễn biến chi tiết của ván trước" )
 cmd_kill = ( "can", "Sói phải nhắn `{0}  mục-tiêu` để lựa chọn mục tiêu để cắn" )
 cmd_defend = ( "baove", "Bảo vệ phải nhắn `{0}  người-chơi` để bảo vệ người đó khỏi tấn công vào ban đêm. Không được bảo vệ một người hai đêm liên tiếp" )
+cmd_revive = ( "cuu", "Phù thủy khi thấy có người chết có thể nhắn `{0}` để dùng bình cứu" )
+cmd_poison = ( "giet", "Phù thủy có thể nhắn `{0}  người-chơi` để dùng bình giết người đó" )
 
 onenight_villager = ( "dân thường", "Một con dân thường không có chức năng. Nhờ vậy, bạn sẽ được yên giấc vào ban đêm", "Ban đêm bạn không phải làm gì cả. Sáng dậy, bạn có thể vote người để treo cổ", "dân làng", "dân" )
 onenight_wolf = ( "sói", "Sói chống lại dân làng. Chúng sẽ thắng nếu người bị treo cổ là phe dân", "Bạn sẽ được thêm vào group sói. Ban ngày, hãy tìm cách treo cổ một người dân để chiến thắng" )
@@ -154,6 +161,7 @@ onenight_troublemaker = ( "phá rối", "Vào ban đêm, kẻ này sẽ tráo đ
 onenight_drunk = ( "kẻ say rượu", "Người này không biết chức năng của mình, và sẽ lấy một trong những lá bài bên ngoài để làm chức năng", "Hãy dùng lệnh `{}  STT-lá-bài` để đổi chức năng của mình lấy một lá bài bên ngoài", "say rượu" )
 onenight_minion = ( "phản bội", "Người này thuộc phe sói và biết được sói là ai. Nếu làng treo cổ người này, phe sói sẽ thắng", "Hãy tìm cách treo cổ dân làng hoặc treo cổ chính mình", "kẻ phản bội" )
 
-classic_guard = ( "bảo vệ", "Mỗi đêm bảo vệ sẽ chọn một người để bảo vệ khỏi bị tấn công", "Hãy dùng lệnh `{}  người-chơi` để chọn người mình bảo vệ" )
+classic_guard = ( "bảo vệ", "Mỗi đêm bảo vệ sẽ chọn một người để bảo vệ khỏi bị tấn công", "Hãy dùng lệnh `{}  người-chơi` để chọn người mình bảo vệ", "bv" )
 classic_wolf = ( "sói", "Mỗi đêm các sói sẽ bàn bạc với nhau và giết một người", "Hãy dùng lệnh `{}  mục-tiêu` để chọn người mình muốn giết" )
 classic_villager = ( "dân thường", "Một con dân thường không có chức năng. Nhờ vậy, bạn sẽ được yên giấc vào ban đêm", "Ban đêm bạn không phải làm gì cả. Sáng dậy, bạn có thể vote người để treo cổ", "dân làng", "dân" )
+classic_witch = ( "phù thủy", "Người này sẽ có một bình thuốc cứu người và một bình giết người để sử dụng trong đêm. Mỗi bình chỉ được dùng một lần trong game", "Mỗi đêm bạn sẽ được biết có người chết hay không. Dùng lệnh `{}` để cứu họ, hoặc lệnh `{} mục-tiêu` để giết, còn không thì bạn phải nhắn `{}`", "pt" )

@@ -5,6 +5,7 @@ wolf_phase_players = []
 after_wolf_phase_players = []
 after_wolf_waiting = []
 wolf_phase = True
+night_deaths = []
 
 GUARD_DEFEND_SELF = True
 
@@ -19,7 +20,7 @@ def connect(core):
   record_history = core.record_history
   on_used = core.on_used
   join_with_and = core.join_with_and
-  core.DEFAULT_ROLES = [ 'Villager', 'Guard', 'Wolf', 'Villager', 'Villager', 'Wolf' ]
+  core.DEFAULT_ROLES = [ 'Villager', 'Guard', 'Wolf', 'Villager', 'Witch', 'Wolf' ]
 
   async def on_wolf_phase_use():
     for player in wolf_phase_players:
@@ -28,6 +29,9 @@ def connect(core):
     wolf_phase = False
     for co in after_wolf_waiting:
       await co
+    for player in after_wolf_phase_players:
+      if hasattr(player.role, 'on_wolves_done'):
+        await player.role.on_wolves_done(player)
 
   async def find_player(message, name):
     player = await core.find_player(message, name)
@@ -76,6 +80,7 @@ def connect(core):
     global wolf_phase
     wolf_phase = True
     after_wolf_waiting.clear()
+    night_deaths.clear()
 
   class ClassicRole:
     async def on_start(self, player, first_time = True):
@@ -139,3 +144,36 @@ def connect(core):
           player.defended = True
           await confirm(message, tr('defend_success').format(player.extern.name))
           await on_wolf_phase_use()
+
+  @core.role
+  class Witch(Villager):
+    after_wolf_phase = True
+    def __init__(self):
+      self.revived = False
+      self.poisoned = False
+
+    async def on_wolves_done(self, me):
+      if night_deaths:
+        msg = tr('witch_death')
+        if not self.revived:
+          msg += tr('witch_revive').format(*self.commands)
+        await me.extern.send(msg)
+      else:
+        await me.extern.send(tr('witch_no_death').format(*self.commands))
+
+    @core.check_dm
+    @core.check_status()
+    @core.single_arg('revive_wronguse')
+    async def Revive(self, me, message, args):
+      pass
+
+    @core.check_dm
+    @core.check_status()
+    @core.single_arg('poison_wronguse')
+    async def Poison(self, me, message, args):
+      pass
+
+    @core.check_dm
+    @core.check_status()
+    async def EndDiscussion(self, me, message, args):
+      pass

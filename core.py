@@ -288,11 +288,6 @@ def connect(admins, role_prefix):
   for admin in admins:
     players[admin.id] = Player(True, admin)
 
-######################## DETACH & ATTACH #######################
-
-#def detach():
-
-
 ######################### SERIALIZATION ########################
 
 class RoleEncoder(json.JSONEncoder):
@@ -376,7 +371,7 @@ async def json_to_state(fp, player_mapping = {}):
 
 ########################## COMMANDS ############################
 
-ROLE_COMMANDS = [ 'Kill', 'Defend', 'See', 'Swap', 'Steal', 'Take', 'Clone', 'Reveal', 'EndDiscussion' ]
+ROLE_COMMANDS = [ 'Kill', 'Defend', 'See', 'Swap', 'Steal', 'Take', 'Clone', 'Reveal', 'EndDiscussion', 'Revive', 'Poison' ]
 for cmd_name in ROLE_COMMANDS:
   def func(): pass
   func.__name__ = cmd_name
