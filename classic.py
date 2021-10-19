@@ -78,26 +78,6 @@ def connect(core):
     filter_players()
 
   @core.injection
-  def export_player(player, dictionary):
-    if hasattr(player, 'alive'):
-      dictionary['alive'] = player.alive
-
-  @core.injection
-  def import_player(player, dictionary):
-    if 'alive' in dictionary:
-      player.alive = dictionary['alive']
-
-  @core.injection
-  def export_channel(channel, dictionary):
-    if hasattr(channel, 'target'):
-      dictionary['target'] = channel.target.extern.id
-
-  @core.injection
-  def import_channel(channel, dictionary):
-    if 'target' in dictionary:
-      channel.target = players[dictionary['target']]
-
-  @core.injection
   def after_shuffle(shuffled_roles):
     filter_players()
 
@@ -125,7 +105,7 @@ def connect(core):
     after_wolf_waiting.clear()
     night_deaths.clear()
 
-  class ClassicRole:
+  class ClassicRole(core.Role):
     async def on_start(self, player, first_time = True):
       if first_time:
         player.alive = True
@@ -210,16 +190,16 @@ def connect(core):
 
     @core.check_dm
     @core.check_status()
-    @core.single_use('revived')
-    @core.single_arg('revive_wronguse')
-    async def Revive(self, me, message, args):
+    @core.single_use('poisoned')
+    @core.single_arg('poison_wronguse')
+    async def Poison(self, me, message, args):
       pass
 
     @core.check_dm
     @core.check_status()
-    @core.single_use('poisoned')
-    @core.single_arg('poison_wronguse')
-    async def Poison(self, me, message, args):
+    @core.single_use('revived')
+    @core.single_arg('revive_wronguse')
+    async def Revive(self, me, message, args):
       pass
 
     @core.check_dm

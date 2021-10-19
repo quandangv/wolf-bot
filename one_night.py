@@ -32,16 +32,6 @@ def connect(core):
     return issubclass(roles[role], Villager)
 
   @core.injection
-  def export_player(player, dictionary):
-    if player.role:
-      dictionary['real_role'] = roles[player.real_role].__name__
-
-  @core.injection
-  def import_player(player, dictionary):
-    if 'real_role' in dictionary:
-      player.real_role = roles[dictionary['real_role']].name
-
-  @core.injection
   def add_to_json(obj):
     obj['SEER_REVEAL'] = SEER_REVEAL
     obj['EXCESS_ROLES'] = EXCESS_ROLES
@@ -134,7 +124,7 @@ def connect(core):
 
 ############################ ROLES #############################
 
-  class OneNightRole:
+  class OneNightRole(core.Role):
     async def on_start(self, player, first_time = True):
       player.real_role = self.name
 

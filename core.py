@@ -2,14 +2,15 @@ import random
 import asyncio
 import json
 import traceback
+import dictionize
 
 commands = {}
 roles = {}
 channel_events = {}
 admin_commands = []
 other_commands = []
-
 lock = asyncio.Lock()
+
 vote_countdown_task = None
 vote_countdown_monitor = None
 history = []
@@ -58,86 +59,32 @@ def missing_action_error(name):
 
 ########################### CLASSES ############################
 
-class Command:
-  def decorate(self, func):
-    self.func = func
+def player_ref(cls):
+  old_dtypical = cls.dtypical
+  old_etypical = cls.etypical
+  def dtypical(self, obj, key, val):
+    if isinstance(val, str) and val.startswith('@'):
+      val = players[int(val[1:])]
+    old_dtypical(self, obj, key, val)
+  def etypical(self, dict, key, val):
+    if isinstance(val, Player):
+      dict[key] = '@' + str(val.extern.id)
+    else:
+      old_etypical(self, dict, key, val)
+  cls.dtypical = dtypical
+  cls.etypical = etypical
+  return cls
 
-  def make_alias(self, alias, description):
-    cmd = Command()
-    cmd.decorate(self.func)
-    cmd.name = self.name
-    cmd.description = tr('alias').format(alias, self.name) + description
-    return cmd
-
-  def is_listed(self, _, __):
-    return True
-
-class DebugCommand(Command):
-  def is_listed(self, _, __):
-    return DEBUG
-
-  def decorate(self, func):
-    async def check(message, args):
-      if DEBUG:
-        await func(message, args)
-      else:
-        await question(message, tr('debug_command'))
-    super().decorate(check)
-
-class AdminCommand(Command):
-  def is_listed(self, player, _):
-    return player.is_admin
-
-  def decorate(self, func):
-    async def check(message, args):
-      if not players[message.author.id].is_admin:
-        await question(message, tr('require_admin'))
-      else:
-        await func(message, args)
-    super().decorate(check)
-
-class PlayerCommand(Command):
-  def is_listed(self, player, _):
-    return player.role
-
-  def decorate(self, func):
-    async def check(message, args):
-      if not message.author.id in players:
-        return await question(message, tr('not_playing'))
-      player = players[message.author.id]
-      if not player.role:
-        await question(message, tr('not_playing'))
-      else:
-        await func(player, message=message, args=args)
-    super().decorate(check)
-
-class RoleCommand(PlayerCommand):
-  def is_listed(self, player, channel):
-    return super().is_listed(player, channel) and hasattr(player.role, self.name)
-
-  def decorate(self, func):
-    async def check(player, message, args):
-      if not hasattr(player.role, func.__name__):
-        return await question(message, tr('wrong_role').format(BOT_PREFIX + self.name))
-      await getattr(player.role, func.__name__)(player, message=message, args=args)
-    async def check_sleep(player, message, args):
-      if not hasattr(player.role, func.__name__):
-        return await confirm(message, tr('good_night'))
-      await getattr(player.role, func.__name__)(player, message=message, args=args)
-    super().decorate(check_sleep if func.__name__ == 'Sleep' else check)
-
-class SetupCommand(AdminCommand):
-  def is_listed(self, player, _):
-    return not status and super().is_listed(player, None)
-
-  def decorate(self, func):
-    async def check(message, args):
-      if status:
-        return await question(message, tr('forbid_game_started').format(BOT_PREFIX + self.name))
-      elif not is_public_channel(message.channel):
-        return await question(message, tr('public_only').format(BOT_PREFIX + self.name))
-      await func(message, args)
-    super().decorate(check)
+class Role:
+  @player_ref
+  @dictionize.make_hint
+  class Hint:
+    def etemplate(self, obj):
+      return { 'type': type(obj).__name__ }
+    async def dtemplate(self, dict):
+      return roles[dict['type']]()
+    async def d_type(*_): pass
+  hint__ = Hint()
 
 class Player:
   def __init__(self, is_admin, extern):
@@ -145,6 +92,28 @@ class Player:
     self.extern = extern
     self.role = None
     self.vote = None
+
+  @dictionize.make_hint
+  @dictionize.sub_hint('role', Role.hint__)
+  @dictionize.e_ignore('extern')
+  class Hint:
+    def __init__(self, available_players):
+      self.available_players = available_players
+    def etemplate(self, obj):
+      return {'id': obj.extern.id, 'name': obj.extern.name }
+    async def dtemplate(self, dict):
+      id = dict['id']
+      if id in players:
+        return players[id]
+      else:
+        for mem in self.available_players:
+          if mem.id == id:
+            player = players[mem.id] = Player(False, mem)
+            return player
+        raise ValueError("ERROR: Member {} is not available".format(id))
+    async def d_real_role(self, obj, val):
+      obj.real_role = val and roles[val].name
+  hint__ = Hint({})
 
 class Channel:
   @staticmethod
@@ -160,6 +129,16 @@ class Channel:
   async def delete(self):
     self.players = None
     await self.extern.delete()
+
+  @player_ref
+  @dictionize.make_hint
+  @dictionize.e_ignore('extern', 'players')
+  class Hint:
+    async def dtemplate(self, dict):
+      return await Channel.create(dict['name'], *( players[id] for id in dict['members'] ))
+    def etemplate(self, obj):
+      return { 'name': obj.extern.name, 'members': [ player.extern.id for player in obj.players ] }
+  hint__ = Hint()
 
 ########################## DECORATORS ##########################
 
@@ -270,7 +249,7 @@ def initialize(admins, role_prefix):
 def connect(admins, role_prefix):
   for base_name, base in list(roles.items()):
     [base.name, base.description, base.greeting, *aliases] = tr(role_prefix + base_name.lower())
-    base.commands = [ command_name(command) for command in dir(base) if command[:1].isupper() ]
+    base.commands = [ command_name(command) for command, func in vars(base).items() if command[:1].isupper() and callable(func) ]
     base.greeting = base.greeting.format(*base.commands)
     base.__role__ = True
     roles[base.name] = base
@@ -296,28 +275,6 @@ def connect(admins, role_prefix):
 
 ######################### SERIALIZATION ########################
 
-class RoleEncoder(json.JSONEncoder):
-  def encode_role(self, obj):
-    return encode(obj, role_hint)
-
-  def default(self, obj):
-    if hasattr(obj, '__role__'):
-      return self.encode_role(obj)
-    if isinstance(obj, Player):
-      result = { 'id': obj.extern.id, 'name': obj.extern.name }
-      for key, val in vars(obj).items():
-        if key == 'role' and val:
-          result[key] = self.encode_role(val)
-        elif key != 'extern':
-          result[key] = val
-      export_player(obj, result)
-      return result
-    if isinstance(obj, Channel):
-      result = { 'name': obj.extern.name, 'members': [ player.extern.id for player in obj.players ] }
-      export_channel(obj, result)
-      return result
-    return json.JSONEncoder.default(self, obj)
-
 def state_to_json(fp):
   obj = {
     'vote_list': vote_list,
@@ -329,38 +286,17 @@ def state_to_json(fp):
     'players': list(players.values()),
   }
   add_to_json(obj)
-  return json.dump(obj, fp, cls = RoleEncoder, indent = 2)
+  return json.dump(obj, fp, cls = dictionize.Encoder, indent = 2)
 
-async def json_to_state(fp, player_mapping = {}):
+async def json_to_state(fp):
   await EndGame(None, None)
   obj = json.load(fp)
-
   available_players = await get_available_members()
-  for decoded_player in obj['players']:
-    id = decoded_player['id']
-    if id in players:
-      player = players[id]
-    else:
-      id = decoded_player['name']
-      if id in player_mapping: id = player_mapping[id]
-      for mem in available_players:
-        if mem.id == id:
-          players[mem.id] = player = Player(False, mem)
-          break
-      else:
-        raise ValueError("ERROR: Member {} is not available".format(id))
-
-    if 'role' in decoded_player:
-      role_obj = decoded_player['role']
-      player.role = decode(role_obj, role_hint)
-    if 'vote' in decoded_player:
-      player.vote = decoded_player['vote']
-    import_player(player, decoded_player)
-
-  for name, channel_dict in obj['channels'].items():
-    channel = tmp_channels[name] = await Channel.create(channel_dict['name'], *( players[id] for id in channel_dict['members'] ))
-    import_channel(channel, channel_dict)
-
+  player_hint = Player.Hint(available_players)
+  for val in obj['players']:
+    await dictionize.decode(val, player_hint)
+  for name, val in obj['channels'].items():
+    tmp_channels[name] = await dictionize.decode(val, Channel.hint__)
   names = ['vote_list', 'played_roles', 'status', 'og_roles', 'history' ]
   extract_from_json(obj)
   for name in names:
@@ -370,85 +306,88 @@ async def json_to_state(fp, player_mapping = {}):
     vote_list[None] = vote_list['null']
     del vote_list['null']
 
-def encode(obj, hint):
-  if obj == None:
-    return None
-  result = hint.s_template(obj)
-  def handle_keyval(key, val):
-    if key in hint.s_specials:
-      hint.s_specials[key](result, val)
-    else:
-      hint.s_typical(result, key, val)
-
-  if hasattr(obj, '__slots__'):
-    for slot in obj.__slots__:
-      handle_keyval(slot, getattr(obj, slot))
-  else:
-    for key, val in vars(obj):
-      handle_keyval(key, val)
-  return result
-
-def decode(dict, hint):
-  if dict == None:
-    return None
-  obj = hint.d_template(dict)
-  for key, val in dict.items():
-    if key in hint.d_specials:
-      hint.d_specials[key](obj, val)
-    else:
-      hint.d_typical(obj, key, val)
-  return obj
-
-class Hint:
-  __slots__ = ('d_template', 'd_typical', 'd_specials', 's_template', 's_typical', 's_specials')
-
-  def simple_setattr(self, obj, key, val):
-    setattr(obj, key, val)
-  def simple_getattr(self, obj, key):
-    return getattr(obj, key)
-  def simple_stemplate(self, dict):
-    return {}
-  def simple_vars(self, obj):
-    return vars(obj)
-
-  def __init__(self, s_template, d_template, s_typical, d_typical, s_specials, d_specials):
-    self.s_template = s_template
-    self.d_template = d_template
-    self.s_typical = s_typical
-    self.d_typical = d_typical
-    self.s_specials = s_specials
-    self.d_specials = d_specials
-  @staticmethod
-  def from_class(deserializer):
-    d_specials = {}
-    s_specials = {}
-    s_typical = deserializer.stypical if hasattr(deserializer, 'stypical') else simple_getattr
-    d_typical = deserializer.dtypical if hasattr(deserializer, 'dtypical') else simple_setattr
-    s_template = deserializer.stemplate if hasattr(deserializer, 'stemplate') else simple_stemplate
-    d_template = deserializer.dtemplate
-    for name, func in vars(deserializer).items():
-      if name.startswith('d_'):
-        d_specials[name[2:]] = func
-      elif name.startswith('s_'):
-        s_specials[name[2:]] = func
-    return Hint(s_template, d_template, s_typical, d_typical, s_specials, d_specials)
-
-class RoleDeserializer:
-  def dtypical(obj, key, val):
-    if isinstance(val, str) and val.startswith('@'):
-      val = players[int(val[1:])]
-    setattr(obj, key, val)
-  def stypical(dict, key, val):
-    dict[key] = '@' + str(val.extern.id) if isinstance(val, Player) else val
-  def dtemplate(dict):
-    return roles[dict['type']]()
-  def stemplate(obj):
-    return { 'type': type(obj).__name__ }
-  def d_type(obj, val): pass
-
-role_hint = Hint.from_class(RoleDeserializer)
-
 ########################## COMMANDS ############################
+
+class Command:
+  def decorate(self, func):
+    self.func = func
+
+  def make_alias(self, alias, description):
+    cmd = Command()
+    cmd.decorate(self.func)
+    cmd.name = self.name
+    cmd.description = tr('alias').format(alias, self.name) + description
+    return cmd
+
+  def is_listed(self, _, __):
+    return True
+
+class DebugCommand(Command):
+  def is_listed(self, _, __):
+    return DEBUG
+
+  def decorate(self, func):
+    async def check(message, args):
+      if DEBUG:
+        await func(message, args)
+      else:
+        await question(message, tr('debug_command'))
+    super().decorate(check)
+
+class AdminCommand(Command):
+  def is_listed(self, player, _):
+    return player.is_admin
+
+  def decorate(self, func):
+    async def check(message, args):
+      if not players[message.author.id].is_admin:
+        await question(message, tr('require_admin'))
+      else:
+        await func(message, args)
+    super().decorate(check)
+
+class PlayerCommand(Command):
+  def is_listed(self, player, _):
+    return player.role
+
+  def decorate(self, func):
+    async def check(message, args):
+      if not message.author.id in players:
+        return await question(message, tr('not_playing'))
+      player = players[message.author.id]
+      if not player.role:
+        await question(message, tr('not_playing'))
+      else:
+        await func(player, message=message, args=args)
+    super().decorate(check)
+
+class RoleCommand(PlayerCommand):
+  def is_listed(self, player, channel):
+    return super().is_listed(player, channel) and hasattr(player.role, self.name)
+
+  def decorate(self, func):
+    async def check(player, message, args):
+      if not hasattr(player.role, func.__name__):
+        return await question(message, tr('wrong_role').format(BOT_PREFIX + self.name))
+      await getattr(player.role, func.__name__)(player, message=message, args=args)
+    async def check_sleep(player, message, args):
+      if not hasattr(player.role, func.__name__):
+        return await confirm(message, tr('good_night'))
+      await getattr(player.role, func.__name__)(player, message=message, args=args)
+    super().decorate(check_sleep if func.__name__ == 'Sleep' else check)
+
+class SetupCommand(AdminCommand):
+  def is_listed(self, player, _):
+    return not status and super().is_listed(player, None)
+
+  def decorate(self, func):
+    async def check(message, args):
+      if status:
+        return await question(message, tr('forbid_game_started').format(BOT_PREFIX + self.name))
+      elif not is_public_channel(message.channel):
+        return await question(message, tr('public_only').format(BOT_PREFIX + self.name))
+      await func(message, args)
+    super().decorate(check)
 
 ROLE_COMMANDS = [ 'Kill', 'Defend', 'See', 'Swap', 'Steal', 'Take', 'Clone', 'Reveal', 'Sleep', 'Revive', 'Poison' ]
 for cmd_name in ROLE_COMMANDS:
@@ -771,10 +710,6 @@ def generate_injections():
   async def low_reveal_all(channel): raise missing_injection_error('low_reveal_all')
   async def role_help(message, role): raise missing_injection_error('role_help')
   def start_night(): pass
-  def export_player(player, dictionary): pass
-  def import_player(player, dictionary): pass
-  def export_channel(channel, dictionary): pass
-  def import_channel(channel, dictionary): pass
   # Don't try this at home
   globals().update(locals())
 generate_injections()
