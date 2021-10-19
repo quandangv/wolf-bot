@@ -25,6 +25,7 @@ wolf_need_consensus = [ ". Đàn sói mau thống nhất mục tiêu cắn", ". 
 wolf_bite = ". Các con sói quyết định cắn **{}**"
 witch_no_death = "Đêm nay bạn không thấy ai chết cả"
 witch_death = "Đêm nay bạn nhận thấy có người chết"
+player_list = "\nNhững người trong trò chơi là: **{}**"
 
 reveal_player = [ "{} chính là **{}**!", "{} là một con **{}**" ]
 reveal_item = "- {} là **{}**"
@@ -36,7 +37,7 @@ no_history = "không tìm thấy lịch sử ván trước"
 history = "Chức năng ban đầu:\n{}\nCác lá bài bên ngoài:{}\nCác lệnh thực hiện:\n{}"
 command_item = "- {} gọi `{}` ra **{}**"
 command_item_empty = "- {} gọi `{}`"
-witch_revive = ". Hãy nhắn lệnh `{}` để cứu họ"
+witch_revive = ". Hãy nhắn lệnh `{1}` để cứu họ"
 
 vote = [ "Dùng lệnh `{} người-chơi` để bỏ phiếu treo cổ người đó", "Bạn ghét đứa nào thì cứ `{} đứa-đó` nha" ]
 help_list = [ "các lệnh được thực hiện là `{}`.", "ngoài cắn người, bạn còn có thể dùng lệnh `{}`. (giỡn thoi nha)", "hãy thử một trong các lệnh `{}`" ]
@@ -80,7 +81,7 @@ poison_wronguse = "bạn muốn dùng bình giết ai thì phải nhắn là `{0
 
 add_success = [ "Đã thêm **{}** vào danh sách chức năng", "Con **{}** vừa xuất hiện trong làng" ]
 remove_success = [ "Đã bỏ một **{}** ra khỏi làng", "Con **{}** đã rời khỏi làng" ]
-thief_success = "bạn đã trộm lá bài {1} từ {0}"
+thief_success = "bạn đã trộm lá bài **{1}** từ {0}"
 troublemaker_success = "đã tráo chức năng của {} và {}"
 see_success = [ "chức năng của {} là **{}**", "{} là một con **{}**" ]
 drunk_success = "đã tráo lá bài bên ngoài số **{}** với lá của bạn"
@@ -132,7 +133,7 @@ cmd_endgame = ( "ngungchoi", "`{0}` sẽ lập tức dừng trò chơi" )
 cmd_sleep = ( "ngu", "Hãy `{0}` khi bạn không muốn thực hiện chức năng của mình" )
 cmd_closevote = ( "dongvote", "`{0}` để lập tức ngưng bỏ phiếu", "ngungvote" )
 cmd_wakeup = ( "thucday", "`{0}` buộc cả làng thức dậy ngay lập tức" )
-cmd_vote = ( "vote", "`{0}  người-chơi` để bỏ phiếu giết người đó", "treoco" )
+cmd_vote = ( "vote", "`{0}  người-chơi` để bỏ phiếu giết người đó", "treoco", "treo" )
 cmd_unvote = ( "unvote", "`{0}` để rút lại phiếu bầu" )
 cmd_clone = ( "nhanban", "`{0}  người-chơi` để nhân bản chức năng của người đó", "saochep" )
 cmd_reveal = ( "latbai", "`{0}  STT-lá-bài` để lật và xem lá bài đó", "xem" )

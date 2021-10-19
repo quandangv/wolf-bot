@@ -4,6 +4,7 @@ import json
 import core
 import importlib
 import asyncio
+import one_night
 from server_conf import *
 random = core.random
 
@@ -25,6 +26,7 @@ async def on_ready():
   print("We have logged in as {0.user}".format(client))
   debug_channel = client.get_channel(DEBUG_CHANNEL)
   guild = client.get_channel(GAME_CHANNEL).guild
+  one_night.connect(core)
   core.initialize([guild.get_member(id) for id in ADMINS], 'onenight_')
   await core.greeting()
 

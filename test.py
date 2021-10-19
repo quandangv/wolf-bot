@@ -10,6 +10,7 @@ posts = []
 members = []
 channels = {}
 posts_lock = asyncio.Lock()
+MAX_ARGS = 10
 
 def generate_send(channel_name):
   async def send(text):
@@ -109,15 +110,12 @@ def tr(key):
       return True
 
   def add_formats(key, sample):
-    arg_count = 0
     tokens = []
-    while True:
-      batch = re.findall('{?{' + str(arg_count) + '.*?}}?', sample)
-      if not batch: break
+    for argidx in range(MAX_ARGS):
+      batch = re.findall('{?{' + str(argidx) + '.*?}}?', sample)
       for token in batch:
         if not token in tokens:
           tokens.append(token)
-      arg_count += 1
 
     if tokens:
       tokens.sort()
@@ -188,6 +186,7 @@ def check_private_single_player_cmd(author, cmd, target, wronguse_msg, no_self_m
     *check_private_single_arg_cmd(author, cmd, target, wronguse_msg, no_self_msg, success_msg, single_use)
   ]
 
+player_list = 'player_list(anne, bob, carl, david, elsa, frank, george, harry, ignacio) '
 loop = asyncio.get_event_loop()
 loop.run_until_complete(asyncio.gather(
   expect_response(anne, '!save _test_empty', game, '[game] confirm(@anne) save_success(_test_empty) '),
@@ -229,15 +228,15 @@ loop.run_until_complete(asyncio.gather(
   expect_response(anne, '!listroles', game, '[game] confirm(@anne) list_roles(villager, villager, villager, insomniac, clone, drunk, troublemaker, thief, villager, seer, wolf, wolf, 9) '),
   expect_response(anne, '!startimmediate', game, [
     '[game] start(@anne, @bob, @carl, @david, @elsa, @frank, @george, @harry, @ignacio) ',
-    '[@anne] role(wolf) wolf_greeting',
-    '[@bob] role(wolf) wolf_greeting',
-    '[@carl] role(seer) seer_greeting(!reveal, !see)',
-    '[@david] role(villager) villager_greeting',
-    '[@elsa] role(thief) thief_greeting(!steal)',
-    '[@frank] role(troublemaker) troublemaker_greeting(!swap)',
-    '[@george] role(drunk) drunk_greeting(!take)',
-    '[@harry] role(clone) clone_greeting(!clone)',
-    '[@ignacio] role(insomniac) insomniac_greeting',
+    '[@anne] role(wolf) wolf_greeting' + player_list,
+    '[@bob] role(wolf) wolf_greeting' + player_list,
+    '[@carl] role(seer) seer_greeting(!reveal, !see)' + player_list,
+    '[@david] role(villager) villager_greeting' + player_list,
+    '[@elsa] role(thief) thief_greeting(!steal)' + player_list,
+    '[@frank] role(troublemaker) troublemaker_greeting(!swap)' + player_list,
+    '[@george] role(drunk) drunk_greeting(!take)' + player_list,
+    '[@harry] role(clone) clone_greeting(!clone)' + player_list,
+    '[@ignacio] role(insomniac) insomniac_greeting' + player_list,
     '[wolf ] wolf_channel(@anne, @bob) sleep_info(!sleep) '
   ])
 ))
@@ -328,15 +327,15 @@ loop.run_until_complete(asyncio.gather(
   expect_response(anne, '!addrole wolf', game, '[game] add_success(wolf) '),
   expect_response(anne, '!startimmediate', game, [
     '[game] start(@anne, @bob, @carl, @david, @elsa, @frank, @george, @harry, @ignacio) ',
-    '[@anne] role(insomniac) insomniac_greeting',
-    '[@bob] role(clone) clone_greeting(!clone)',
-    '[@carl] role(drunk) drunk_greeting(!take)',
-    '[@david] role(troublemaker) troublemaker_greeting(!swap)',
-    '[@elsa] role(thief) thief_greeting(!steal)',
-    '[@frank] role(villager) villager_greeting',
-    '[@george] role(seer) seer_greeting(!reveal, !see)',
-    '[@harry] role(wolf) wolf_greeting',
-    '[@ignacio] role(minion) minion_greeting',
+    '[@anne] role(insomniac) insomniac_greeting' + player_list,
+    '[@bob] role(clone) clone_greeting(!clone)' + player_list,
+    '[@carl] role(drunk) drunk_greeting(!take)' + player_list,
+    '[@david] role(troublemaker) troublemaker_greeting(!swap)' + player_list,
+    '[@elsa] role(thief) thief_greeting(!steal)' + player_list,
+    '[@frank] role(villager) villager_greeting' + player_list,
+    '[@george] role(seer) seer_greeting(!reveal, !see)' + player_list,
+    '[@harry] role(wolf) wolf_greeting' + player_list,
+    '[@ignacio] role(minion) minion_greeting' + player_list,
     '[@ignacio] wolves_reveal(harry) ',
     '[wolf ] wolf_channel(@harry) sleep_info(!sleep) ',
     '[wolf ] wolf_get_reveal(!reveal, 3) '
@@ -377,28 +376,37 @@ core.disconnect()
 classic.connect(core)
 core.connect(admins, 'classic_')
 
+player_list = 'player_list(anne, bob, carl, david, elsa, frank) '
 members = [ anne, bob, carl, david, elsa, frank ]
 loop.run_until_complete(asyncio.gather(
   expect_response(anne, '!load _test_empty', game, '[game] confirm(@anne) load_success(_test_empty) '),
   expect_response(anne, '!startimmediate', game, [
       '[game] start(@anne, @bob, @carl, @david, @elsa, @frank) ',
-      '[@anne] role(villager) villager_greeting',
-      '[@bob] role(guard) guard_greeting(!defend)',
-      '[@carl] role(wolf) wolf_greeting(!kill)',
-      '[@david] role(villager) villager_greeting',
-      '[@elsa] role(witch) witch_greeting(!poison, !revive, !sleep)',
-      '[@frank] role(wolf) wolf_greeting(!kill)',
+      '[@anne] role(villager) villager_greeting' + player_list,
+      '[@bob] role(guard) guard_greeting(!defend)' + player_list,
+      '[@carl] role(wolf) wolf_greeting(!kill)' + player_list,
+      '[@david] role(villager) villager_greeting' + player_list,
+      '[@elsa] role(witch) witch_greeting(!poison, !revive, !sleep)' + player_list,
+      '[@frank] role(wolf) wolf_greeting(!kill)' + player_list,
       '[wolf ] wolf_channel(@carl, @frank) ',
   ]),
 ))
 
 loop.run_until_complete(asyncio.gather(
+  expect_response(frank, '!kill anne', channels['wolf '], '[wolf ] vote_bite(@frank, anne) wolf_need_consensus '),
   expect_response(bob, '!defend anne', game, [ '[game] question(@bob) wrong_role(!defend) ', '[@bob] question(@bob) dm_only(!defend) ' ]),
   expect_response(bob, '!defend anne', bot_dm, '[@bot] confirm(@bob) defend_success(anne) '),
+  expect_response(anne, '!save _test', game, '[game] confirm(@anne) save_success(_test) '),
   expect_response(bob, '!defend carl', bot_dm, '[@bot] question(@bob) ability_used(!defend) '),
-  expect_response(frank, '!kill anne', channels['wolf '], '[wolf ] vote_bite(@frank, anne) wolf_need_consensus '),
   expect_response(carl, '!kill elsa', channels['wolf '], '[wolf ] vote_bite(@carl, elsa) wolf_need_consensus '),
   expect_response(carl, '!kill anne', channels['wolf '], [ '[wolf ] vote_bite(@carl, anne) wolf_bite(anne) ', '[@elsa] witch_no_death ' ]),
+  expect_response(anne, '!load _test', game, '[game] confirm(@anne) load_success(_test) '),
+))
+
+loop.run_until_complete(asyncio.gather(
+  expect_response(bob, '!defend david', bot_dm, '[@bot] question(@bob) ability_used(!defend) '),
+  expect_response(carl, '!kill david', channels['wolf '], '[wolf ] vote_bite(@carl, david) wolf_need_consensus '),
+  expect_response(frank, '!kill david', channels['wolf '], [ '[wolf ] vote_bite(@frank, david) wolf_bite(david) ', '[@elsa] witch_death witch_revive(!revive) ' ]),
 ))
 
 core.disconnect()
@@ -412,19 +420,20 @@ def shuffle_copy(arr):
   return result
 
 members = [ anne, bob, carl, david, elsa, frank, george, harry, ignacio ]
+player_list = 'player_list(anne, bob, carl, david, elsa, frank, george, harry, ignacio) '
 loop.run_until_complete(asyncio.gather(
   expect_response(anne, '!load _test_empty', game, '[game] confirm(@anne) load_success(_test_empty) '),
   expect_response(anne, '!startimmediate', game, [
       '[game] start(@anne, @bob, @carl, @david, @elsa, @frank, @george, @harry, @ignacio) ',
-      '[@anne] role(tanner) tanner_greeting',
-      '[@bob] role(thief) thief_greeting(!steal)',
-      '[@carl] role(troublemaker) troublemaker_greeting(!swap)',
-      '[@david] role(drunk) drunk_greeting(!take)',
-      '[@elsa] role(villager) villager_greeting',
-      '[@frank] role(villager) villager_greeting',
-      '[@george] role(seer) seer_greeting(!reveal, !see)',
-      '[@harry] role(clone) clone_greeting(!clone)',
-      '[@ignacio] role(insomniac) insomniac_greeting',
+      '[@anne] role(tanner) tanner_greeting' + player_list,
+      '[@bob] role(thief) thief_greeting(!steal)' + player_list,
+      '[@carl] role(troublemaker) troublemaker_greeting(!swap)' + player_list,
+      '[@david] role(drunk) drunk_greeting(!take)' + player_list,
+      '[@elsa] role(villager) villager_greeting' + player_list,
+      '[@frank] role(villager) villager_greeting' + player_list,
+      '[@george] role(seer) seer_greeting(!reveal, !see)' + player_list,
+      '[@harry] role(clone) clone_greeting(!clone)' + player_list,
+      '[@ignacio] role(insomniac) insomniac_greeting' + player_list,
   ]),
   expect_response(anne, '!wakeup', game, [ '[@ignacio] insomniac_reveal(insomniac) ', '[game] wake_up vote(!vote) ' ]),
   expect_response(anne, '!vote harry', game, '[game] vote_success(@anne, @harry) '),

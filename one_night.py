@@ -19,11 +19,27 @@ def connect(core):
   join_with_and = core.join_with_and
   core.DEFAULT_ROLES = [ 'Wolf', 'Thief', 'Troublemaker', 'Drunk', 'Wolf', 'Villager', 'Seer', 'Clone', 'Minion', 'Insomniac', 'Tanner', 'Villager' ]
 
-  def is_wolf_side(role):
+  async def is_wolf_side(role):
+    if not role in roles:
+      await core.debug("ERROR: Role '{}' does not exist".format(role))
+      return False
     return issubclass(roles[role], WolfSide)
 
-  def is_village_side(role):
+  async def is_village_side(role):
+    if not role in roles:
+      await core.debug("ERROR: Role '{}' does not exist".format(role))
+      return False
     return issubclass(roles[role], Villager)
+
+  @core.injection
+  def export_player(player, dictionary):
+    if player.role:
+      dictionary['real_role'] = roles[player.real_role].__name__
+
+  @core.injection
+  def import_player(player, dictionary):
+    if 'real_role' in dictionary:
+      player.real_role = roles[dictionary['real_role']].name
 
   @core.injection
   def add_to_json(obj):
@@ -65,11 +81,11 @@ def connect(core):
     await core.main_channel().send(tr('reveal_player').format(player.extern.mention, lynched_role))
     lynched_role = roles[lynched_role]
     if issubclass(lynched_role, Villager) or issubclass(lynched_role, Minion):
-      winners = [ player for player in players.values() if is_wolf_side(player.real_role) ]
+      winners = [ player for player in players.values() if await is_wolf_side(player.real_role) ]
     elif issubclass(lynched_role, Tanner):
       winners = [ player ]
     elif issubclass(lynched_role, WolfSide):
-      winners = [ player for player in players.values() if is_village_side(player.real_role) ]
+      winners = [ player for player in players.values() if await is_village_side(player.real_role) ]
     await core.announce_winners(core.main_channel(), winners)
 
   @core.injection
@@ -77,9 +93,9 @@ def connect(core):
     wolves = []
     villagers = []
     for p in players.values():
-      if is_wolf_side(p.real_role):
+      if await is_wolf_side(p.real_role):
         wolves.append(p)
-      elif is_village_side(p.real_role):
+      elif await is_village_side(p.real_role):
         villagers.append(p)
     await core.announce_winners(core.main_channel(), wolves if wolves else villagers)
 
@@ -185,7 +201,7 @@ def connect(core):
 
     @core.check_dm
     @core.check_status()
-    @core.single_use
+    @core.single_use()
     @core.single_arg('clone_wronguse')
     async def Clone(self, me, message, args):
       if me.extern.name == args:
@@ -207,7 +223,7 @@ def connect(core):
 
     @core.check_dm
     @core.check_status()
-    @core.single_use
+    @core.single_use()
     async def Swap(self, me, message, args):
       players = args.split()
       if len(players) != 2 or players[0] == players[1]:
@@ -231,7 +247,7 @@ def connect(core):
 
     @core.check_dm
     @core.check_status()
-    @core.single_use
+    @core.single_use()
     @core.single_arg('thief_wronguse')
     async def Steal(self, me, message, args):
       if me.extern.name == args:
@@ -252,7 +268,7 @@ def connect(core):
 
     @core.check_dm
     @core.check_status()
-    @core.single_use
+    @core.single_use()
     @core.single_arg('drunk_wronguse', EXCESS_ROLES)
     async def Take(self, me, message, args):
       number = await select_excess_card(message, 'drunk_wronguse', 'Take', args)
@@ -297,7 +313,7 @@ def connect(core):
 
     @core.check_channel('wolf')
     @core.check_status()
-    @core.single_use
+    @core.single_use()
     @core.single_arg('reveal_wronguse', EXCESS_ROLES)
     async def Reveal(self, me, tmp_channel, message, args):
       number = await select_excess_card(message, 'reveal_wronguse', 'Reveal', args)

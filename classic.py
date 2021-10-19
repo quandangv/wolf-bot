@@ -27,8 +27,13 @@ def connect(core):
       if not player.role.target:
         return
     wolf_phase = False
+    target = core.tmp_channels['wolf'].target
+    if not hasattr(target, 'defended'):
+      target.alive = False
+      night_deaths.append(target)
     for co in after_wolf_waiting:
       await co
+    after_wolf_waiting.clear()
     for player in after_wolf_phase_players:
       if hasattr(player.role, 'on_wolves_done'):
         await player.role.on_wolves_done(player)
@@ -49,14 +54,52 @@ def connect(core):
         await confirm(message, tr('wait'))
         after_wolf_waiting.append(co)
 
-  @core.injection
-  def after_shuffle(shuffled_roles):
+  def filter_players():
     wolf_phase_players.clear()
+    after_wolf_phase_players.clear()
     for player in players.values():
       if hasattr(player.role, 'wolf_phase'):
         wolf_phase_players.append(player)
       if hasattr(player.role, 'after_wolf_phase'):
         after_wolf_phase_players.append(player)
+
+  @core.injection
+  def add_to_json(obj):
+    obj['night_deaths'] = night_deaths
+    obj['wolf_phase'] = wolf_phase
+    obj['GUARD_DEFEND_SELF'] = GUARD_DEFEND_SELF
+
+  @core.injection
+  def extract_from_json(obj):
+    names = [ 'night_deaths', 'wolf_phase', 'GUARD_DEFEND_SELF' ]
+    for name in names:
+      if name in obj:
+        globals()[name] = obj[name]
+    filter_players()
+
+  @core.injection
+  def export_player(player, dictionary):
+    if hasattr(player, 'alive'):
+      dictionary['alive'] = player.alive
+
+  @core.injection
+  def import_player(player, dictionary):
+    if 'alive' in dictionary:
+      player.alive = dictionary['alive']
+
+  @core.injection
+  def export_channel(channel, dictionary):
+    if hasattr(channel, 'target'):
+      dictionary['target'] = channel.target.extern.id
+
+  @core.injection
+  def import_channel(channel, dictionary):
+    if 'target' in dictionary:
+      channel.target = players[dictionary['target']]
+
+  @core.injection
+  def after_shuffle(shuffled_roles):
+    filter_players()
 
   @core.injection
   def default_roles_needed(player_count):
@@ -94,8 +137,8 @@ def connect(core):
 
   @core.role
   class Wolf(WolfSide, core.Wolf):
-    def __init__(self):
-      self.wolf_phase = True
+    wolf_phase = True
+    __slots__ = ('target',)
     def new_night(self):
       self.target = None
 
@@ -123,6 +166,7 @@ def connect(core):
   @core.role
   class Guard(Villager):
     wolf_phase = True
+    __slots__ = ('target', 'prev_target')
     def __init__(self):
       self.prev_target = None
     def new_night(self):
@@ -130,7 +174,7 @@ def connect(core):
 
     @core.check_dm
     @core.check_status()
-    @core.single_use
+    @core.single_use()
     @core.single_arg('defend_wronguse')
     async def Defend(self, me, message, args):
       player = await find_player(message, args)
@@ -140,6 +184,8 @@ def connect(core):
         if not GUARD_DEFEND_SELF and me.extern.id == player.extern.id:
           await question(message, tr('no_defend_self'))
         else:
+          if self.prev_target:
+            del self.prev_target.defended
           self.target = self.prev_target = player
           player.defended = True
           await confirm(message, tr('defend_success').format(player.extern.name))
@@ -148,6 +194,7 @@ def connect(core):
   @core.role
   class Witch(Villager):
     after_wolf_phase = True
+    __slots__ = ('revived', 'poisoned')
     def __init__(self):
       self.revived = False
       self.poisoned = False
@@ -163,12 +210,14 @@ def connect(core):
 
     @core.check_dm
     @core.check_status()
+    @core.single_use('revived')
     @core.single_arg('revive_wronguse')
     async def Revive(self, me, message, args):
       pass
 
     @core.check_dm
     @core.check_status()
+    @core.single_use('poisoned')
     @core.single_arg('poison_wronguse')
     async def Poison(self, me, message, args):
       pass

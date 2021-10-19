@@ -6,6 +6,7 @@
 - Print starting role with start message
 - Manually add players to the game
 - Use single_use for discussed, revived, and poisoned
+- List roles when starting game
 
 # DOING
 

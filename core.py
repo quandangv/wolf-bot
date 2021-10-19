@@ -189,13 +189,15 @@ def single_arg(message_key, *message_args):
     return sa_result
   return decorator
 
-def single_use(func):
-  async def su_result(self, *others, message, args):
-    if self.target:
-      return await question(message, tr('ability_used').format(command_name(func.__name__)))
-    await func(self, *others, message=message, args=args)
-  su_result.__name__ = func.__name__
-  return su_result
+def single_use(var_name = 'target'):
+  def decorator(func):
+    async def su_result(self, *others, message, args):
+      if getattr(self, var_name):
+        return await question(message, tr('ability_used').format(command_name(func.__name__)))
+      await func(self, *others, message=message, args=args)
+    su_result.__name__ = func.__name__
+    return su_result
+  return decorator
 
 def check_status(required_status = 'night'):
   def decorator(func):
@@ -296,26 +298,24 @@ def connect(admins, role_prefix):
 
 class RoleEncoder(json.JSONEncoder):
   def encode_role(self, obj):
-    if hasattr(obj, '__slots__'):
-      result = { slot: getattr(obj, slot) for slot in obj.__slots__ }
-    else:
-      result = {}
-    result['type'] = type(obj).__name__
-    return result
+    return encode(obj, role_hint)
 
   def default(self, obj):
     if hasattr(obj, '__role__'):
       return self.encode_role(obj)
     if isinstance(obj, Player):
       result = { 'id': obj.extern.id, 'name': obj.extern.name }
-      if obj.vote:
-        result['vote'] = obj.vote
-      if obj.role:
-        result['role'] = self.encode_role(obj.role)
-        result['real_role'] = roles[obj.real_role].__name__
+      for key, val in vars(obj).items():
+        if key == 'role' and val:
+          result[key] = self.encode_role(val)
+        elif key != 'extern':
+          result[key] = val
+      export_player(obj, result)
       return result
     if isinstance(obj, Channel):
-      return { 'name': obj.extern.name, 'members': [ player.extern.id for player in obj.players ] }
+      result = { 'name': obj.extern.name, 'members': [ player.extern.id for player in obj.players ] }
+      export_channel(obj, result)
+      return result
     return json.JSONEncoder.default(self, obj)
 
 def state_to_json(fp):
@@ -348,21 +348,18 @@ async def json_to_state(fp, player_mapping = {}):
           players[mem.id] = player = Player(False, mem)
           break
       else:
-        print("ERROR: Member {} is not available".format(id))
-        return
+        raise ValueError("ERROR: Member {} is not available".format(id))
+
     if 'role' in decoded_player:
       role_obj = decoded_player['role']
-      role = roles[role_obj['type']]
-      player.role = role()
-      for key, val in role_obj.items():
-        if key != 'type':
-          setattr(player.role, key, val)
-      player.real_role = roles[decoded_player['real_role']].name
+      player.role = decode(role_obj, role_hint)
     if 'vote' in decoded_player:
       player.vote = decoded_player['vote']
+    import_player(player, decoded_player)
 
-  for name, channel in obj['channels'].items():
-    tmp_channels[name] = await Channel.create(channel['name'], *( players[id] for id in channel['members'] ))
+  for name, channel_dict in obj['channels'].items():
+    channel = tmp_channels[name] = await Channel.create(channel_dict['name'], *( players[id] for id in channel_dict['members'] ))
+    import_channel(channel, channel_dict)
 
   names = ['vote_list', 'played_roles', 'status', 'og_roles', 'history' ]
   extract_from_json(obj)
@@ -372,6 +369,84 @@ async def json_to_state(fp, player_mapping = {}):
   if 'null' in vote_list:
     vote_list[None] = vote_list['null']
     del vote_list['null']
+
+def encode(obj, hint):
+  if obj == None:
+    return None
+  result = hint.s_template(obj)
+  def handle_keyval(key, val):
+    if key in hint.s_specials:
+      hint.s_specials[key](result, val)
+    else:
+      hint.s_typical(result, key, val)
+
+  if hasattr(obj, '__slots__'):
+    for slot in obj.__slots__:
+      handle_keyval(slot, getattr(obj, slot))
+  else:
+    for key, val in vars(obj):
+      handle_keyval(key, val)
+  return result
+
+def decode(dict, hint):
+  if dict == None:
+    return None
+  obj = hint.d_template(dict)
+  for key, val in dict.items():
+    if key in hint.d_specials:
+      hint.d_specials[key](obj, val)
+    else:
+      hint.d_typical(obj, key, val)
+  return obj
+
+class Hint:
+  __slots__ = ('d_template', 'd_typical', 'd_specials', 's_template', 's_typical', 's_specials')
+
+  def simple_setattr(self, obj, key, val):
+    setattr(obj, key, val)
+  def simple_getattr(self, obj, key):
+    return getattr(obj, key)
+  def simple_stemplate(self, dict):
+    return {}
+  def simple_vars(self, obj):
+    return vars(obj)
+
+  def __init__(self, s_template, d_template, s_typical, d_typical, s_specials, d_specials):
+    self.s_template = s_template
+    self.d_template = d_template
+    self.s_typical = s_typical
+    self.d_typical = d_typical
+    self.s_specials = s_specials
+    self.d_specials = d_specials
+  @staticmethod
+  def from_class(deserializer):
+    d_specials = {}
+    s_specials = {}
+    s_typical = deserializer.stypical if hasattr(deserializer, 'stypical') else simple_getattr
+    d_typical = deserializer.dtypical if hasattr(deserializer, 'dtypical') else simple_setattr
+    s_template = deserializer.stemplate if hasattr(deserializer, 'stemplate') else simple_stemplate
+    d_template = deserializer.dtemplate
+    for name, func in vars(deserializer).items():
+      if name.startswith('d_'):
+        d_specials[name[2:]] = func
+      elif name.startswith('s_'):
+        s_specials[name[2:]] = func
+    return Hint(s_template, d_template, s_typical, d_typical, s_specials, d_specials)
+
+class RoleDeserializer:
+  def dtypical(obj, key, val):
+    if isinstance(val, str) and val.startswith('@'):
+      val = players[int(val[1:])]
+    setattr(obj, key, val)
+  def stypical(dict, key, val):
+    dict[key] = '@' + str(val.extern.id) if isinstance(val, Player) else val
+  def dtemplate(dict):
+    return roles[dict['type']]()
+  def stemplate(obj):
+    return { 'type': type(obj).__name__ }
+  def d_type(obj, val): pass
+
+role_hint = Hint.from_class(RoleDeserializer)
 
 ########################## COMMANDS ############################
 
@@ -482,11 +557,12 @@ async def StartImmediate(message, args):
       before_shuffle()
 
       shuffled_roles = shuffle_copy(played_roles)
+      player_list = tr('player_list').format(', '.join([member.name for member in members]))
       for idx, member in enumerate(members):
         player = get_player(member)
         player.role = roles[shuffled_roles[idx]]()
         og_roles[player.extern.mention] = player.role.name
-        await player.extern.send(tr('role').format(player.role.name) + player.role.greeting)
+        await player.extern.send(tr('role').format(player.role.name) + player.role.greeting + player_list)
         if hasattr(player.role, 'on_start'):
           await player.role.on_start(player)
         if hasattr(player.role, 'new_night'):
@@ -510,7 +586,6 @@ async def StartImmediate(message, args):
 
 @cmd(Command())
 @check_public
-@check_status('day')
 async def VoteDetail(message, args):
   item = tr('vote_detail_item')
   await main_channel().send(tr('vote_detail').format('\n'.join([ item.format(player.extern.name, player.vote) for player in players.values() if player.vote ])))
@@ -696,6 +771,10 @@ def generate_injections():
   async def low_reveal_all(channel): raise missing_injection_error('low_reveal_all')
   async def role_help(message, role): raise missing_injection_error('role_help')
   def start_night(): pass
+  def export_player(player, dictionary): pass
+  def import_player(player, dictionary): pass
+  def export_channel(channel, dictionary): pass
+  def import_channel(channel, dictionary): pass
   # Don't try this at home
   globals().update(locals())
 generate_injections()
