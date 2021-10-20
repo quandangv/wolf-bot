@@ -283,18 +283,18 @@ def connect(core):
 
   @core.role
   class Wolf(WolfSide):
-    __slots__ = ('target', 'discussed')
+    __slots__ = ('target', 'sleep')
     def __init__(self):
       self.target = True
-      self.discussed = False
+      self.sleep = False
 
     @core.check_channel('wolf')
     @core.check_status()
     async def Sleep(self, me, tmp_channel, message, args):
-      self.discussed = True
+      self.sleep = True
       msg = tr('gone_to_sleep').format(me.extern.mention)
       for player in tmp_channel.players:
-        if not player.role.discussed:
+        if not player.role.sleep:
           await message.channel.send(msg + tr('sleep_wait_other'))
           break
       else:

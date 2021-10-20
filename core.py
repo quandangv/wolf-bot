@@ -722,7 +722,7 @@ def missing_injection_error(name):
 async def on_used():
   for player in players.values():
     if player.role:
-      if (hasattr(player.role, 'target') and not player.role.target) or (hasattr(player.role, 'discussed') and not player.role.discussed):
+      if (hasattr(player.role, 'target') and not player.role.target) or (hasattr(player.role, 'sleep') and not player.role.sleep):
         return
   await WakeUp(None, None)
   return True

@@ -5,7 +5,8 @@ wolf_phase_players = []
 after_wolf_phase_players = []
 after_wolf_waiting = []
 wolf_phase = True
-night_deaths = []
+attach_deaths = []
+known_alive = []
 
 GUARD_DEFEND_SELF = True
 
@@ -26,52 +27,62 @@ def connect(core):
     for player in wolf_phase_players:
       if not player.role.target:
         return
+    global wolf_phase
     wolf_phase = False
     target = core.tmp_channels['wolf'].target
     if not hasattr(target, 'defended'):
       target.alive = False
-      night_deaths.append(target)
+      attach_deaths.append(target)
     for co in after_wolf_waiting:
       await co
     after_wolf_waiting.clear()
     for player in after_wolf_phase_players:
       if hasattr(player.role, 'on_wolves_done'):
         await player.role.on_wolves_done(player)
+    await on_used()
+
+  async def checked_on_used():
+    if not wolf_phase:
+      await on_used()
 
   async def find_player(message, name):
     player = await core.find_player(message, name)
-    if player.alive:
+    if player in known_alive:
       return player
     else:
       await question(message, tr('target_dead').format(player.extern.name))
 
-  def after_wolf_phase(func):
+  def wait_after_wolf_phase(func):
     async def handler(*others, message, args):
       co = func(*others, message=message, args=args)
-      if wolf_phase:
+      if not wolf_phase:
         await co
       else:
         await confirm(message, tr('wait'))
         after_wolf_waiting.append(co)
+    return handler
 
   def filter_players():
+    known_alive.clear()
     wolf_phase_players.clear()
     after_wolf_phase_players.clear()
     for player in players.values():
-      if hasattr(player.role, 'wolf_phase'):
-        wolf_phase_players.append(player)
-      if hasattr(player.role, 'after_wolf_phase'):
-        after_wolf_phase_players.append(player)
+      if player.role:
+        known_alive.append(player)
+        if hasattr(player.role, 'wolf_phase'):
+          wolf_phase_players.append(player)
+        if hasattr(player.role, 'after_wolf_phase'):
+          after_wolf_phase_players.append(player)
 
   @core.injection
   def add_to_json(obj):
-    obj['night_deaths'] = night_deaths
+    obj['attach_deaths'] = attach_deaths
     obj['wolf_phase'] = wolf_phase
     obj['GUARD_DEFEND_SELF'] = GUARD_DEFEND_SELF
 
   @core.injection
   def extract_from_json(obj):
-    names = [ 'night_deaths', 'wolf_phase', 'GUARD_DEFEND_SELF' ]
+    names = [ 'attach_deaths', 'wolf_phase', 'GUARD_DEFEND_SELF' ]
     for name in names:
       if name in obj:
         globals()[name] = obj[name]
@@ -103,7 +114,7 @@ def connect(core):
     global wolf_phase
     wolf_phase = True
     after_wolf_waiting.clear()
-    night_deaths.clear()
+    attach_deaths.clear()
 
   class ClassicRole(core.Role):
     async def on_start(self, player, first_time = True):
@@ -174,35 +185,57 @@ def connect(core):
   @core.role
   class Witch(Villager):
     after_wolf_phase = True
-    __slots__ = ('revived', 'poisoned')
+    __slots__ = ('revived', 'poisoned', 'sleep')
     def __init__(self):
       self.revived = False
       self.poisoned = False
+      self.sleep = False
+    def new_night(self):
+      if not self.revived or not self.poisoned:
+        self.sleep = False
+    async def auto_sleep(self):
+      if (self.revived or (not attach_deaths and not wolf_phase)) and self.poisoned:
+        self.sleep = True
 
     async def on_wolves_done(self, me):
-      if night_deaths:
+      if attach_deaths:
         msg = tr('witch_death')
         if not self.revived:
           msg += tr('witch_revive').format(*self.commands)
         await me.extern.send(msg)
       else:
         await me.extern.send(tr('witch_no_death').format(*self.commands))
+      await self.auto_sleep()
 
     @core.check_dm
     @core.check_status()
     @core.single_use('poisoned')
     @core.single_arg('poison_wronguse')
     async def Poison(self, me, message, args):
-      pass
+      player = await find_player(message, args)
+      if player:
+        self.poisoned = True
+        player.alive = False
+        await confirm(message, tr('poison_success').format(args))
+        await self.auto_sleep()
 
     @core.check_dm
     @core.check_status()
+    @wait_after_wolf_phase
     @core.single_use('revived')
-    @core.single_arg('revive_wronguse')
     async def Revive(self, me, message, args):
-      pass
+      if attach_deaths:
+        self.revived = True
+        attach_deaths.pop().alive = True
+        await confirm(message, tr('revive_success'))
+        await self.auto_sleep()
+      else:
+        await question(message, tr('revive_no_deaths'))
+
 
     @core.check_dm
     @core.check_status()
     async def Sleep(self, me, message, args):
-      pass
+      if not self.sleep:
+        self.sleep = True
+        await message.reply(tr('good_night'))

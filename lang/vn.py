@@ -76,7 +76,6 @@ clone_wronguse = "bạn muốn nhân bản ai thì phải nhắn là `{0} ngư�
 vote_wronguse = "bạn muốn treo cổ ai thì phải nhắn là `{0} người-đó`. Ví dụ như `{0} quandangv`"
 bite_wronguse = "bạn muốn cắn ai thì phải nhắn là `{0} người-đó`. Ví dụ như `{0} quandangv`"
 defend_wronguse = "bạn muốn bảo vệ ai thì phải nhắn là `{0} người-đó`. Ví dụ như `{0} quandangv`"
-revive_wronguse = "bạn muốn cứu người thì phải nhắn là `{0}`"
 poison_wronguse = "bạn muốn dùng bình giết ai thì phải nhắn là `{0} người-đó`. Ví dụ như `{0} quandangv`"
 
 add_success = [ "Đã thêm **{}** vào danh sách chức năng", "Con **{}** vừa xuất hiện trong làng" ]
@@ -96,6 +95,8 @@ load_success = "đã tải thành công trạng thái **{}**"
 vote_detail = "Các phiếu bầu hiện tại là:\n{}"
 vote_bite = [ "Hôm nay {} thèm thịt **{}**", "{} muốn cắn chết **{}**", "{} đề nghị đàn sói cắn **{}**" ]
 defend_success = "đêm nay bạn sẽ bảo vệ **{}**"
+poison_success = "bạn đã dùng bình giết **{}**"
+revive_success = "bạn đã dùng cứu"
 
 no_swap_self = "bạn không được tráo chức năng với chính mình"
 seer_self = "bạn không được soi chính mình"
@@ -123,6 +124,7 @@ defend_repeat = "đêm qua bạn đã bảo vệ người này rồi mà"
 no_defend_self = "bạn không được bảo vệ chính mình"
 target_dead = [ "mục tiêu của bạn đã chết", "**{}** chết rồi mà" ]
 good_night = [ "chúc bạn ngủ ngon", "mơ đẹp nhé", "ngủ ngon nha", "chúc bạn sống sót đến sáng mai", "chúc bạn không bị sói cắn" ]
+revive_no_deaths = "đêm nay không có ai chết cả"
 
 cmd_help = ( "giupdo", "`{0}` liệt kê các lệnh bạn được thực hiện.\nCòn `{0} câu-lệnh` sẽ nhắn thông tin trợ giúp về lệnh\nVà `{0}  chức-năng` sẽ giải thích chức năng đó", "trogiup" )
 cmd_startimmediate = ( "choingay", "`{0}` để bắt đầu chơi ngay" )
