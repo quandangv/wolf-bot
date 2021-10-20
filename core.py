@@ -623,7 +623,7 @@ async def WakeUp(_, __):
   status = 'day'
   global vote_list
   vote_list = { None: player_count }
-  await main_channel().send(tr('wake_up') + tr('vote').format(command_name('Vote')))
+  await main_channel().send(wake_up_message() + tr('vote').format(command_name('Vote')))
 
 @cmd(DebugCommand())
 async def RevealAll(message, args):
@@ -710,6 +710,7 @@ def generate_injections():
   async def low_reveal_all(channel): raise missing_injection_error('low_reveal_all')
   async def role_help(message, role): raise missing_injection_error('role_help')
   def start_night(): pass
+  def wake_up_message(): return tr('wake_up')
   # Don't try this at home
   globals().update(locals())
 generate_injections()
@@ -720,12 +721,13 @@ def missing_injection_error(name):
 ########################### EVENTS #############################
 
 async def on_used():
-  for player in players.values():
-    if player.role:
-      if (hasattr(player.role, 'target') and not player.role.target) or (hasattr(player.role, 'sleep') and not player.role.sleep):
-        return
-  await WakeUp(None, None)
-  return True
+  if status == 'night':
+    for player in players.values():
+      if player.role:
+        if (hasattr(player.role, 'target') and not player.role.target) or (hasattr(player.role, 'sleep') and not player.role.sleep):
+          return
+    await WakeUp(None, None)
+    return True
 
 async def on_voted(me, vote):
   async def close_vote_countdown(seconds):

@@ -15,6 +15,8 @@ sleep_info = [ "Khi nào bàn luận xong, mỗi bạn hãy nhắn `{}` để qu
 greeting = [ "Hé lô mọi người! Mọi người có thể dùng lệnh `{0}` để được giúp đỡ, còn admin thì có thể nhắn `{1}` để bắt đầu chơi ngay", "Xin chào cả làng! Các dân làng có thể nhắn `{0}` để tìm hiểu thêm về các lệnh, còn dân làng admin thì có thể dùng lệnh `{1}` để chơi ngay" ]
 
 wake_up = [ "Ò ó ooo, sáng rồi nè, dậy treo cổ mấy con sói đii. ", "Dậy đi dậy đii, đêm nay làng ta ko ai chết nha. ", "Cả làng dậy đi! " ]
+wake_up_death = [ "Cả làng dậy đi nào! Đêm qua có **{}** chết", "Ò ó ooo, trời đã sáng, còn **{}** đã chết", "Mọi người hãy dành một giây mặc niệm cho **{}** đã chết trong đêm" ]
+wake_up_no_death = [ "Thật là một ngày đẹp trời! Cả làng dậy và không ai chết cả", "Ò ó ooo cả làng dậy đi, hôm nay không có ai chết cả", "Chúc mừng mọi người trong làng đã an toàn trải qua một đêm dài" ]
 winners = [ "Chúc mừng {} đã chiến thắng!", "{} đã giành lấy chiến thắng trong bàn này" ]
 no_winners = [ "Hahaha trò chơi không ai thắng cả", "Ván này mọi người đều thua nha :)" ]
 lynch = [ "Và thế là {} bị quăng vào chảo lửa", "{} quá thất vọng với quyết định của dân làng và lăn ra chết", "Làng treo cổ {}, rồi đem đi chôn cất", "Mọi người đuổi {0} ra khỏi làng. Từ đó không ai nhìn thấy {0} nữa" ]

@@ -116,6 +116,19 @@ def connect(core):
     after_wolf_waiting.clear()
     attach_deaths.clear()
 
+  @core.injection
+  def wake_up_message():
+    deaths = []
+    alive = []
+    global known_alive
+    for player in known_alive:
+      if not player.alive:
+        deaths.append(player.extern.mention)
+      else:
+        alive.append(player)
+    known_alive = alive
+    return tr('wake_up_death').format(join_with_and(deaths)) if deaths else tr('wake_up_no_death')
+
   class ClassicRole(core.Role):
     async def on_start(self, player, first_time = True):
       if first_time:
@@ -212,6 +225,7 @@ def connect(core):
     async def auto_sleep(self):
       if (self.revived or (not attach_deaths and not wolf_phase)) and self.poisoned:
         self.sleep = True
+        await checked_on_used()
 
     async def on_wolves_done(self, me):
       if attach_deaths:
@@ -255,3 +269,4 @@ def connect(core):
       if not self.sleep:
         self.sleep = True
         await message.reply(tr('good_night'))
+        await checked_on_used()
