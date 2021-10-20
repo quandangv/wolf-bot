@@ -30,15 +30,15 @@ def connect(core):
     global wolf_phase
     wolf_phase = False
     target = core.tmp_channels['wolf'].target
-    if not hasattr(target, 'defended'):
+    if isinstance(target, core.Player) and not hasattr(target, 'defended'):
       target.alive = False
       attach_deaths.append(target)
-    for co in after_wolf_waiting:
-      await co
-    after_wolf_waiting.clear()
     for player in after_wolf_phase_players:
       if hasattr(player.role, 'on_wolves_done'):
         await player.role.on_wolves_done(player)
+    for co in after_wolf_waiting:
+      await co
+    after_wolf_waiting.clear()
     await on_used()
 
   async def checked_on_used():
@@ -132,23 +132,39 @@ def connect(core):
     __slots__ = ('target',)
     def new_night(self):
       self.target = None
+    async def check_consensus(self, msg, target, wolf_channel):
+      self.target = target
+      for wolf in wolf_channel.players:
+        if wolf.role.target != target:
+          await wolf_channel.extern.send(msg + tr('wolf_need_consensus'))
+          return False
+      else:
+        wolf_channel.target = self.target
+        await on_wolf_phase_use()
+        return True
 
     @core.check_channel('wolf')
     @core.check_status()
     @core.single_arg('bite_wronguse')
     async def Kill(self, me, tmp_channel, message, args):
-      player = await find_player(message, args)
-      if player:
-        self.target = player
-        msg = tr('vote_bite').format(me.extern.mention, self.target.extern.name)
-        for wolf in tmp_channel.players:
-          if wolf.role.target != self.target:
-            await tmp_channel.extern.send(msg + tr('wolf_need_consensus'))
-            break
-        else:
-          await tmp_channel.extern.send(msg + tr('wolf_bite').format(self.target.extern.name))
-          tmp_channel.target = self.target
-          await on_wolf_phase_use()
+      if wolf_phase:
+        player = await find_player(message, args)
+        if player:
+          msg = tr('vote_bite').format(me.extern.mention, player.extern.name)
+          if await self.check_consensus(msg, player, tmp_channel):
+            await tmp_channel.extern.send(msg + tr('wolf_bite').format(self.target.extern.name))
+      else:
+        await question(message, tr('kill_already'))
+
+    @core.check_channel('wolf')
+    @core.check_status()
+    async def Sleep(self, me, tmp_channel, message, args):
+      if wolf_phase:
+        msg = tr('wolf_no_kill').format(me.extern.mention)
+        if await self.check_consensus(msg, True, tmp_channel):
+          await tmp_channel.extern.send(msg + tr('wolf_no_bite'))
+      else:
+        await question(message, tr('kill_already'))
 
     async def on_start(self, player, first_time = True):
       await ClassicRole.on_start(self, player, first_time)
@@ -200,7 +216,7 @@ def connect(core):
     async def on_wolves_done(self, me):
       if attach_deaths:
         msg = tr('witch_death')
-        if not self.revived:
+        if not self.revived and not self.sleep:
           msg += tr('witch_revive').format(*self.commands)
         await me.extern.send(msg)
       else:
