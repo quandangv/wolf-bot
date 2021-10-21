@@ -494,7 +494,10 @@ async def StartImmediate(message, args):
         player = get_player(member)
         player.role = roles[shuffled_roles[idx]]()
         og_roles[player.extern.mention] = player.role.name
-        await player.extern.send(tr('role').format(player.role.name) + player.role.greeting + player_list)
+        msg = tr('role').format(player.role.name) + player.role.greeting
+        if player.role.commands:
+          msg += player_list
+        await player.extern.send(msg)
         if hasattr(player.role, 'on_start'):
           await player.role.on_start(player)
         if hasattr(player.role, 'new_night'):
