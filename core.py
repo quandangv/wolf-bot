@@ -78,13 +78,13 @@ def player_ref(cls):
 class Role:
   @player_ref
   @dictionize.make_hint
-  class Hint:
+  class Dictionize:
     def etemplate(self, obj):
       return { 'type': type(obj).__name__ }
     async def dtemplate(self, dict):
       return roles[dict['type']]()
     async def d_type(*_): pass
-  hint__ = Hint()
+  dictionize__ = Dictionize()
 
 class Player:
   def __init__(self, is_admin, extern):
@@ -94,9 +94,9 @@ class Player:
     self.vote = None
 
   @dictionize.make_hint
-  @dictionize.sub_hint('role', Role.hint__)
+  @dictionize.sub_hint('role', Role.dictionize__)
   @dictionize.e_ignore('extern')
-  class Hint:
+  class Dictionize:
     def __init__(self, available_players):
       self.available_players = available_players
     def etemplate(self, obj):
@@ -113,7 +113,7 @@ class Player:
         raise ValueError("ERROR: Member {} is not available".format(id))
     async def d_real_role(self, obj, val):
       obj.real_role = val and roles[val].name
-  hint__ = Hint({})
+  dictionize__ = Dictionize({})
 
 class Channel:
   @staticmethod
@@ -133,12 +133,12 @@ class Channel:
   @player_ref
   @dictionize.make_hint
   @dictionize.e_ignore('extern', 'players')
-  class Hint:
+  class Dictionize:
     async def dtemplate(self, dict):
       return await Channel.create(dict['name'], *( players[id] for id in dict['members'] ))
     def etemplate(self, obj):
       return { 'name': obj.extern.name, 'members': [ player.extern.id for player in obj.players ] }
-  hint__ = Hint()
+  dictionize__ = Dictionize()
 
 ########################## DECORATORS ##########################
 
@@ -292,11 +292,11 @@ async def json_to_state(fp):
   await EndGame(None, None)
   obj = json.load(fp)
   available_players = await get_available_members()
-  player_hint = Player.Hint(available_players)
+  player_hint = Player.Dictionize(available_players)
   for val in obj['players']:
     await dictionize.decode(val, player_hint)
   for name, val in obj['channels'].items():
-    tmp_channels[name] = await dictionize.decode(val, Channel.hint__)
+    tmp_channels[name] = await dictionize.decode(val, Channel.dictionize__)
   names = ['vote_list', 'played_roles', 'status', 'og_roles', 'history' ]
   extract_from_json(obj)
   for name in names:

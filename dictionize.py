@@ -70,6 +70,6 @@ def e_ignore(*names):
 
 class Encoder(json.JSONEncoder):
   def default(self, obj):
-    if hasattr(obj, 'hint__'):
-      return encode(obj, obj.hint__)
+    if hasattr(obj, 'dictionize__'):
+      return encode(obj, obj.dictionize__)
     return json.JSONEncoder.default(self, obj)

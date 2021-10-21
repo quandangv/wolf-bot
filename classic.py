@@ -262,7 +262,6 @@ def connect(core):
       else:
         await question(message, tr('revive_no_deaths'))
 
-
     @core.check_dm
     @core.check_status()
     async def Sleep(self, me, message, args):
