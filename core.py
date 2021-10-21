@@ -385,7 +385,7 @@ class SetupCommand(AdminCommand):
       await func(message, args)
     super().decorate(check)
 
-ROLE_COMMANDS = [ 'Kill', 'Defend', 'See', 'Swap', 'Steal', 'Take', 'Clone', 'Reveal', 'Sleep', 'Revive', 'Poison' ]
+ROLE_COMMANDS = [ 'Kill', 'Defend', 'See', 'Swap', 'Steal', 'Take', 'Clone', 'Reveal', 'Sleep', 'Revive', 'Poison', 'Investigate' ]
 for cmd_name in ROLE_COMMANDS:
   def func(): pass
   func.__name__ = cmd_name

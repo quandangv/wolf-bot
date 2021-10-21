@@ -11,6 +11,7 @@ attack_deaths = []
 known_alive = []
 
 GUARD_DEFEND_SELF = True
+LONELY_SIDES = [ 'tanner' ]
 
 def connect(core):
   tr = core.tr
@@ -24,7 +25,7 @@ def connect(core):
   on_used = core.on_used
   join_with_and = core.join_with_and
   dictionize = core.dictionize
-  core.DEFAULT_ROLES = [ 'Villager', 'Guard', 'Wolf', 'Villager', 'Witch', 'Wolf' ]
+  core.DEFAULT_ROLES = [ 'Villager', 'Guard', 'Wolf', 'Villager', 'Witch', 'Wolf', 'Detective', 'Drunk' ]
   core.game_mode = THIS_MODULE
 
   @dictionize.custom_keys('wolf_phase', 'attack_deaths', 'known_alive', 'GUARD_DEFEND_SELF')
@@ -76,6 +77,7 @@ def connect(core):
       else:
         await confirm(message, tr('wait'))
         after_wolf_waiting.append(co)
+    handler.__name__ = func.__name__
     return handler
 
   def filter_players():
@@ -133,11 +135,14 @@ def connect(core):
     async def on_start(self, player, first_time = True):
       if first_time:
         player.alive = True
+        player.side = self.default_side()
 
   @core.role
-  class Villager(ClassicRole): pass
+  class Villager(ClassicRole):
+    def default_side(self): return 'village'
 
-  class WolfSide(ClassicRole): pass
+  class WolfSide(ClassicRole):
+    def default_side(self): return 'wolf'
 
   @core.role
   class Wolf(WolfSide, core.Wolf):
@@ -269,3 +274,31 @@ def connect(core):
         self.sleep = True
         await message.reply(tr('good_night'))
         await checked_on_used()
+
+  @core.role
+  class Detective(Villager):
+    after_wolf_phase = True
+    __slots__ = ('sleep',)
+    def __init__(self):
+      self.sleep = False
+    def new_night(self):
+      self.sleep = False
+
+    @core.check_dm
+    @core.check_status()
+    @wait_after_wolf_phase
+    @core.single_use('sleep')
+    async def Investigate(self, me, message, args):
+      players = args.split()
+      if len(players) != 2 or players[0] == players[1]:
+        return await question(message, tr('detective_wronguse').format(command_name('Investigate')))
+      players = [ await find_player(message, name) for name in players ]
+      if players[0] and players[1]:
+        sides = [ p.side for p in players ]
+        if sides[0] == sides[1] and not sides[0] in LONELY_SIDES:
+          msg = tr('investigate_same')
+        else:
+          msg = tr('investigate_diff')
+        await message.reply(msg.format(players[0].extern.name, players[1].extern.name))
+        self.sleep = True
+        await on_used()

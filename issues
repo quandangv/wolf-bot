@@ -1,16 +1,17 @@
 # TODO
 - Allow non-admin to setup game
 - Force fixed or randomized order of action for roles
-- Test case for no winners
-- Test case for starting with default roles
-- Print starting role with start message
 - Manually add players to the game
-- Use single_use for discussed, revived, and poisoned
 - List roles when starting game
+- Test case for white wolf
 
 # DOING
 
 # DONE
+- Use single_use for discussed, revived, and poisoned
+- Print starting role with start message
+- Test case for no winners
+- Test case for starting with default roles
 - Rename EndDiscussion to Sleep
 - Rename Role.used to Role.target
 - History command

@@ -101,11 +101,12 @@ wolf_no_kill = [ "Hôm nay {} muốn ăn chay", "{} không muốn giết ai cả
 defend_success = "đêm nay bạn sẽ bảo vệ **{}**"
 poison_success = "bạn đã dùng bình giết **{}**"
 revive_success = "bạn đã dùng cứu"
+investigate_same = "{} **=** {}"
+investigate_diff = "{} **≠** {}"
 
 no_swap_self = "bạn không được tráo chức năng với chính mình"
 seer_self = "bạn không được soi chính mình"
 clone_self = "bạn không được nhân bản chính mình"
-
 require_admin = "bạn không phải là admin nên không được dùng lệnh đó nha"
 not_playing = "bạn không có trong trò chơi, bạn không được dùng lệnh này đâu"
 forbid_game_started = [ "bạn không được dùng lệnh `{}` khi trò chơi đã bắt đầu", "trò chơi bắt đầu rồi, bạn không được dùng lệnh `{}` đâu" ]
@@ -158,6 +159,7 @@ cmd_kill = ( "can", "Sói phải nhắn `{0}  mục-tiêu` để lựa chọn m�
 cmd_defend = ( "baove", "Bảo vệ phải nhắn `{0}  người-chơi` để bảo vệ người đó khỏi tấn công vào ban đêm. Không được bảo vệ một người hai đêm liên tiếp" )
 cmd_revive = ( "cuu", "Phù thủy khi thấy có người chết có thể nhắn `{0}` để dùng bình cứu" )
 cmd_poison = ( "giet", "Phù thủy có thể nhắn `{0}  người-chơi` để dùng bình giết người đó" )
+cmd_investigate = ( "dieutra", "Thám tử có thể `{0}  người-chơi-1  người-chơi-2` để xem họ cùng phe hay khác phe" )
 
 onenight_villager = ( "dân thường", "Một con dân thường không có chức năng. Nhờ vậy, bạn sẽ được yên giấc vào ban đêm", "Ban đêm bạn không phải làm gì cả. Sáng dậy, bạn có thể vote người để treo cổ", "dân làng", "dân" )
 onenight_wolf = ( "sói", "Sói chống lại dân làng. Chúng sẽ thắng nếu người bị treo cổ là phe dân", "Bạn sẽ được thêm vào group sói. Ban ngày, hãy tìm cách treo cổ một người dân để chiến thắng" )
@@ -174,3 +176,4 @@ classic_guard = ( "bảo vệ", "Mỗi đêm bảo vệ sẽ chọn một ngư�
 classic_wolf = ( "sói", "Mỗi đêm các sói sẽ bàn bạc với nhau và giết một người", "Hãy dùng lệnh `{}  mục-tiêu` để chọn người mình muốn giết" )
 classic_villager = ( "dân thường", "Một con dân thường không có chức năng. Nhờ vậy, bạn sẽ được yên giấc vào ban đêm", "Ban đêm bạn không phải làm gì cả. Sáng dậy, bạn có thể vote người để treo cổ", "dân làng", "dân" )
 classic_witch = ( "phù thủy", "Người này sẽ có một bình thuốc cứu người và một bình giết người để sử dụng trong đêm. Mỗi bình chỉ được dùng một lần trong game", "Mỗi đêm bạn sẽ được biết có người chết hay không. Dùng lệnh `{1}` để cứu họ, hoặc lệnh `{0} mục-tiêu` để giết, còn không thì bạn phải nhắn `{2}`", "pt" )
+classic_detective = ( "thám tử", "Thám tử sẽ điều tra 2 người mỗi đêm, biết được họ có cùng phe với nhau không", "Mỗi đêm bạn hãy dùng lệnh `{}  người-chơi-1  người-chơi-2` để chọn hai người để điều tra xem họ có cùng phe với nhau không" )
