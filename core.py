@@ -71,13 +71,13 @@ dictionize.simple_dtypical = my_dtypical
 
 class Role:
   @dictionize.slots_keys
-  class Dictionize:
+  class _Dictionize:
     def etemplate(self, obj):
       return { 'type': type(obj).__name__ }
     async def dtemplate(self, dict):
       return roles[dict['type']]()
     async def d_type(*_): pass
-  dictionize__ = Dictionize()
+  dictionize__ = _Dictionize()
 
 class Player:
   def __init__(self, is_admin, extern):
@@ -245,7 +245,12 @@ def initialize(admins, role_prefix):
 def connect(admins, role_prefix):
   for base_name, base in list(roles.items()):
     [base.name, base.description, base.greeting, *aliases] = tr(role_prefix + base_name.lower())
-    base.commands = [ command_name(command) for command, func in vars(base).items() if command[:1].isupper() and callable(func) ]
+    base.commands = []
+    for command in dir(base):
+      if command[:1].isupper():
+        func = getattr(base, command)
+        if callable(func):
+          base.commands.append(command_name(command))
     base.greeting = base.greeting.format(*base.commands)
     base.__role__ = True
     roles[base.name] = base

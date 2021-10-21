@@ -139,7 +139,7 @@ def connect(core):
 
   @core.role
   class Villager(ClassicRole):
-    def default_side(self): return 'village'
+    def default_side(self): return 'villager'
 
   class WolfSide(ClassicRole):
     def default_side(self): return 'wolf'
@@ -160,6 +160,10 @@ def connect(core):
         wolf_channel.target = self.target
         await on_wolf_phase_use()
         return True
+
+    async def on_start(self, player, first_time = True):
+      await ClassicRole.on_start(self, player, first_time)
+      await core.Wolf.on_start(self, player, first_time)
 
     @core.check_channel('wolf')
     @core.check_status()
@@ -184,9 +188,9 @@ def connect(core):
       else:
         await question(message, tr('kill_already'))
 
-    async def on_start(self, player, first_time = True):
-      await ClassicRole.on_start(self, player, first_time)
-      await core.Wolf.on_start(self, player, first_time)
+  @core.role
+  class WolfSheep(Wolf):
+    def default_side(self): return 'villager'
 
   @core.role
   class Guard(Villager):
