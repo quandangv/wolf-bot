@@ -3,16 +3,18 @@ import asyncio
 import json
 import traceback
 import dictionize
+import sys
 
+THIS_MODULE = sys.modules[__name__]
 commands = {}
 roles = {}
 channel_events = {}
 admin_commands = []
 other_commands = []
 lock = asyncio.Lock()
-
 vote_countdown_task = None
 vote_countdown_monitor = None
+
 history = []
 og_roles = {}
 vote_list = {}
@@ -77,7 +79,7 @@ def player_ref(cls):
 
 class Role:
   @player_ref
-  @dictionize.make_hint
+  @dictionize.slots_keys
   class Dictionize:
     def etemplate(self, obj):
       return { 'type': type(obj).__name__ }
@@ -93,7 +95,7 @@ class Player:
     self.role = None
     self.vote = None
 
-  @dictionize.make_hint
+  @dictionize.dict_keys
   @dictionize.sub_hint('role', Role.dictionize__)
   @dictionize.e_ignore('extern')
   class Dictionize:
@@ -131,7 +133,7 @@ class Channel:
     await self.extern.delete()
 
   @player_ref
-  @dictionize.make_hint
+  @dictionize.dict_keys
   @dictionize.e_ignore('extern', 'players')
   class Dictionize:
     async def dtemplate(self, dict):
@@ -275,33 +277,32 @@ def connect(admins, role_prefix):
 
 ######################### SERIALIZATION ########################
 
+@dictionize.custom_keys('vote_list', 'played_roles', 'status', 'og_roles', 'history', 'tmp_channels', 'players', 'player_count')
+class Dictionize:
+  async def dtemplate(self, dict):
+    return THIS_MODULE
+  def e_players(self, dict, val):
+    dict['players'] = list(val.values())
+  async def d_players(self, obj, val):
+    available_players = await get_available_members()
+    player_hint = Player.Dictionize(available_players)
+    for p in val:
+      await dictionize.decode(p, player_hint)
+  async def d_tmp_channels(self, obj, val):
+    for name, val in val.items():
+      tmp_channels[name] = await dictionize.decode(val, Channel.dictionize__)
+dictionize__ = Dictionize()
+
 def state_to_json(fp):
-  obj = {
-    'vote_list': vote_list,
-    'played_roles': played_roles,
-    'status': status,
-    'og_roles': og_roles,
-    'history': history,
-    'channels': tmp_channels,
-    'players': list(players.values()),
-  }
+  obj = dictionize.encode(THIS_MODULE, dictionize__)
   add_to_json(obj)
   return json.dump(obj, fp, cls = dictionize.Encoder, indent = 2)
 
 async def json_to_state(fp):
   await EndGame(None, None)
   obj = json.load(fp)
-  available_players = await get_available_members()
-  player_hint = Player.Dictionize(available_players)
-  for val in obj['players']:
-    await dictionize.decode(val, player_hint)
-  for name, val in obj['channels'].items():
-    tmp_channels[name] = await dictionize.decode(val, Channel.dictionize__)
-  names = ['vote_list', 'played_roles', 'status', 'og_roles', 'history' ]
+  await dictionize.decode(obj, dictionize__)
   extract_from_json(obj)
-  for name in names:
-    if name in obj:
-      globals()[name] = obj[name]
   if 'null' in vote_list:
     vote_list[None] = vote_list['null']
     del vote_list['null']

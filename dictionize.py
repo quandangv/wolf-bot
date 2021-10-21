@@ -9,12 +9,8 @@ def encode(obj, hint):
       hint.especials[key](hint, result, val)
     else:
       hint.etypical(result, key, val)
-  if hasattr(obj, '__slots__'):
-    for slot in obj.__slots__:
-      handle_keyval(slot, getattr(obj, slot))
-  else:
-    for key, val in vars(obj).items():
-      handle_keyval(key, val)
+  for key in hint.ekeys(obj):
+    handle_keyval(key, getattr(obj, key))
   return result
 
 async def decode(dict, hint):
@@ -48,6 +44,23 @@ def make_hint(cls):
     elif name.startswith('e_'):
       cls.especials[name[2:]] = func
   return cls
+
+def slots_keys(cls):
+  def get_slots(self, obj): return obj.__slots__ if hasattr(obj, '__slots__') else ()
+  cls.ekeys = get_slots
+  return make_hint(cls)
+
+def dict_keys(cls):
+  def get_dict(self, obj): return obj.__dict__
+  cls.ekeys = get_dict
+  return make_hint(cls)
+
+def custom_keys(*keys):
+  def decorator(cls):
+    def custom(self, obj): return keys
+    cls.ekeys = custom
+    return make_hint(cls)
+  return decorator
 
 def sub_hint(name, hint):
   def decorator(cls):
