@@ -14,6 +14,7 @@ other_commands = []
 lock = asyncio.Lock()
 vote_countdown_task = None
 vote_countdown_monitor = None
+game_mode = None
 
 history = []
 og_roles = {}
@@ -61,24 +62,14 @@ def missing_action_error(name):
 
 ########################### CLASSES ############################
 
-def player_ref(cls):
-  old_dtypical = cls.dtypical
-  old_etypical = cls.etypical
-  def dtypical(self, obj, key, val):
-    if isinstance(val, str) and val.startswith('@'):
-      val = players[int(val[1:])]
-    old_dtypical(self, obj, key, val)
-  def etypical(self, dict, key, val):
-    if isinstance(val, Player):
-      dict[key] = '@' + str(val.extern.id)
-    else:
-      old_etypical(self, dict, key, val)
-  cls.dtypical = dtypical
-  cls.etypical = etypical
-  return cls
+old_dtypical = dictionize.simple_dtypical
+def my_dtypical(self, obj, key, val):
+  if isinstance(val, str) and val.startswith('@@'):
+    val = Player.dictionize__.dtemplate(val)
+  old_dtypical(self, obj, key, val)
+dictionize.simple_dtypical = my_dtypical
 
 class Role:
-  @player_ref
   @dictionize.slots_keys
   class Dictionize:
     def etemplate(self, obj):
@@ -98,7 +89,7 @@ class Player:
   @dictionize.dict_keys
   @dictionize.sub_hint('role', Role.dictionize__)
   @dictionize.e_ignore('extern')
-  class Dictionize:
+  class FullDictionize:
     def __init__(self, available_players):
       self.available_players = available_players
     def etemplate(self, obj):
@@ -107,15 +98,19 @@ class Player:
       id = dict['id']
       if id in players:
         return players[id]
-      else:
-        for mem in self.available_players:
-          if mem.id == id:
-            player = players[mem.id] = Player(False, mem)
-            return player
-        raise ValueError("ERROR: Member {} is not available".format(id))
+      for mem in self.available_players:
+        if mem.id == id:
+          player = players[mem.id] = Player(False, mem)
+          return player
+      raise ValueError("ERROR: Member {} is not available".format(id))
     async def d_real_role(self, obj, val):
       obj.real_role = val and roles[val].name
-  dictionize__ = Dictionize({})
+  @dictionize.no_keys
+  class RefDictionize:
+    def etemplate(self, obj): return '@@' + str(obj.extern.id)
+    def dtemplate(self, obj): return players[int(obj[2:])]
+  dictionize__ = RefDictionize()
+  full_dictionize__ = FullDictionize({})
 
 class Channel:
   @staticmethod
@@ -132,14 +127,13 @@ class Channel:
     self.players = None
     await self.extern.delete()
 
-  @player_ref
   @dictionize.dict_keys
   @dictionize.e_ignore('extern', 'players')
   class Dictionize:
-    async def dtemplate(self, dict):
-      return await Channel.create(dict['name'], *( players[id] for id in dict['members'] ))
     def etemplate(self, obj):
       return { 'name': obj.extern.name, 'members': [ player.extern.id for player in obj.players ] }
+    async def dtemplate(self, dict):
+      return await Channel.create(dict['name'], *( players[id] for id in dict['members'] ))
   dictionize__ = Dictionize()
 
 ########################## DECORATORS ##########################
@@ -282,10 +276,9 @@ class Dictionize:
   async def dtemplate(self, dict):
     return THIS_MODULE
   def e_players(self, dict, val):
-    dict['players'] = list(val.values())
+    dict['players'] = [ dictionize.encode(p, Player.full_dictionize__) for p in val.values() ]
   async def d_players(self, obj, val):
-    available_players = await get_available_members()
-    player_hint = Player.Dictionize(available_players)
+    player_hint = Player.FullDictionize(await get_available_members())
     for p in val:
       await dictionize.decode(p, player_hint)
   async def d_tmp_channels(self, obj, val):
@@ -295,14 +288,16 @@ dictionize__ = Dictionize()
 
 def state_to_json(fp):
   obj = dictionize.encode(THIS_MODULE, dictionize__)
-  add_to_json(obj)
+  if game_mode:
+    obj.update(dictionize.encode(game_mode, game_mode.dictionize__))
   return json.dump(obj, fp, cls = dictionize.Encoder, indent = 2)
 
 async def json_to_state(fp):
   await EndGame(None, None)
   obj = json.load(fp)
   await dictionize.decode(obj, dictionize__)
-  extract_from_json(obj)
+  if game_mode:
+    await dictionize.decode(obj, game_mode.dictionize__)
   if 'null' in vote_list:
     vote_list[None] = vote_list['null']
     del vote_list['null']
@@ -699,8 +694,6 @@ def injection(func):
   globals()[func.__name__] = func
 
 def generate_injections():
-  def add_to_json(obj): pass
-  def extract_from_json(obj): pass
   def before_shuffle(): pass
   def after_shuffle(): pass
   def default_roles_needed(player_count): raise missing_injection_error('default_roles_needed')

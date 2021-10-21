@@ -1,10 +1,10 @@
 import sys
 
+THIS_MODULE = sys.modules[__name__]
 excess_roles = []
 og_excess = []
 EXCESS_ROLES = 3
 SEER_REVEAL = 2
-THIS_MODULE = sys.modules[__name__]
 
 def connect(core):
   tr = core.tr
@@ -17,7 +17,16 @@ def connect(core):
   record_history = core.record_history
   on_used = core.on_used
   join_with_and = core.join_with_and
+  dictionize = core.dictionize
   core.DEFAULT_ROLES = [ 'Wolf', 'Thief', 'Troublemaker', 'Drunk', 'Wolf', 'Villager', 'Seer', 'Clone', 'Minion', 'Insomniac', 'Tanner', 'Villager' ]
+
+  @dictionize.custom_keys('excess_roles', 'og_excess', 'EXCESS_ROLES', 'SEER_REVEAL')
+  class Dictionize:
+    async def dtemplate(self, dict):
+      return THIS_MODULE
+    async def d_excess_roles(self, obj, val):
+      globals()['excess_roles'] = [ roles[role].name for role in val ]
+  globals()['dictionize__'] = Dictionize()
 
   async def is_wolf_side(role):
     if not role in roles:
@@ -30,21 +39,6 @@ def connect(core):
       await core.debug("ERROR: Role '{}' does not exist".format(role))
       return False
     return issubclass(roles[role], Villager)
-
-  @core.injection
-  def add_to_json(obj):
-    obj['SEER_REVEAL'] = SEER_REVEAL
-    obj['EXCESS_ROLES'] = EXCESS_ROLES
-    obj['og_excess'] = og_excess
-    obj['excess_roles'] = [ roles[role].__name__ for role in excess_roles ]
-
-  @core.injection
-  def extract_from_json(obj):
-    excess_roles = [ roles[role].name for role in obj['excess_roles'] ]
-    names = [ 'SEER_REVEAL', 'EXCESS_ROLES', 'og_excess' ]
-    for name in names:
-      if name in obj:
-        globals()[name] = obj[name]
 
   @core.injection
   def default_roles_needed(player_count):

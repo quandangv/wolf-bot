@@ -4,13 +4,12 @@ def encode(obj, hint):
   if obj == None:
     return None
   result = hint.etemplate(obj)
-  def handle_keyval(key, val):
+  for key in hint.ekeys(obj):
+    val = getattr(obj, key)
     if key in hint.especials:
       hint.especials[key](hint, result, val)
     else:
       hint.etypical(result, key, val)
-  for key in hint.ekeys(obj):
-    handle_keyval(key, getattr(obj, key))
   return result
 
 async def decode(dict, hint):
@@ -29,7 +28,7 @@ def simple_dtypical(self, obj, key, val): setattr(obj, key, val)
 def simple_etemplate(self, dict): return {}
 def simple_vars(self, obj): return vars(obj)
 
-def make_hint(cls):
+def make_hint(cls, ekeys):
   if not hasattr(cls, 'etypical'):
     cls.etypical = simple_etypical
   if not hasattr(cls, 'dtypical'):
@@ -38,6 +37,7 @@ def make_hint(cls):
     cls.etemplate = simple_etemplate
   cls.dspecials = {}
   cls.especials = {}
+  cls.ekeys = ekeys
   for name, func in vars(cls).items():
     if name.startswith('d_'):
       cls.dspecials[name[2:]] = func
@@ -47,20 +47,22 @@ def make_hint(cls):
 
 def slots_keys(cls):
   def get_slots(self, obj): return obj.__slots__ if hasattr(obj, '__slots__') else ()
-  cls.ekeys = get_slots
-  return make_hint(cls)
+  return make_hint(cls, get_slots)
 
 def dict_keys(cls):
   def get_dict(self, obj): return obj.__dict__
-  cls.ekeys = get_dict
-  return make_hint(cls)
+  return make_hint(cls, get_dict)
 
 def custom_keys(*keys):
   def decorator(cls):
     def custom(self, obj): return keys
-    cls.ekeys = custom
-    return make_hint(cls)
+    return make_hint(cls, custom)
   return decorator
+
+def no_keys(cls):
+  def custom(*_): return ()
+  cls.ekeys = custom
+  return cls
 
 def sub_hint(name, hint):
   def decorator(cls):

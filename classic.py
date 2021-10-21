@@ -1,11 +1,13 @@
 import sys
 
 THIS_MODULE = sys.modules[__name__]
+after_wolf_waiting = []
+
 wolf_phase_players = []
 after_wolf_phase_players = []
-after_wolf_waiting = []
+
 wolf_phase = True
-attach_deaths = []
+attack_deaths = []
 known_alive = []
 
 GUARD_DEFEND_SELF = True
@@ -21,7 +23,22 @@ def connect(core):
   record_history = core.record_history
   on_used = core.on_used
   join_with_and = core.join_with_and
+  dictionize = core.dictionize
   core.DEFAULT_ROLES = [ 'Villager', 'Guard', 'Wolf', 'Villager', 'Witch', 'Wolf' ]
+  core.game_mode = THIS_MODULE
+
+  @dictionize.custom_keys('wolf_phase', 'attack_deaths', 'known_alive', 'GUARD_DEFEND_SELF')
+  class Dictionize:
+    async def dtemplate(self, dict):
+      filter_players()
+      return THIS_MODULE
+    def dplayer_arr(name):
+      async def func(self, obj, val):
+        setattr(obj, name, [ core.Player.dictionize__.dtemplate(p) for p in val ])
+      return func
+    d_attack_deaths = dplayer_arr('attack_deaths')
+    d_known_alive = dplayer_arr('known_alive')
+  globals()['dictionize__'] = Dictionize()
 
   async def on_wolf_phase_use():
     for player in wolf_phase_players:
@@ -32,7 +49,7 @@ def connect(core):
     target = core.tmp_channels['wolf'].target
     if isinstance(target, core.Player) and not hasattr(target, 'defended'):
       target.alive = False
-      attach_deaths.append(target)
+      attack_deaths.append(target)
     for player in after_wolf_phase_players:
       if hasattr(player.role, 'on_wolves_done'):
         await player.role.on_wolves_done(player)
@@ -75,20 +92,6 @@ def connect(core):
           after_wolf_phase_players.append(player)
 
   @core.injection
-  def add_to_json(obj):
-    obj['attach_deaths'] = attach_deaths
-    obj['wolf_phase'] = wolf_phase
-    obj['GUARD_DEFEND_SELF'] = GUARD_DEFEND_SELF
-
-  @core.injection
-  def extract_from_json(obj):
-    names = [ 'attach_deaths', 'wolf_phase', 'GUARD_DEFEND_SELF' ]
-    for name in names:
-      if name in obj:
-        globals()[name] = obj[name]
-    filter_players()
-
-  @core.injection
   def after_shuffle(shuffled_roles):
     filter_players()
 
@@ -114,7 +117,7 @@ def connect(core):
     global wolf_phase
     wolf_phase = True
     after_wolf_waiting.clear()
-    attach_deaths.clear()
+    attack_deaths.clear()
 
   @core.injection
   def wake_up_message():
@@ -223,12 +226,12 @@ def connect(core):
       if not self.revived or not self.poisoned:
         self.sleep = False
     async def auto_sleep(self):
-      if (self.revived or (not attach_deaths and not wolf_phase)) and self.poisoned:
+      if (self.revived or (not attack_deaths and not wolf_phase)) and self.poisoned:
         self.sleep = True
         await checked_on_used()
 
     async def on_wolves_done(self, me):
-      if attach_deaths:
+      if attack_deaths:
         msg = tr('witch_death')
         if not self.revived and not self.sleep:
           msg += tr('witch_revive').format(*self.commands)
@@ -254,9 +257,9 @@ def connect(core):
     @wait_after_wolf_phase
     @core.single_use('revived')
     async def Revive(self, me, message, args):
-      if attach_deaths:
+      if attack_deaths:
         self.revived = True
-        attach_deaths.pop().alive = True
+        attack_deaths.pop().alive = True
         await confirm(message, tr('revive_success'))
         await self.auto_sleep()
       else:
