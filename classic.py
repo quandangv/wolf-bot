@@ -44,8 +44,7 @@ def connect(core):
     for player in wolf_phase_players:
       if not player.role.target:
         return
-    global wolf_phase
-    wolf_phase = False
+    globals()['wolf_phase'] = False
     target = core.tmp_channels['wolf'].target
     if isinstance(target, core.Player) and not hasattr(target, 'defended'):
       target.alive = False
@@ -114,8 +113,7 @@ def connect(core):
 
   @core.injection
   def start_night():
-    global wolf_phase
-    wolf_phase = True
+    globals()['wolf_phase'] = True
     after_wolf_waiting.clear()
     attack_deaths.clear()
 
@@ -123,13 +121,12 @@ def connect(core):
   def wake_up_message():
     deaths = []
     alive = []
-    global known_alive
     for player in known_alive:
       if not player.alive:
         deaths.append(player.extern.mention)
       else:
         alive.append(player)
-    known_alive = alive
+    globals()['known_alive'] = alive
     return tr('wake_up_death').format(join_with_and(deaths)) if deaths else tr('wake_up_no_death')
 
   class ClassicRole(core.Role):

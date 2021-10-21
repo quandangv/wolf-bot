@@ -471,9 +471,8 @@ async def StartImmediate(message, args):
   try:
     members = await get_available_members()
     current_count = len(members)
-    global played_roles
     if not played_roles:
-      played_roles = [ roles[DEFAULT_ROLES[idx]].name for idx in range(default_roles_needed(current_count))]
+      globals()['played_roles'] = [ roles[DEFAULT_ROLES[idx]].name for idx in range(default_roles_needed(current_count))]
     needed_count = needed_players_count(played_roles)
     if current_count > needed_count:
       await question(message, tr('start_needless').format(current_count, needed_count))
@@ -483,10 +482,8 @@ async def StartImmediate(message, args):
       await message.channel.send(tr('start').format(join_with_and(
         [member.mention for member in members]
       )))
-      global status
-      global player_count
-      status = 'night'
-      player_count = current_count
+      globals()['status'] = 'night'
+      globals()['player_count'] = current_count
       history.clear()
       og_roles.clear()
       before_shuffle()
@@ -551,7 +548,6 @@ async def low_vote_count(key):
 @cmd(AdminCommand())
 async def CloseVote(_, __):
   # Function to either end game or start next night
-  global vote_countdown_task
   if vote_countdown_task:
     vote_countdown_task.cancel()
     clear_vote_countdown()
@@ -668,8 +664,7 @@ async def find_player(message, name):
   await question(message, tr('player_notfound').format(name))
 
 def clear_vote_countdown():
-  global vote_countdown_task
-  vote_countdown_task = None
+  globals()['vote_countdown_task'] = None
 
 async def await_vote_countdown():
   if vote_countdown_task:
