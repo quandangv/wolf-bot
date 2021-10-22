@@ -28,7 +28,9 @@ wolf_bite = ". Các con sói quyết định cắn **{}**"
 wolf_no_bite = ". Các con sói quyết định không cắn ai"
 witch_no_death = "Đêm nay bạn không thấy ai chết cả"
 witch_death = "Đêm nay bạn nhận thấy có người chết"
-player_list = "\nNhững người trong trò chơi là: **{}**"
+player_list = "Những người trong trò chơi là: **{}**"
+drunk_choose = "Hãy dùng lệnh `{}  chức-năng` để chọn một chức năng bên ngoài cho mình"
+drunk_choose_wolf = "Bạn phải lấy chức năng sói"
 
 reveal_player = [ "{} chính là **{}**!", "{} là một con **{}**" ]
 reveal_item = "- {} là **{}**"
@@ -87,7 +89,7 @@ thief_success = "bạn đã trộm lá bài **{1}** từ {0}"
 troublemaker_success = "đã tráo chức năng của {} và {}"
 see_success = [ "chức năng của {} là **{}**", "{} là một con **{}**" ]
 drunk_success = "đã tráo lá bài bên ngoài số **{}** với lá của bạn"
-clone_success = "bạn đã nhân bản chức năng của {}, giờ bạn sẽ là một **{}**! "
+clone_success = "Bạn đã nhân bản chức năng **{}**! "
 vote_success = [ "{} đòi quăng {} vào chảo lửa!", "{} đòi treo cổ {}!", "{} vote treo cổ {}" ]
 unvote_success = "{} đổi ý và rút lại phiếu bầu"
 insomniac_reveal = [ "Sau một đêm dài, bạn xem lại chức năng của mình và thấy: bạn là **{}**!", "Trước khi trời sáng, bạn vội xem lại chức năng của mình và thấy nó là **{}**!" ]
@@ -103,6 +105,7 @@ poison_success = "bạn đã dùng bình giết **{}**"
 revive_success = "bạn đã dùng cứu"
 investigate_same = "{} **=** {}"
 investigate_diff = "{} **≠** {}"
+drunk_took_role = "bạn đã trở thành **{}**. "
 
 no_swap_self = "bạn không được tráo chức năng với chính mình"
 seer_self = "bạn không được soi chính mình"
@@ -178,3 +181,4 @@ classic_villager = ( "dân thường", "Một con dân thường không có ch�
 classic_witch = ( "phù thủy", "Người này sẽ có một bình thuốc cứu người và một bình giết người để sử dụng trong đêm. Mỗi bình chỉ được dùng một lần trong game", "Mỗi đêm bạn sẽ được biết có người chết hay không. Dùng lệnh `{1}` để cứu họ, hoặc lệnh `{0} mục-tiêu` để giết, còn không thì bạn phải nhắn `{2}`", "pt" )
 classic_detective = ( "thám tử", "Thám tử sẽ điều tra 2 người mỗi đêm, biết được họ có cùng phe với nhau không", "Mỗi đêm bạn hãy dùng lệnh `{}  người-chơi-1  người-chơi-2` để chọn hai người để điều tra xem họ có cùng phe với nhau không" )
 classic_wolfsheep = ( "sói trắng", "Đây là một con sói, nhưng mang dáng vóc và hành vi của dân làng, giúp nó qua mặt được các chức năng soi và điều tra", "Hãy dùng lệnh `{}  mục-tiêu` để chọn người mình muốn giết" )
+classic_drunk = ( "kẻ say rượu", "Khi chơi chức năng này, trò chơi sẽ được set dư ra 2 lá bài. Đêm đầu tiên, kẻ say rượu sẽ được xem 2 lá bài dư và chọn một trong hai làm chức năng của mình. Nếu một trong 2 chức năng đó là sói, người chơi phải chọn sói", "", "say rượu" )

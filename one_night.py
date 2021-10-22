@@ -173,11 +173,8 @@ def connect(core):
       player = await find_player(message, args)
       if player:
         record_history(message, player.real_role)
-        me.role = roles[player.real_role]()
+        await core.set_role('clone_success', me, roles[player.real_role], False)
         me.real_role = me.role.name
-        if hasattr(me.role, 'on_start'):
-          await me.role.on_start(me, False)
-        return await confirm(message, tr('clone_success').format(args, me.role.name) + me.role.greeting)
 
   @core.role
   class Troublemaker(Villager):

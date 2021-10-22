@@ -4,6 +4,8 @@
 - Manually add players to the game
 - List roles when starting game
 - Test case for wolf in sheep clothing
+- Use role class in excess_roles instead of role names
+- Drunk fail when 2 wolves in exccess cards
 
 # DOING
 

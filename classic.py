@@ -25,7 +25,7 @@ def connect(core):
   on_used = core.on_used
   join_with_and = core.join_with_and
   dictionize = core.dictionize
-  core.DEFAULT_ROLES = [ 'Villager', 'Guard', 'Wolf', 'Villager', 'Witch', 'Wolf', 'Detective', 'Drunk' ]
+  core.DEFAULT_ROLES = [ 'Villager', 'Guard', 'Wolf', 'Villager', 'Witch', 'Wolf', 'Detective', 'Drunk', 'Villager', 'WolfSheep' ]
   core.game_mode = THIS_MODULE
 
   @dictionize.custom_keys('wolf_phase', 'attack_deaths', 'known_alive', 'GUARD_DEFEND_SELF')
@@ -98,7 +98,7 @@ def connect(core):
 
   @core.injection
   def default_roles_needed(player_count):
-    return player_count
+    return player_count if player_count < 6 else player_count + 2
 
   @core.injection
   def needed_players_count(played_roles):
@@ -308,10 +308,30 @@ def connect(core):
         self.sleep = True
         await on_used()
 
-  #@core.role
-  #class Drunk:
-  #  player_count = -1
-  #  prompted_setup = True
-  #  async def on_start(self, player, first_time = True):
-  #    if first_time:
-  #      await player.extern.send(tr('excess_roles').format(
+  @core.role
+  class Drunk:
+    player_count = -1
+    prompted_setup = True
+    async def on_start(self, me, first_time = True):
+      if first_time:
+        msg = tr('excess_roles').format(join_with_and(core.excess_roles))
+        for role in core.excess_roles:
+          role = roles[role]
+          if issubclass(role, Wolf):
+            await me.extern.send(msg + tr('drunk_choose_wolf'))
+            await self.take(me, role)
+            break
+        else:
+          await me.extern.send(msg + tr('drunk_choose').format(command_name('Take')))
+
+    async def take(self, me, role):
+      core.excess_roles.pop(core.excess_roles.index(role.name))
+      me.role = role()
+      await core.set_role('drunk_took_role', me, role, True)
+
+    @core.check_dm
+    async def Take(self, me, message, args):
+      role = roles[args]
+      if role.name in core.excess_roles:
+        take(me, role)
+        await core.on_setup_answered()

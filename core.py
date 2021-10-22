@@ -497,7 +497,6 @@ async def StartImmediate(message, args):
       og_roles.clear()
 
       shuffled_roles = shuffle_copy(played_roles)
-      player_list = tr('player_list').format(', '.join([member.name for member in members]))
 
       og_excess.clear()
       excess_roles.clear()
@@ -505,19 +504,16 @@ async def StartImmediate(message, args):
         excess_roles.append(shuffled_roles[-idx - 1])
       globals()['og_excess'] = excess_roles[:]
 
+      player_list = tr('player_list').format(', '.join([member.name for member in members]))
       prompted_setup = False
       for idx, member in enumerate(members):
         player = get_player(member)
-        player.role = roles[shuffled_roles[idx]]()
-        og_roles[player.extern.mention] = player.role.name
-        msg = tr('role').format(player.role.name) + player.role.greeting
+        await set_role('role', player, roles[shuffled_roles[idx]], True)
         if player.role.commands:
-          msg += player_list
-        await player.extern.send(msg)
-        if hasattr(player.role, 'on_start'):
-          await player.role.on_start(player)
+          await player.extern.send(player_list)
         if hasattr(player.role, 'new_night'):
           player.role.new_night()
+        og_roles[player.extern.mention] = player.role.name
         prompted_setup = prompted_setup or hasattr(player.role, 'prompted_setup')
       after_shuffle(shuffled_roles)
 
@@ -526,6 +522,17 @@ async def StartImmediate(message, args):
   except BaseException as e:
     await EndGame(None, None)
     raise e
+
+async def on_setup_answered():
+  for player in players.values:
+    if player.role and hasattr(player.role, 'prompted_setup'):
+      return
+  await finish_game_setup()
+async def set_role(greeting_key, player, role, first_time):
+  player.role = role()
+  await player.extern.send(tr(greeting_key).format(role.name) + role.greeting)
+  if hasattr(player.role, 'on_start'):
+    await player.role.on_start(player, first_time)
 
 async def finish_game_setup():
   for id, channel in tmp_channels.items():
