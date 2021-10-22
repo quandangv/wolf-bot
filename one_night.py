@@ -1,8 +1,6 @@
 import sys
 
 THIS_MODULE = sys.modules[__name__]
-excess_roles = []
-og_excess = []
 EXCESS_ROLES = 3
 SEER_REVEAL = 2
 
@@ -20,12 +18,10 @@ def connect(core):
   dictionize = core.dictionize
   core.DEFAULT_ROLES = [ 'Wolf', 'Thief', 'Troublemaker', 'Drunk', 'Wolf', 'Villager', 'Seer', 'Clone', 'Minion', 'Insomniac', 'Tanner', 'Villager' ]
 
-  @dictionize.custom_keys('excess_roles', 'og_excess', 'EXCESS_ROLES', 'SEER_REVEAL')
+  @dictionize.custom_keys('EXCESS_ROLES', 'SEER_REVEAL')
   class Dictionize:
     async def dtemplate(self, dict):
       return THIS_MODULE
-    async def d_excess_roles(self, obj, val):
-      globals()['excess_roles'] = [ roles[role].name for role in val ]
   globals()['dictionize__'] = Dictionize()
 
   async def is_wolf_side(role):
@@ -47,17 +43,6 @@ def connect(core):
   @core.injection
   def needed_players_count(played_roles):
     return max(0, len(played_roles) - EXCESS_ROLES)
-
-  @core.injection
-  def before_shuffle():
-    og_excess.clear()
-
-  @core.injection
-  def after_shuffle(shuffled_roles):
-    excess_roles.clear()
-    for idx in range(EXCESS_ROLES):
-      excess_roles.append(shuffled_roles[-idx - 1])
-      og_excess.append(shuffled_roles[-idx - 1])
 
   @core.injection
   async def on_lynch(player):
@@ -85,12 +70,7 @@ def connect(core):
 
   @core.injection
   async def show_history(channel, roles, commands):
-    await channel.send(tr('history').format(roles, join_with_and(og_excess), commands))
-
-  @core.injection
-  async def low_reveal_all(channel):
-    reveal_item = tr('reveal_item')
-    await channel.send(tr('reveal_all').format('\n'.join([ reveal_item.format(player.extern.name, player.real_role) for player in players.values() if player.role ])) + '\n' + tr('excess_roles').format(', '.join([name for name in excess_roles])))
+    await channel.send(tr('history').format(roles, join_with_and(core.og_excess), commands))
 
   @core.injection
   async def role_help(message, role):
@@ -107,7 +87,7 @@ def connect(core):
 
   @core.channel_event
   async def wolf_channel(channel):
-    for role in excess_roles:
+    for role in core.excess_roles:
       if issubclass(roles[role], Wolf):
         for player in channel.players:
           if not player.extern.bot:
@@ -167,7 +147,7 @@ def connect(core):
         return await question(message, tr('out_of_reveal').format(SEER_REVEAL))
       number = await select_excess_card(message, 'reveal_wronguse', 'Reveal', args)
       if number:
-        result = excess_roles[number - 1]
+        result = core.excess_roles[number - 1]
         record_history(message, result)
         self.reveal_count += 1
         if self.reveal_count >= SEER_REVEAL:
@@ -258,7 +238,7 @@ def connect(core):
       number = await select_excess_card(message, 'drunk_wronguse', 'Take', args)
       if number:
         record_history(message, None)
-        me.real_role, excess_roles[number-1] = excess_roles[number-1], me.real_role
+        me.real_role, core.excess_roles[number-1] = core.excess_roles[number-1], me.real_role
         self.target = number
         await on_used()
         return await confirm(message, tr('drunk_success').format(args))
@@ -302,8 +282,8 @@ def connect(core):
     async def Reveal(self, me, tmp_channel, message, args):
       number = await select_excess_card(message, 'reveal_wronguse', 'Reveal', args)
       if number:
-        record_history(message, excess_roles[number-1])
-        await confirm(message, tr('reveal_success').format(number, excess_roles[number - 1]))
+        record_history(message, core.excess_roles[number-1])
+        await confirm(message, tr('reveal_success').format(number, core.excess_roles[number - 1]))
         self.target = number
         await on_used()
 

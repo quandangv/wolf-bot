@@ -24,6 +24,8 @@ players = {}
 played_roles = []
 status = None
 player_count = 0
+excess_roles = []
+og_excess = []
 
 BOT_PREFIX = '!'
 CREATE_NORMALIZED_ALIASES = True
@@ -276,7 +278,7 @@ def connect(admins, role_prefix):
 
 ######################### SERIALIZATION ########################
 
-@dictionize.custom_keys('vote_list', 'played_roles', 'status', 'og_roles', 'history', 'tmp_channels', 'players', 'player_count')
+@dictionize.custom_keys('excess_roles', 'og_excess', 'vote_list', 'played_roles', 'status', 'og_roles', 'history', 'tmp_channels', 'players', 'player_count')
 class Dictionize:
   async def dtemplate(self, dict):
     return THIS_MODULE
@@ -289,6 +291,8 @@ class Dictionize:
   async def d_tmp_channels(self, obj, val):
     for name, val in val.items():
       tmp_channels[name] = await dictionize.decode(val, Channel.dictionize__)
+  async def d_excess_roles(self, obj, val):
+    obj.excess_roles = [ roles[role].name for role in val ]
 dictionize__ = Dictionize()
 
 def state_to_json(fp):
@@ -491,10 +495,17 @@ async def StartImmediate(message, args):
       globals()['player_count'] = current_count
       history.clear()
       og_roles.clear()
-      before_shuffle()
 
       shuffled_roles = shuffle_copy(played_roles)
       player_list = tr('player_list').format(', '.join([member.name for member in members]))
+
+      og_excess.clear()
+      excess_roles.clear()
+      for idx in range(len(shuffled_roles) - player_count):
+        excess_roles.append(shuffled_roles[-idx - 1])
+      globals()['og_excess'] = excess_roles[:]
+
+      prompted_setup = False
       for idx, member in enumerate(members):
         player = get_player(member)
         player.role = roles[shuffled_roles[idx]]()
@@ -507,22 +518,26 @@ async def StartImmediate(message, args):
           await player.role.on_start(player)
         if hasattr(player.role, 'new_night'):
           player.role.new_night()
-
+        prompted_setup = prompted_setup or hasattr(player.role, 'prompted_setup')
       after_shuffle(shuffled_roles)
 
-      for id, channel in tmp_channels.items():
-        channel_name = id + '_channel'
-        msg = tr(channel_name).format(join_with_and([player.extern.mention for player in channel.players]))
-        if hasattr(channel, 'discussing'):
-          msg += tr('sleep_info').format(command_name('Sleep'))
-        await channel.extern.send(msg)
-        if channel_name in channel_events:
-          await channel_events[channel_name](channel)
-      await on_used()
-      start_night()
+      if not prompted_setup:
+        await finish_game_setup()
   except BaseException as e:
     await EndGame(None, None)
     raise e
+
+async def finish_game_setup():
+  for id, channel in tmp_channels.items():
+    channel_name = id + '_channel'
+    msg = tr(channel_name).format(join_with_and([player.extern.mention for player in channel.players]))
+    if hasattr(channel, 'discussing'):
+      msg += tr('sleep_info').format(command_name('Sleep'))
+    await channel.extern.send(msg)
+    if channel_name in channel_events:
+      await channel_events[channel_name](channel)
+  await on_used()
+  start_night()
 
 @cmd(Command())
 @check_public
@@ -629,6 +644,10 @@ async def WakeUp(_, __):
 async def RevealAll(message, args):
   await low_reveal_all(message.channel)
 
+async def low_reveal_all(channel):
+  reveal_item = tr('reveal_item')
+  await channel.send(tr('reveal_all').format('\n'.join([ reveal_item.format(player.extern.name, player.real_role) for player in players.values() if player.role ])) + '\n' + tr('excess_roles').format(', '.join([name for name in excess_roles])))
+
 ############################# UTILS ############################
 
 def disconnect():
@@ -697,14 +716,12 @@ def injection(func):
   globals()[func.__name__] = func
 
 def generate_injections():
-  def before_shuffle(): pass
-  def after_shuffle(): pass
+  def after_shuffle(shuffled_roles): pass
   def default_roles_needed(player_count): raise missing_injection_error('default_roles_needed')
   def needed_players_count(played_roles): raise missing_injection_error('needed_players_count')
   async def on_lynch(player): raise missing_injection_error('on_lynch')
   async def on_no_lynch(): pass
   async def show_history(channel, roles, commands): raise missing_injection_error('show_history')
-  async def low_reveal_all(channel): raise missing_injection_error('low_reveal_all')
   async def role_help(message, role): raise missing_injection_error('role_help')
   def start_night(): pass
   def wake_up_message(): return tr('wake_up')

@@ -102,7 +102,7 @@ def connect(core):
 
   @core.injection
   def needed_players_count(played_roles):
-    return len(played_roles)
+    return sum([ roles[role].player_count for role in played_roles ])
 
   @core.injection
   def on_lynch(player):
@@ -132,6 +132,7 @@ def connect(core):
     return tr('wake_up_death').format(join_with_and(deaths)) if deaths else tr('wake_up_no_death')
 
   class ClassicRole(core.Role):
+    player_count = 1
     async def on_start(self, player, first_time = True):
       if first_time:
         player.alive = True
@@ -306,3 +307,11 @@ def connect(core):
         await message.reply(msg.format(players[0].extern.name, players[1].extern.name))
         self.sleep = True
         await on_used()
+
+  #@core.role
+  #class Drunk:
+  #  player_count = -1
+  #  prompted_setup = True
+  #  async def on_start(self, player, first_time = True):
+  #    if first_time:
+  #      await player.extern.send(tr('excess_roles').format(
