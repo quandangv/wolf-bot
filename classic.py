@@ -42,8 +42,8 @@ def connect(core):
   globals()['dictionize__'] = Dictionize()
 
   async def on_wolf_phase_use():
-    for player in wolf_phase_players:
-      if not player.role.target:
+    for player in known_alive:
+      if hasattr(player.role, 'wolf_phase') and not player.role.target:
         return
     globals()['wolf_phase'] = False
     target = core.tmp_channels['wolf'].target
@@ -92,6 +92,22 @@ def connect(core):
         if hasattr(player.role, 'after_wolf_phase'):
           after_wolf_phase_players.append(player)
 
+  async def go_to_sleep():
+    await core.main_channel().send(tr('go_to_sleep'))
+    globals()['wolf_phase'] = True
+    core.status = 'night'
+    for player in core.players.values():
+      if hasattr(player.role, 'new_night'):
+        player.role.new_night()
+
+  def know_dead(player):
+    known_alive.pop(known_alive.index(player))
+    player.role = Dead
+
+  @core.injection
+  def game_info():
+    return tr('alive_list').format(len(known_alive), join_with_and([ p.extern.mention for p in known_alive ]))
+
   @core.injection
   def after_shuffle(shuffled_roles):
     filter_players()
@@ -105,9 +121,10 @@ def connect(core):
     return sum([ roles[role].player_count for role in played_roles ])
 
   @core.injection
-  def on_lynch(player):
+  async def on_lynch(player):
     player.alive = False
-    # go to sleep
+    know_dead(player)
+    await go_to_sleep()
 
   @core.injection
   async def role_help(message, role):
@@ -122,13 +139,10 @@ def connect(core):
   @core.injection
   def wake_up_message():
     deaths = []
-    alive = []
-    for player in known_alive:
+    for player in known_alive[:]:
       if not player.alive:
         deaths.append(player.extern.mention)
-      else:
-        alive.append(player)
-    globals()['known_alive'] = alive
+        know_dead(player)
     return tr('wake_up_death').format(join_with_and(deaths)) if deaths else tr('wake_up_no_death')
 
   class ClassicRole(core.Role):
@@ -168,14 +182,14 @@ def connect(core):
 
     @core.check_channel('wolf')
     @core.check_status()
-    @core.single_arg('bite_wronguse')
+    @core.single_arg('kill_wronguse')
     async def Kill(self, me, tmp_channel, message, args):
       if wolf_phase:
         player = await find_player(message, args)
         if player:
-          msg = tr('vote_bite').format(me.extern.mention, player.extern.name)
+          msg = tr('vote_kill').format(me.extern.mention, player.extern.name)
           if await self.check_consensus(msg, player, tmp_channel):
-            await tmp_channel.extern.send(msg + tr('wolf_bite').format(self.target.extern.name))
+            await tmp_channel.extern.send(msg + tr('wolf_kill').format(self.target.extern.name))
       else:
         await question(message, tr('kill_already'))
 
@@ -183,9 +197,9 @@ def connect(core):
     @core.check_status()
     async def Sleep(self, me, tmp_channel, message, args):
       if wolf_phase:
-        msg = tr('wolf_no_kill').format(me.extern.mention)
+        msg = tr('vote_no_kill').format(me.extern.mention)
         if await self.check_consensus(msg, True, tmp_channel):
-          await tmp_channel.extern.send(msg + tr('wolf_no_bite'))
+          await tmp_channel.extern.send(msg + tr('wolf_no_kill'))
       else:
         await question(message, tr('kill_already'))
 
@@ -211,7 +225,7 @@ def connect(core):
       if player:
         if player == self.prev_target:
           await question(message, tr('defend_repeat'))
-        if not GUARD_DEFEND_SELF and me.extern.id == player.extern.id:
+        elif not GUARD_DEFEND_SELF and me.extern.id == player.extern.id:
           await question(message, tr('no_defend_self'))
         else:
           if self.prev_target:
@@ -277,7 +291,7 @@ def connect(core):
     async def Sleep(self, me, message, args):
       if not self.sleep:
         self.sleep = True
-        await message.reply(tr('good_night'))
+        await core.say_good_night(message)
         await checked_on_used()
 
   @core.role
@@ -335,3 +349,12 @@ def connect(core):
       if role.name in core.excess_roles:
         take(me, role)
         await core.on_setup_answered()
+
+  class Dead:
+    async def other(me, message, args):
+      await question(message, tr('dead'))
+    for cmd in core.ROLE_COMMANDS:
+      locals()[cmd] = other
+
+    async def Sleep(me, message, args):
+      await core.say_good_night(message)

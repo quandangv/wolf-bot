@@ -187,10 +187,13 @@ def check_status(required_status = 'night'):
     return handler
   return decorator
 
-async def warn_wrong_channel(message, required_channel, cmd):
-  cmd = command_name(cmd)
+async def warn_wrong_channel(message, required_channel, raw_cmd):
+  cmd = command_name(raw_cmd)
   if not is_dm_channel(message.channel):
-    await question(message, tr('wrong_role').format(cmd))
+    if raw_cmd == 'Sleep':
+      await say_good_night(message)
+    else:
+      await question(message, tr('wrong_role').format(cmd))
   await message.author.send(tr('question').format(message.author.mention) + tr(required_channel + '_only').format(cmd))
 
 def check_public(func):
@@ -377,7 +380,7 @@ class RoleCommand(PlayerCommand):
       await getattr(player.role, func.__name__)(player, message=message, args=args)
     async def check_sleep(player, message, args):
       if not hasattr(player.role, func.__name__):
-        return await confirm(message, tr('good_night'))
+        return await say_good_night(message)
       await getattr(player.role, func.__name__)(player, message=message, args=args)
     super().decorate(check_sleep if func.__name__ == 'Sleep' else check)
 
@@ -452,13 +455,18 @@ async def RemoveRole(message, args):
   await message.channel.send(tr('remove_success').format(join_with_and(role_list)))
 
 @cmd(Command())
-async def ListRoles(message, args):
+async def Info(message, args):
   if not played_roles:
     msg = tr('no_roles')
     if players:
       msg += tr('default_roles').format(DEFAULT_ROLES)
     return await confirm(message, msg)
-  await confirm(message, tr('list_roles').format(join_with_and(played_roles), needed_players_count(played_roles)))
+  msg = tr('list_roles').format(join_with_and(played_roles))
+  if status:
+    msg += game_info()
+  else:
+    msg += tr('player_needed').format(needed_players_count(played_roles))
+  await confirm(message, msg)
 
 @cmd(PlayerCommand())
 async def Unvote(me, message, args):
@@ -657,6 +665,9 @@ async def low_reveal_all(channel):
 
 ############################# UTILS ############################
 
+async def say_good_night(message):
+  await confirm(message, tr('good_night'))
+
 def disconnect():
   roles.clear()
   channel_events.clear()
@@ -730,6 +741,7 @@ def generate_injections():
   async def on_no_lynch(): pass
   async def show_history(channel, roles, commands): raise missing_injection_error('show_history')
   async def role_help(message, role): raise missing_injection_error('role_help')
+  def game_info(): return ''
   def start_night(): pass
   def wake_up_message(): return tr('wake_up')
   # Don't try this at home
