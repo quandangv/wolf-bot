@@ -17,6 +17,7 @@ def connect(core):
   join_with_and = core.join_with_and
   dictionize = core.dictionize
   core.DEFAULT_ROLES = [ 'Wolf', 'Thief', 'Troublemaker', 'Drunk', 'Wolf', 'Villager', 'Seer', 'Clone', 'Minion', 'Insomniac', 'Tanner', 'Villager' ]
+  core.role_prefix = 'onenight_'
 
   @dictionize.custom_keys('EXCESS_ROLES', 'SEER_REVEAL')
   class Dictionize:

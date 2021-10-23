@@ -27,6 +27,7 @@ def connect(core):
   dictionize = core.dictionize
   core.DEFAULT_ROLES = [ 'Villager', 'Guard', 'Wolf', 'Villager', 'Witch', 'Wolf', 'Detective', 'Drunk', 'Villager', 'WolfSheep' ]
   core.game_mode = THIS_MODULE
+  core.role_prefix = 'classic_'
 
   @dictionize.custom_keys('wolf_phase', 'attack_deaths', 'known_alive', 'GUARD_DEFEND_SELF')
   class Dictionize:
@@ -64,6 +65,8 @@ def connect(core):
 
   async def find_player(message, name):
     player = await core.find_player(message, name)
+    if not player:
+      return None
     if player in known_alive:
       return player
     else:
@@ -200,7 +203,7 @@ def connect(core):
     async def check_consensus(self, msg, target, wolf_channel):
       self.target = target
       for wolf in wolf_channel.players:
-        if wolf.role.target != target:
+        if not isinstance(wolf.role, Dead) and wolf.role.target != target:
           await wolf_channel.extern.send(msg + tr('wolf_need_consensus'))
           return False
       else:
@@ -340,7 +343,7 @@ def connect(core):
     @wait_after_wolf_phase
     @core.single_use('sleep')
     async def Investigate(self, me, message, args):
-      players = args.split()
+      players = [arg.strip() for arg in args.split(',')]
       if len(players) != 2 or players[0] == players[1]:
         return await question(message, tr('detective_wronguse').format(command_name('Investigate')))
       players = [ await find_player(message, name) for name in players ]

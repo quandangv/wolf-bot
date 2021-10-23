@@ -146,7 +146,7 @@ def shuffle_copy(arr):
   return arr[::-1]
 
 one_night.connect(core)
-core.initialize(admins, 'onenight_')
+core.initialize(admins)
 loop = asyncio.get_event_loop()
 
 async def low_expect_response(coroutine, response):
@@ -421,7 +421,7 @@ loop.run_until_complete(asyncio.gather(
   expect_response(bob, '!defend anne', game, [ '[game] question(@bob) wrong_role(!defend) ', '[@bob] question(@bob) dm_only(!defend) ' ]),
   expect_response(bob, '!defend anne', bot_dm, '[@bot] confirm(@bob) defend_success(anne) '),
   expect_response(anne, '!save _test', game, '[game] confirm(@anne) save_success(_test) '),
-  expect_response(george, '!investigate george carl', bot_dm, '[@bot] confirm(@george) wait '),
+  expect_response(george, '!investigate george, carl', bot_dm, '[@bot] confirm(@george) wait '),
   expect_response(bob, '!defend carl', bot_dm, '[@bot] question(@bob) ability_used(!defend) '),
   expect_response(carl, '!kill elsa', channels['wolf '], '[wolf ] vote_kill(@carl, elsa) wolf_need_consensus '),
   expect_response(elsa, '!poison carl', bot_dm, '[@bot] confirm(@elsa) poison_success(carl) '),
@@ -435,7 +435,7 @@ loop.run_until_complete(asyncio.gather(
   expect_response(carl, '!kill david', channels['wolf '], '[wolf ] vote_kill(@carl, david) wolf_need_consensus '),
   expect_response(harry, '!kill david', channels['wolf '], '[wolf ] vote_kill(@harry, david) wolf_need_consensus '),
   expect_response(frank, '!kill david', channels['wolf '], [ '[@elsa] witch_death witch_revive(!revive) ', '[wolf ] vote_kill(@frank, david) wolf_kill(david) ' ]),
-  expect_response(george, '!investigate frank carl', bot_dm, '[@bot] investigate_same(frank, carl) '),
+  expect_response(george, '!investigate frank, carl', bot_dm, '[@bot] investigate_same(frank, carl) '),
   expect_response(elsa, '!revive', bot_dm, '[@bot] confirm(@elsa) revive_success '),
   expect_response(elsa, '!sleep', bot_dm, [ '[@bot] confirm(@elsa) good_night ', '[game] wake_up_no_death ', '[game] vote(!vote) ' ]),
   expect_response(anne, '!load _test', game, '[game] confirm(@anne) load_success(_test) '),
@@ -445,7 +445,7 @@ loop.run_until_complete(asyncio.gather(
   expect_response(bob, '!defend david', bot_dm, '[@bot] question(@bob) ability_used(!defend) '),
   expect_response(carl, '!sleep', channels['wolf '], '[wolf ] vote_no_kill(@carl) wolf_need_consensus '),
   expect_response(harry, '!sleep', channels['wolf '], '[wolf ] vote_no_kill(@harry) wolf_need_consensus '),
-  expect_response(george, '!investigate elsa harry', bot_dm, '[@bot] confirm(@george) wait '),
+  expect_response(george, '!investigate elsa, harry', bot_dm, '[@bot] confirm(@george) wait '),
   expect_response(elsa, '!sleep', bot_dm, '[@bot] confirm(@elsa) good_night '),
   expect_response(frank, '!sleep', channels['wolf '], [ '[@elsa] witch_no_death ', '[@bot] investigate_same(elsa, harry) ', '[game] wake_up_no_death ', '[game] vote(!vote) ', '[wolf ] vote_no_kill(@frank) wolf_no_kill ' ]),
   expect_response(anne, '!load _test', game, '[game] confirm(@anne) load_success(_test) '),
@@ -458,7 +458,7 @@ loop.run_until_complete(asyncio.gather(
   expect_response(frank, '!kill david', channels['wolf '], [ '[@elsa] witch_death witch_revive(!revive) ', '[wolf ] vote_kill(@frank, david) wolf_kill(david) ' ]),
   expect_response(carl, '!kill carl', channels['wolf '], '[wolf ] question(@carl) kill_already '),
   expect_response(elsa, '!sleep', bot_dm, '[@bot] confirm(@elsa) good_night '),
-  expect_response(george, '!investigate elsa bob', bot_dm, [ '[@bot] investigate_same(elsa, bob) ', '[game] wake_up_death(@david) ', '[game] vote(!vote) ' ]),
+  expect_response(george, '!investigate elsa, bob', bot_dm, [ '[@bot] investigate_same(elsa, bob) ', '[game] wake_up_death(@david) ', '[game] vote(!vote) ' ]),
   expect_response(anne, '!load _test', game, '[game] confirm(@anne) load_success(_test) '),
 ))
 
@@ -466,7 +466,7 @@ loop.run_until_complete(asyncio.gather(
   expect_response(carl, '!kill david', channels['wolf '], '[wolf ] vote_kill(@carl, david) wolf_need_consensus '),
   expect_response(elsa, '!revive', bot_dm, '[@bot] confirm(@elsa) wait '),
   expect_response(elsa, '!sleep', bot_dm, '[@bot] confirm(@elsa) good_night '),
-  expect_response(george, '!investigate elsa bob', bot_dm, '[@bot] confirm(@george) wait '),
+  expect_response(george, '!investigate elsa, bob', bot_dm, '[@bot] confirm(@george) wait '),
   expect_response(harry, '!kill david', channels['wolf '], '[wolf ] vote_kill(@harry, david) wolf_need_consensus '),
   expect_response(frank, '!kill david', channels['wolf '], [ '[@elsa] witch_death ', '[@bot] confirm(@elsa) revive_success ', '[@bot] investigate_same(elsa, bob) ', '[game] wake_up_no_death ', '[game] vote(!vote) ', '[wolf ] vote_kill(@frank, david) wolf_kill(david) ' ]),
   expect_response(anne, '!save _test', game, '[game] confirm(@anne) save_success(_test) '),
@@ -479,34 +479,40 @@ loop.run_until_complete(asyncio.gather(
   expect_response(frank, '!vote elsa', game, '[game] vote_success(@frank, @elsa) '),
   expect_response(harry, '!vote elsa', game, '[game] vote_success(@harry, @elsa) '),
   expect_response(george, '!vote elsa', game, [ '[game] vote_success(@george, @elsa) ', '[game] vote_result(vote_item(@elsa, 8) ) ', '[game] lynch(@elsa) ', '[game] go_to_sleep ' ]),
+  expect_response(elsa, '!poison david', bot_dm, '[@bot] question(@elsa) dead '),
   expect_response(bob, '!defend anne', bot_dm, '[@bot] question(@bob) defend_repeat '),
-  expect_response(bob, '!defend bob', bot_dm, '[@bot] confirm(@bob) defend_success(bob) '),
+  expect_response(bob, '!defend david', bot_dm, '[@bot] confirm(@bob) defend_success(david) '),
   expect_response(carl, '!kill bob', channels['wolf '], '[wolf ] vote_kill(@carl, bob) wolf_need_consensus '),
   expect_response(harry, '!kill bob', channels['wolf '], '[wolf ] vote_kill(@harry, bob) wolf_need_consensus '),
   expect_response(frank, '!kill bob', channels['wolf '], '[wolf ] vote_kill(@frank, bob) wolf_kill(bob) '),
-  expect_response(george, '!investigate george bob', bot_dm, [ '[@bot] investigate_same(george, bob) ', '[game] wake_up_no_death ', '[game] vote(!vote) ' ]),
+  expect_response(george, '!investigate george, bob', bot_dm, [ '[@bot] investigate_same(george, bob) ', '[game] wake_up_death(@bob) ', '[game] wolf_victory ', '[game] winners(@carl, @frank, @harry) ', '[game] reveal_all(anne:villager\ncarl:wolf\nbob:guard\ndavid:villager\nelsa:witch\nfrank:wolf\ngeorge:detective\nharry:wolfsheep) \nexcess_roles(villager) ' ]),
 
   expect_response(anne, '!load _test', game, '[game] confirm(@anne) load_success(_test) '),
 ))
 
 loop.run_until_complete(asyncio.gather(
-  expect_response(anne, '!vote bob', game, '[game] vote_success(@anne, @bob) '),
-  expect_response(bob, '!vote bob', game, '[game] vote_success(@bob, @bob) '),
-  expect_response(carl, '!vote bob', game, '[game] vote_success(@carl, @bob) '),
-  expect_response(david, '!vote bob', game, '[game] vote_success(@david, @bob) '),
-  expect_response(elsa, '!vote bob', game, [ '[game] vote_success(@elsa, @bob) ', '[game] landslide_vote_countdown(@bob, 0.3) ' ]),
-  expect_response(frank, '!vote bob', game, '[game] vote_success(@frank, @bob) '),
-  expect_response(harry, '!vote bob', game, '[game] vote_success(@harry, @bob) '),
-  expect_response(george, '!vote bob', game, [ '[game] vote_success(@george, @bob) ', '[game] vote_result(vote_item(@bob, 8) ) ', '[game] lynch(@bob) ', '[game] go_to_sleep ' ]),
-  expect_response(bob, '!defend david', bot_dm, '[@bot] question(@bob) dead '),
-  expect_response(bob, '!sleep', bot_dm, '[@bot] confirm(@bob) good_night '),
-  expect_response(carl, '!kill bob', channels['wolf '], '[wolf ] question(@carl) target_dead '),
-  expect_response(carl, '!kill elsa', channels['wolf '], '[wolf ] vote_kill(@carl, elsa) wolf_need_consensus '),
+  expect_response(anne, '!vote carl', game, '[game] vote_success(@anne, @carl) '),
+  expect_response(bob, '!vote carl', game, '[game] vote_success(@bob, @carl) '),
+  expect_response(carl, '!vote carl', game, '[game] vote_success(@carl, @carl) '),
+  expect_response(david, '!vote carl', game, '[game] vote_success(@david, @carl) '),
+  expect_response(elsa, '!vote carl', game, [ '[game] vote_success(@elsa, @carl) ', '[game] landslide_vote_countdown(@carl, 0.3) ' ]),
+  expect_response(frank, '!vote carl', game, '[game] vote_success(@frank, @carl) '),
+  expect_response(harry, '!vote carl', game, '[game] vote_success(@harry, @carl) '),
+  expect_response(george, '!vote carl', game, [ '[game] vote_success(@george, @carl) ', '[game] vote_result(vote_item(@carl, 8) ) ', '[game] lynch(@carl) ', '[game] go_to_sleep ' ]),
+  expect_response(bob, '!defend elsa', bot_dm, '[@bot] confirm(@bob) defend_success(elsa) '),
+  expect_response(elsa, '!poison harry', bot_dm, '[@bot] confirm(@elsa) poison_success(harry) '),
+  expect_response(carl, '!kill elsa', channels['wolf '], '[wolf ] question(@carl) dead '),
   expect_response(harry, '!kill elsa', channels['wolf '], '[wolf ] vote_kill(@harry, elsa) wolf_need_consensus '),
-  expect_response(frank, '!kill elsa', channels['wolf '], [ '[@elsa] witch_death ', '[wolf ] vote_kill(@frank, elsa) wolf_kill(elsa) ' ]),
-  expect_response(elsa, '!poison david', bot_dm, '[@bot] confirm(@elsa) poison_success(david) '),
-  expect_response(anne, '!info', game, '[game] confirm(@anne) list_roles(villager, guard, wolf, villager, witch, wolf, detective, drunk, villager, wolfsheep) alive_list(7, @anne, @carl, @david, @elsa, @frank, @george, @harry) '),
-  expect_response(george, '!investigate elsa harry', bot_dm, [ '[@bot] investigate_same(elsa, harry) ', '[game] wake_up_death(@david, @elsa) ', '[game] wolf_victory ', '[game] winners(@carl, @frank, @harry) ', '[game] reveal_all(anne:villager\ncarl:wolf\nbob:guard\ndavid:villager\nelsa:witch\nfrank:wolf\ngeorge:detective\nharry:wolfsheep) \nexcess_roles(villager) ' ]),
+  expect_response(frank, '!kill elsa', channels['wolf '], [ '[@elsa] witch_no_death ', '[wolf ] vote_kill(@frank, elsa) wolf_kill(elsa) ' ]),
+  expect_response(george, '!investigate elsa, harry', bot_dm, [ '[@bot] investigate_same(elsa, harry) ', '[game] wake_up_death(@harry) ', '[game] vote(!vote) ' ]),
+  expect_response(anne, '!vote frank', game, '[game] vote_success(@anne, @frank) '),
+  expect_response(bob, '!vote frank', game, '[game] vote_success(@bob, @frank) '),
+  expect_response(carl, '!vote frank', game, '[game] vote_success(@carl, @frank) '),
+  expect_response(david, '!vote frank', game, '[game] vote_success(@david, @frank) '),
+  expect_response(elsa, '!vote frank', game, [ '[game] vote_success(@elsa, @frank) ', '[game] landslide_vote_countdown(@frank, 0.3) ' ]),
+  expect_response(frank, '!vote frank', game, '[game] vote_success(@frank, @frank) '),
+  expect_response(harry, '!vote frank', game, '[game] vote_success(@harry, @frank) '),
+  expect_response(george, '!vote frank', game, [ '[game] vote_success(@george, @frank) ', '[game] vote_result(vote_item(@frank, 8) ) ', '[game] lynch(@frank) ', '[game] village_victory ', '[game] winners(@anne, @bob, @david, @elsa, @george) ', '[game] reveal_all(anne:villager\ncarl:wolf\nbob:guard\ndavid:villager\nelsa:witch\nfrank:wolf\ngeorge:detective\nharry:wolfsheep) \nexcess_roles(villager) ' ]),
 ))
 
 core.disconnect()

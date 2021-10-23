@@ -15,6 +15,7 @@ lock = asyncio.Lock()
 vote_countdown_task = None
 vote_countdown_monitor = None
 game_mode = None
+role_prefix = None
 
 history = []
 og_roles = {}
@@ -228,7 +229,7 @@ def check_channel(channel_name):
 
 ############################ INIT ##############################
 
-def initialize(admins, role_prefix):
+def initialize(admins):
   random.seed()
   for cmd_name, base in list(commands.items()):
     [name, description, *aliases] = tr('cmd_' + cmd_name.lower())
@@ -483,6 +484,8 @@ async def Vote(me, message, args):
   if player:
     await on_voted(me, player.extern.mention)
 
+#@cmd(PlayerCommand())
+
 @cmd(SetupCommand())
 async def StartImmediate(message, args):
   try:
@@ -585,7 +588,6 @@ async def low_vote_count(key):
 
 @cmd(AdminCommand())
 async def CloseVote(_, __):
-  # Function to either end game or start next night
   if vote_countdown_task:
     vote_countdown_task.cancel()
     clear_vote_countdown()
@@ -645,7 +647,6 @@ async def EndGame(_, __):
 
 @cmd(AdminCommand())
 async def WakeUp(_, __):
-  # Function to start gametype-specific day
   for player in players.values():
     if hasattr(player.role, 'before_dawn'):
       await player.role.before_dawn(player)
@@ -653,6 +654,8 @@ async def WakeUp(_, __):
   status = 'day'
   global vote_list
   vote_list = { None: player_count }
+  for p in players.values():
+    p.vote = None
   await on_wake_up()
 
 @cmd(DebugCommand())
