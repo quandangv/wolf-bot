@@ -50,7 +50,7 @@ def connect(core):
     if isinstance(target, core.Player) and not hasattr(target, 'defended'):
       target.alive = False
       attack_deaths.append(target)
-    for player in after_wolf_phase_players:
+    for player in known_alive:
       if hasattr(player.role, 'on_wolves_done'):
         await player.role.on_wolves_done(player)
     for co in after_wolf_waiting:
@@ -102,7 +102,36 @@ def connect(core):
 
   def know_dead(player):
     known_alive.pop(known_alive.index(player))
-    player.role = Dead
+    player.role = Dead(player.role)
+
+  async def not_endgame():
+    wolf_count = 0
+    villager_count = 0
+    for p in known_alive:
+      if isinstance(p.role, Wolf):
+        wolf_count += 1
+      elif isinstance(p.role, Villager):
+        villager_count += 1
+    def get_winners(base):
+      result = []
+      for p in core.players.values():
+        if isinstance(p.role, Dead):
+          p.role = p.role.role
+        if isinstance(p.role, base):
+          result.append(p.extern.mention)
+      return result
+    if not wolf_count:
+      await core.main_channel().send(tr('village_victory'))
+      await core.announce_winners(get_winners(Villager))
+    elif wolf_count >= villager_count:
+      await core.main_channel().send(tr('wolf_victory'))
+      await core.announce_winners(get_winners(WolfSide))
+    else:
+      return True
+
+  @core.injection
+  def get_role(player):
+    return player.role.name
 
   @core.injection
   def game_info():
@@ -124,7 +153,8 @@ def connect(core):
   async def on_lynch(player):
     player.alive = False
     know_dead(player)
-    await go_to_sleep()
+    if await not_endgame():
+      await go_to_sleep()
 
   @core.injection
   async def role_help(message, role):
@@ -137,13 +167,15 @@ def connect(core):
     attack_deaths.clear()
 
   @core.injection
-  def wake_up_message():
+  async def on_wake_up():
     deaths = []
     for player in known_alive[:]:
       if not player.alive:
         deaths.append(player.extern.mention)
         know_dead(player)
-    return tr('wake_up_death').format(join_with_and(deaths)) if deaths else tr('wake_up_no_death')
+    await core.main_channel().send(tr('wake_up_death').format(join_with_and(deaths)) if deaths else tr('wake_up_no_death'))
+    if await not_endgame():
+      await core.main_channel().send(tr('vote').format(command_name('Vote')))
 
   class ClassicRole(core.Role):
     player_count = 1
@@ -351,10 +383,13 @@ def connect(core):
         await core.on_setup_answered()
 
   class Dead:
-    async def other(me, message, args):
+    def __init__(self, role):
+      self.role = role
+
+    async def other(self, me, message, args):
       await question(message, tr('dead'))
     for cmd in core.ROLE_COMMANDS:
       locals()[cmd] = other
 
-    async def Sleep(me, message, args):
+    async def Sleep(self, me, message, args):
       await core.say_good_night(message)

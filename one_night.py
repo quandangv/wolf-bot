@@ -37,6 +37,14 @@ def connect(core):
     return issubclass(roles[role], Villager)
 
   @core.injection
+  def get_role(player):
+    return player.real_role
+
+  @core.injection
+  async def on_wake_up():
+    await core.main_channel().send(tr('wake_up') + tr('vote').format(command_name('Vote')))
+
+  @core.injection
   def default_roles_needed(player_count):
     return player_count + EXCESS_ROLES
 
@@ -50,12 +58,12 @@ def connect(core):
     await core.main_channel().send(tr('reveal_player').format(player.extern.mention, lynched_role))
     lynched_role = roles[lynched_role]
     if issubclass(lynched_role, Villager) or issubclass(lynched_role, Minion):
-      winners = [ player for player in players.values() if await is_wolf_side(player.real_role) ]
+      winners = [ player.extern.mention for player in players.values() if await is_wolf_side(player.real_role) ]
     elif issubclass(lynched_role, Tanner):
-      winners = [ player ]
+      winners = [ player.extern.mention ]
     elif issubclass(lynched_role, WolfSide):
-      winners = [ player for player in players.values() if await is_village_side(player.real_role) ]
-    await core.announce_winners(core.main_channel(), winners)
+      winners = [ player.extern.mention for player in players.values() if await is_village_side(player.real_role) ]
+    await core.announce_winners(winners)
 
   @core.injection
   async def on_no_lynch():
@@ -63,10 +71,10 @@ def connect(core):
     villagers = []
     for p in players.values():
       if await is_wolf_side(p.real_role):
-        wolves.append(p)
+        wolves.append(p.extern.mention)
       elif await is_village_side(p.real_role):
-        villagers.append(p)
-    await core.announce_winners(core.main_channel(), wolves if wolves else villagers)
+        villagers.append(p.extern.mention)
+    await core.announce_winners(wolves if wolves else villagers)
 
   @core.injection
   async def show_history(channel, roles, commands):

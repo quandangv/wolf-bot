@@ -653,7 +653,7 @@ async def WakeUp(_, __):
   status = 'day'
   global vote_list
   vote_list = { None: player_count }
-  await main_channel().send(wake_up_message() + tr('vote').format(command_name('Vote')))
+  await on_wake_up()
 
 @cmd(DebugCommand())
 async def RevealAll(message, args):
@@ -661,7 +661,7 @@ async def RevealAll(message, args):
 
 async def low_reveal_all(channel):
   reveal_item = tr('reveal_item')
-  await channel.send(tr('reveal_all').format('\n'.join([ reveal_item.format(player.extern.name, player.real_role) for player in players.values() if player.role ])) + '\n' + tr('excess_roles').format(', '.join([name for name in excess_roles])))
+  await channel.send(tr('reveal_all').format('\n'.join([ reveal_item.format(player.extern.name, get_role(player)) for player in players.values() if player.role ])) + '\n' + tr('excess_roles').format(', '.join([name for name in excess_roles])))
 
 ############################# UTILS ############################
 
@@ -717,9 +717,10 @@ async def await_vote_countdown():
       await vote_countdown_task
     except asyncio.CancelledError: pass
 
-async def announce_winners(channel, winners):
+async def announce_winners(winners):
+  channel = main_channel()
   if winners:
-    await channel.send(tr('winners').format(join_with_and([ p.extern.mention for p in winners ])))
+    await channel.send(tr('winners').format(join_with_and(winners)))
   else:
     await channel.send(tr('no_winners'))
   await low_reveal_all(channel)
@@ -743,7 +744,8 @@ def generate_injections():
   async def role_help(message, role): raise missing_injection_error('role_help')
   def game_info(): return ''
   def start_night(): pass
-  def wake_up_message(): return tr('wake_up')
+  async def on_wake_up(): raise missing_injection_error('on_wake_up')
+  def get_role(player): raise missing_injection_error('get_role')
   # Don't try this at home
   globals().update(locals())
 generate_injections()
