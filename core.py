@@ -437,7 +437,7 @@ async def AddRole(message, args):
         role_list.append(name)
       else:
         return await confused(message.channel, role)
-    await message.channel.send(tr('add_success').format(join_with_and(role_list)))
+    await message.channel.send(tr('add_success').format(join_with_and(role_list)) + player_needed_msg())
   else:
     await question(message, tr('add_wronguse').format(command_name('AddRole')))
 
@@ -458,7 +458,7 @@ async def RemoveRole(message, args):
           return await question(message, tr('remove_notfound').format(role))
       else:
         return await confused(message.channel, args)
-    await message.channel.send(tr('remove_success').format(join_with_and(role_list)))
+    await message.channel.send(tr('remove_success').format(join_with_and(role_list)) + player_needed_msg())
   else:
     await question(message, tr('remove_wronguse').format(command_name('RemoveRole')))
 
@@ -473,7 +473,7 @@ async def Info(message, args):
   if status:
     msg += game_info()
   else:
-    msg += tr('player_needed').format(needed_players_count(played_roles))
+    msg += player_needed_msg()
   await confirm(message, msg)
 
 @cmd(PlayerCommand())
@@ -675,6 +675,8 @@ async def low_reveal_all(channel):
 
 ############################# UTILS ############################
 
+def player_needed_msg():
+  return tr('player_needed').format(needed_players_count(played_roles))
 def split_args(args):
   return [ arg.strip() for arg in args.split(',') ] if args else []
 

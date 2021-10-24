@@ -6,11 +6,11 @@
 - Test case for wolf in sheep clothing
 - Use role class in excess_roles instead of role names
 - Drunk fail when 2 wolves in exccess cards
-- Show needed player count when add or remove roles
 
 # DOING
 
 # DONE
+- Show needed player count when add or remove roles
 - Upper case role name
 - Separate arguments by comma
 - Use single_use for discussed, revived, and poisoned

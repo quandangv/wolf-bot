@@ -208,22 +208,18 @@ loop.run_until_complete(asyncio.gather(
   expect_response(anne, '!addrole', game, '[game] question(@anne) add_wronguse(!addrole) '),
 
   expect_response(anne, '!addrole villager', bot_dm, '[@bot] question(@anne) public_only(!addrole) '),
-  expect_response(anne, '!addrole villager, villager, villager', game, '[game] add_success(villager, villager, villager) '),
-  expect_response(anne, '!addrole insomniac', game, '[game] add_success(insomniac) '),
-  expect_response(anne, '!addrole clone', game, '[game] add_success(clone) '),
-  expect_response(anne, '!addrole drunk', game, '[game] add_success(drunk) '),
-  expect_response(anne, '!addrole troublemaker', game, '[game] add_success(troublemaker) '),
-  expect_response(anne, '!addrole thief', game, '[game] add_success(thief) '),
-  expect_response(anne, '!addrole villager alias', game, '[game] add_success(villager) '),
-  expect_response(anne, '!addrole seer', game, '[game] add_success(seer) '),
+  expect_response(anne, '!addrole villager, villager, villager', game, '[game] add_success(villager, villager, villager) player_needed(0) '),
+  expect_response(anne, '!addrole insomniac', game, '[game] add_success(insomniac) player_needed(1) '),
+  expect_response(anne, '!addrole clone,drunk,  troublemaker,thief', game, '[game] add_success(clone, drunk, troublemaker, thief) player_needed(5) '),
+  expect_response(anne, '!addrole villager alias, seer', game, '[game] add_success(villager, seer) player_needed(7) '),
   expect_response(anne, '!startimmediate', game, '[game] question(@anne) start_needless(9, 7) '),
-  expect_response(anne, '!addrole wolf', game, '[game] add_success(wolf) '),
+  expect_response(anne, '!addrole wolf', game, '[game] add_success(wolf) player_needed(8) '),
 
   expect_response(anne, '!save _test', game, '[game] confirm(@anne) save_success(_test) '),
   expect_response(anne, '!load _test_empty', game, '[game] confirm(@anne) load_success(_test_empty) '),
   expect_response(anne, '!load _test ', game, '[game] confirm(@anne) load_success(_test) '),
 
-  expect_response(anne, '!addrole wolf', game, '[game] add_success(wolf) '),
+  expect_response(anne, '!addrole wolf', game, '[game] add_success(wolf) player_needed(9) '),
   expect_response(anne, '!info', game, '[game] confirm(@anne) list_roles(villager, villager, villager, insomniac, clone, drunk, troublemaker, thief, villager, seer, wolf, wolf) player_needed(9) '),
   expect_response(anne, '!startimmediate', game, [
     '[game] start(@anne, @bob, @carl, @david, @elsa, @frank, @george, @harry, @ignacio) ',
@@ -323,14 +319,10 @@ def shuffle_copy(arr):
 
 loop.run_until_complete(asyncio.gather(
   expect_response(anne, '!removerole', game, '[game] question(@anne) remove_wronguse(!removerole) '),
-  expect_response(anne, '!removerole villager, villager', game, '[game] remove_success(villager, villager) '),
-  expect_response(anne, '!removerole villager', game, '[game] remove_success(villager) '),
-  expect_response(anne, '!removerole wolf', game, '[game] remove_success(wolf) '),
+  expect_response(anne, '!removerole villager', game, '[game] remove_success(villager) player_needed(8) '),
+  expect_response(anne, '!removerole villager, villager, wolf', game, '[game] remove_success(villager, villager, wolf) player_needed(5) '),
   expect_response(anne, '!removerole minion', game, '[game] question(@anne) remove_notfound(minion) '),
-  expect_response(anne, '!addrole minion', game, '[game] add_success(minion) '),
-  expect_response(anne, '!addrole villager', game, '[game] add_success(villager) '),
-  expect_response(anne, '!addrole villager', game, '[game] add_success(villager) '),
-  expect_response(anne, '!addrole wolf', game, '[game] add_success(wolf) '),
+  expect_response(anne, '!addrole minion, villager, villager, wolf', game, '[game] add_success(minion, villager, villager, wolf) player_needed(9) '),
   expect_response(anne, '!startimmediate', game, [
     '[game] start(@anne, @bob, @carl, @david, @elsa, @frank, @george, @harry, @ignacio) ',
     '[@anne] role(insomniac) insomniac_greeting',
