@@ -48,7 +48,7 @@ command_item = "- {} gọi `{}` ra **{}**"
 command_item_empty = "- {} gọi `{}`"
 witch_revive = ". Hãy nhắn lệnh `{1}` để cứu họ"
 
-vote = [ "Dùng lệnh `{} người-chơi` để bỏ phiếu treo cổ người đó", "Bạn ghét đứa nào thì cứ `{} đứa-đó` nha" ]
+vote = [ "Dùng lệnh `{} người-chơi` để bỏ phiếu treo cổ người đó, hoặc `{}`để không treo ai cả", "Bạn ghét đứa nào thì cứ `{} đứa-đó` nha, còn không muốn giết ai thì nhắn `{}`" ]
 help_list = [ "các lệnh được thực hiện là `{}`.", "ngoài cắn người, bạn còn có thể dùng lệnh `{}`. (giỡn thoi nha)", "hãy thử một trong các lệnh `{}`" ]
 help_detail = ". Để tìm hiểu thêm về từng lệnh, hãy nhắn `{0}  tên-lệnh`"
 list_roles = [ "Ván này mình chơi **{}**", "Trong làng có **{}**" ]
@@ -69,10 +69,12 @@ start_toolittle = "chưa chơi được, làng có quá ít chức năng"
 
 vote_countdown = "Phần lớn mọi người đã bỏ phiếu! Những người khác còn **{}** giây để bỏ phiếu"
 landslide_vote_countdown = "{} chuẩn bị lên dàn, mọi người còn **{}** giây để thay đổi quyết định!"
+landslide_no_vote_countdown = "Phần lớn mọi người đã quyết định không giết, mọi người còn **{}** giây để thay đổi quyết định!"
 vote_countdown_cancelled = "Mọi người cứ từ từ bỏ phiếu đi"
 vote_result = "Cả làng đã bỏ phiếu xong! Kết quả là:\n{}"
 vote_item = "- {} với **{}** phiếu bầu"
 vote_detail_item = "- **{}** vote {}"
+no_lynch = "**Không giết**"
 
 add_wronguse = "bạn muốn thêm chức năng gì thì phải nhắn là `{0} chức-năng`. Ví dụ như `{0} dan lang`"
 remove_wronguse = "bạn muốn bỏ chức năng nào thì phải nhắn là `{0} chức-năng`. Ví dụ như `{0} tien tri`"
@@ -97,6 +99,7 @@ see_success = [ "chức năng của {} là **{}**", "{} là một con **{}**" ]
 drunk_success = "đã tráo lá bài bên ngoài số **{}** với lá của bạn"
 clone_success = "Bạn đã nhân bản chức năng **{}**! "
 vote_success = [ "{} đòi quăng {} vào chảo lửa!", "{} đòi treo cổ {}!", "{} vote treo cổ {}" ]
+no_vote_success = [ "{} đề nghị làng không giết ai cả", "Hôm nay {} không muốn giết ai cả" ]
 unvote_success = "{} đổi ý và rút lại phiếu bầu"
 insomniac_reveal = [ "Sau một đêm dài, bạn xem lại chức năng của mình và thấy: bạn là **{}**!", "Trước khi trời sáng, bạn vội xem lại chức năng của mình và thấy nó là **{}**!" ]
 reveal_success = "lá bài số **{}** là **{}**"
@@ -152,6 +155,7 @@ cmd_sleep = ( "ngu", "Hãy `{0}` khi bạn không muốn thực hiện chức n�
 cmd_closevote = ( "dongvote", "`{0}` để lập tức ngưng bỏ phiếu", "ngungvote" )
 cmd_wakeup = ( "thucday", "`{0}` buộc cả làng thức dậy ngay lập tức" )
 cmd_vote = ( "vote", "`{0}  người-chơi` để bỏ phiếu giết người đó", "treoco", "treo" )
+cmd_votenolynch = ( "khonggiet", "`{0}` để vote không treo cổ ai cả" )
 cmd_unvote = ( "unvote", "`{0}` để rút lại phiếu bầu" )
 cmd_clone = ( "nhanban", "`{0}  người-chơi` để nhân bản chức năng của người đó", "saochep" )
 cmd_reveal = ( "latbai", "`{0}  STT-lá-bài` để lật và xem lá bài đó", "xem" )

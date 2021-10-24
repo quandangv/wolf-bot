@@ -104,7 +104,8 @@ def connect(core):
         player.role.new_night()
 
   def know_dead(player):
-    known_alive.pop(known_alive.index(player))
+    if player in known_alive:
+      known_alive.pop(known_alive.index(player))
     player.role = Dead(player.role)
 
   async def not_endgame():
@@ -160,6 +161,11 @@ def connect(core):
       await go_to_sleep()
 
   @core.injection
+  async def on_no_lynch(player):
+    if await not_endgame():
+      await go_to_sleep()
+
+  @core.injection
   async def role_help(message, role):
     await confirm(message, core.roles[role].description.format(THIS_MODULE))
 
@@ -178,7 +184,7 @@ def connect(core):
         know_dead(player)
     await core.main_channel().send(tr('wake_up_death').format(join_with_and(deaths)) if deaths else tr('wake_up_no_death'))
     if await not_endgame():
-      await core.main_channel().send(tr('vote').format(command_name('Vote')))
+      await core.main_channel().send(core.remind_vote())
 
   class ClassicRole(core.Role):
     player_count = 1
@@ -186,6 +192,18 @@ def connect(core):
       if first_time:
         player.alive = True
         player.side = self.default_side()
+
+  class Dead:
+    def __init__(self, role):
+      self.role = role
+
+    async def other(self, me, message, args):
+      await question(message, tr('dead'))
+    for cmd in core.ROLE_COMMANDS:
+      locals()[cmd] = other
+
+    async def Sleep(self, me, message, args):
+      await core.say_good_night(message)
 
   @core.role
   class Villager(ClassicRole):
@@ -385,14 +403,11 @@ def connect(core):
         take(me, role)
         await core.on_setup_answered()
 
-  class Dead:
-    def __init__(self, role):
-      self.role = role
-
-    async def other(self, me, message, args):
-      await question(message, tr('dead'))
-    for cmd in core.ROLE_COMMANDS:
-      locals()[cmd] = other
-
-    async def Sleep(self, me, message, args):
-      await core.say_good_night(message)
+    @staticmethod
+    def check_shuffling(shuffled_roles, player_count):
+      wolf_count = 0
+      for idx in range(player_count, len(shuffled_roles)):
+        if issubclass(roles[shuffled_roles[idx]], Wolf):
+          wolf_count += 1
+      if wolf_count > 1:
+        return True

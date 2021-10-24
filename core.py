@@ -283,7 +283,7 @@ def connect(admins, role_prefix):
 
 ######################### SERIALIZATION ########################
 
-@dictionize.custom_keys('excess_roles', 'og_excess', 'vote_list', 'played_roles', 'status', 'og_roles', 'history', 'tmp_channels', 'players', 'player_count')
+@dictionize.custom_keys('excess_roles', 'og_excess', 'vote_list', 'played_roles', 'status', 'og_roles', 'history', 'players', 'tmp_channels', 'player_count')
 class Dictionize:
   async def dtemplate(self, dict):
     return THIS_MODULE
@@ -491,7 +491,11 @@ async def Vote(me, message, args):
   if player:
     await on_voted(me, player.extern.mention)
 
-#@cmd(PlayerCommand())
+@cmd(PlayerCommand())
+@check_public
+@check_status('day')
+async def VoteNoLynch(me, message, args):
+  await on_voted(me, True)
 
 @cmd(SetupCommand())
 async def StartImmediate(message, args):
@@ -514,7 +518,14 @@ async def StartImmediate(message, args):
       history.clear()
       og_roles.clear()
 
-      shuffled_roles = shuffle_copy(played_roles)
+      while True:
+        shuffled_roles = shuffle_copy(played_roles)
+        for role in shuffled_roles:
+          role = roles[role]
+          if hasattr(role, 'check_shuffling') and role.check_shuffling(shuffled_roles, player_count):
+            break
+        else:
+          break
 
       og_excess.clear()
       excess_roles.clear()
@@ -584,7 +595,7 @@ async def low_vote_count(key):
   vote_item = tr('vote_item')
   for p, votes in vote_list.items():
     if p and votes:
-      vote_detail.append(vote_item.format(p, votes))
+      vote_detail.append(vote_item.format(p if p != True else tr('no_lynch'), votes))
       if votes > max_vote:
         max_vote = votes
         most_vote = p
@@ -599,7 +610,7 @@ async def CloseVote(_, __):
     vote_countdown_task.cancel()
     clear_vote_countdown()
   most_vote = await low_vote_count('vote_result')
-  if most_vote:
+  if most_vote and most_vote != True:
     await main_channel().send(tr('lynch').format(most_vote))
     for lynched in players.values():
       if lynched.extern.mention == most_vote:
@@ -677,8 +688,12 @@ async def low_reveal_all(channel):
 
 def player_needed_msg():
   return tr('player_needed').format(needed_players_count(played_roles))
+
 def split_args(args):
   return [ arg.strip() for arg in args.split(',') ] if args else []
+
+def remind_vote():
+  return tr('vote').format(command_name('Vote'), command_name('VoteNoLynch'))
 
 async def say_good_night(message):
   await confirm(message, tr('good_night'))
@@ -792,10 +807,10 @@ async def on_voted(me, vote):
   not_voted = vote_list[None]
   channel = main_channel()
   if vote:
-    await channel.send(tr('vote_success').format(me.extern.mention, vote))
+    await channel.send(tr('no_vote_success').format(me.extern.mention) if isinstance(vote, bool) else tr('vote_success').format(me.extern.mention, vote))
     next_most = 0
     for p, votes in vote_list.items():
-      if p and p != me.vote and votes > next_most:
+      if p and p != me.vote and p != True and votes > next_most:
         next_most = votes
     global vote_countdown_task
     if not_voted == 0:
@@ -806,7 +821,7 @@ async def on_voted(me, vote):
           vote_countdown_task.cancel()
         else:
           return
-      await channel.send(tr('landslide_vote_countdown').format(me.vote, LANDSLIDE_VOTE_COUNTDOWN))
+      await channel.send(tr('landslide_vote_countdown').format(me.vote, LANDSLIDE_VOTE_COUNTDOWN) if me.vote != True else tr('landslide_no_vote_countdown').format(LANDSLIDE_VOTE_COUNTDOWN))
       vote_countdown_task = asyncio.create_task(close_vote_countdown(LANDSLIDE_VOTE_COUNTDOWN))
       vote_countdown_task.time = LANDSLIDE_VOTE_COUNTDOWN
     elif not_voted / player_count <= 1 - SUPERMAJORITY:

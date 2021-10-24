@@ -3,13 +3,15 @@
 - Force fixed or randomized order of action for roles
 - Manually add players to the game
 - List roles when starting game
-- Test case for wolf in sheep clothing
 - Use role class in excess_roles instead of role names
 - Drunk fail when 2 wolves in exccess cards
+- Remind witch to sleep
+- Remind UnVote command when player vote
 
 # DOING
 
 # DONE
+- Test case for wolf in sheep clothing
 - Show needed player count when add or remove roles
 - Upper case role name
 - Separate arguments by comma

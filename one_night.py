@@ -43,7 +43,7 @@ def connect(core):
 
   @core.injection
   async def on_wake_up():
-    await core.main_channel().send(tr('wake_up') + tr('vote').format(command_name('Vote')))
+    await core.main_channel().send(tr('wake_up') + core.remind_vote())
 
   @core.injection
   def default_roles_needed(player_count):
