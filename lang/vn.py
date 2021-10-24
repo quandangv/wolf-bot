@@ -64,7 +64,7 @@ sleep_wait_other = ", còn người khác trong group vẫn chưa ngủ"
 all_sleeping = ", mọi người đều đã ngủ"
 wait = [ "đợi mình tí nha", "đợi tí mình trả lời" ]
 
-start = [ "Bắt đầu trò chơi với {}", "Trò chơi gồm {} sẽ được bắt đầu ngay bây giờ", "{} chơi ha", "Trò chơi bắt đầu! Đêm nay sói sẽ xuất hiện giữa {}" ]
+start = [ "Bắt đầu trò chơi với {}. ", "Trò chơi gồm {} sẽ được bắt đầu ngay bây giờ. ", "{} chơi ha! ", "Trò chơi bắt đầu! Đêm nay sói sẽ xuất hiện giữa {}. " ]
 start_needmore = [ "hiện tại có **{}** người chơi, trong khi mình cần **{}** người lận", "mình cần **{1}** người chơi, mới có **{0}** người à" ]
 start_needless = [ "hiện tại có tới **{}** người chơi, mình mới set đủ chức năng cho **{}** người thôi", "chức năng chỉ đủ cho **{1}** người thôi, giờ làng có đến **{0}** người lận" ]
 start_toolittle = "chưa chơi được, làng có quá ít chức năng"

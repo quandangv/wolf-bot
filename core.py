@@ -469,12 +469,7 @@ async def Info(message, args):
     if players:
       msg += tr('default_roles').format(DEFAULT_ROLES)
     return await confirm(message, msg)
-  msg = tr('list_roles').format(join_with_and(played_roles))
-  if status:
-    msg += game_info()
-  else:
-    msg += player_needed_msg()
-  await confirm(message, msg)
+  await confirm(message, list_roles() + (game_info() if status else player_needed_msg()))
 
 @cmd(PlayerCommand())
 async def Unvote(me, message, args):
@@ -512,7 +507,7 @@ async def StartImmediate(message, args):
     else:
       await message.channel.send(tr('start').format(join_with_and(
         [member.mention for member in members]
-      )))
+      )) + list_roles())
       globals()['status'] = 'night'
       globals()['player_count'] = current_count
       history.clear()
@@ -686,6 +681,8 @@ async def low_reveal_all(channel):
 
 ############################# UTILS ############################
 
+def list_roles():
+  return tr('list_roles').format(join_with_and(played_roles))
 def player_needed_msg():
   return tr('player_needed').format(needed_players_count(played_roles))
 
