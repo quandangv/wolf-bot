@@ -5,12 +5,12 @@
 - List roles when starting game
 - Use role class in excess_roles instead of role names
 - Drunk fail when 2 wolves in exccess cards
-- Remind witch to sleep
 
 # DOING
 
 # DONE
 - Remind UnVote command when player vote
+- Remind witch to sleep
 - Test case for wolf in sheep clothing
 - Show needed player count when add or remove roles
 - Upper case role name

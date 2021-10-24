@@ -807,7 +807,7 @@ async def on_voted(me, vote):
   not_voted = vote_list[None]
   channel = main_channel()
   if vote:
-    await channel.send(tr('no_vote_success').format(me.extern.mention) if isinstance(vote, bool) else tr('vote_success').format(me.extern.mention, vote))
+    await channel.send((tr('no_vote_success').format(me.extern.mention) if isinstance(vote, bool) else tr('vote_success').format(me.extern.mention, vote)) + tr('remind_unvote').format(command_name('Unvote')))
     next_most = 0
     for p, votes in vote_list.items():
       if p and p != me.vote and p != True and votes > next_most:
