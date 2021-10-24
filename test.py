@@ -173,7 +173,7 @@ def check_private_single_arg_cmd(author, cmd, target, wronguse_msg, no_self_msg,
   result = [
     expect_response(author, cmd, game, [ '[game] question({0}) wrong_role({1}) '.format(author.mention, cmd), '[{0}] question({0}) dm_only({1}) '.format(author.mention, cmd) ]),
     expect_response(author, cmd, bot_dm, '[@bot] question({}) {} '.format(author.mention, wronguse_msg)),
-    expect_response(author, cmd + ' foo bar', bot_dm, '[@bot] question({}) {} '.format(author.mention, wronguse_msg)),
+    expect_response(author, cmd + ' foo,bar', bot_dm, '[@bot] question({}) {} '.format(author.mention, wronguse_msg)),
     expect_response(author, cmd + ' ' + target, bot_dm, '[@bot] confirm({}) {}'.format(author.mention, success_msg)),
     *([ expect_response(author, cmd + ' ' + target, bot_dm, '[@bot] question({}) ability_used({}) '.format(author.mention, cmd)) ] if single_use else [])
   ]
@@ -255,7 +255,7 @@ loop.run_until_complete(asyncio.gather(
 
   expect_response(anne, '!swap', game, '[game] question(@anne) wrong_role(!swap) '),
   expect_response(anne, '!swap carl', bot_dm, '[@bot] question(@anne) wrong_role(!swap) '),
-  expect_response(anne, '!swap carl carl', bot_dm, '[@bot] question(@anne) wrong_role(!swap) '),
+  expect_response(anne, '!swap carl, carl', bot_dm, '[@bot] question(@anne) wrong_role(!swap) '),
 
   *check_private_single_player_cmd(elsa, '!steal', 'anne', 'thief_wronguse(!steal)', 'no_swap_self', 'thief_success(anne, wolf) '),
   expect_response(anne, '!revealall', bot_dm, '[@bot] reveal_all(anne:thief\ncarl:seer\nbob:wolf\ndavid:villager\nelsa:wolf\nfrank:troublemaker\ngeorge:drunk\nharry:clone\nignacio:insomniac) \nexcess_roles(villager, villager, villager) '),
@@ -264,10 +264,10 @@ loop.run_until_complete(asyncio.gather(
   expect_response(carl, '!reveal', bot_dm, '[@bot] question(@carl) reveal_wronguse(!reveal, 3) '),
   expect_response(carl, '!reveal 2', bot_dm, '[@bot] question(@carl) seer_see_already '),
 
-  expect_response(frank, '!swap frank elsa', bot_dm, '[@bot] question(@frank) no_swap_self '),
+  expect_response(frank, '!swap frank, elsa', bot_dm, '[@bot] question(@frank) no_swap_self '),
   expect_response(frank, '!swap elsa', bot_dm, '[@bot] question(@frank) troublemaker_wronguse(!swap) '),
   expect_response(frank, '!swap ', bot_dm, '[@bot] question(@frank) troublemaker_wronguse(!swap) '),
-  expect_response(frank, '!swap anne david', bot_dm, '[@bot] confirm(@frank) troublemaker_success(anne, david) '),
+  expect_response(frank, '!swap anne, david', bot_dm, '[@bot] confirm(@frank) troublemaker_success(anne, david) '),
 
   expect_response(anne, '!save _test', game, '[game] confirm(@anne) save_success(_test) '),
   expect_response(anne, '!load _test_empty', game, '[game] confirm(@anne) load_success(_test_empty) '),
@@ -275,7 +275,7 @@ loop.run_until_complete(asyncio.gather(
 ))
 
 loop.run_until_complete(asyncio.gather(
-  expect_response(frank, '!swap anne david', bot_dm, '[@bot] question(@frank) ability_used(!swap) '),
+  expect_response(frank, '!swap anne, david', bot_dm, '[@bot] question(@frank) ability_used(!swap) '),
   expect_response(anne, '!revealall', bot_dm, '[@bot] reveal_all(anne:villager\ncarl:seer\nbob:wolf\ndavid:thief\nelsa:wolf\nfrank:troublemaker\ngeorge:drunk\nharry:clone\nignacio:insomniac) \nexcess_roles(villager, villager, villager) '),
 
   expect_response(george, '!take 4', bot_dm, '[@bot] question(@george) choice_outofrange(3) '),
@@ -314,7 +314,7 @@ members.pop()
 loop.run_until_complete(asyncio.gather(
   expect_response(carl, '', game, [ '[game] vote_result(vote_item(@anne, 1) \nvote_item(@harry, 5) \nvote_item(@elsa, 2) ) ', '[game] lynch(@harry) ', '[game] reveal_player(@harry, insomniac) ', '[game] winners(@bob, @elsa) ', '[game] reveal_all(anne:villager\ncarl:seer\nbob:wolf\ndavid:thief\nelsa:wolf\nfrank:troublemaker\ngeorge:villager\nharry:insomniac\nignacio:thief) \nexcess_roles(drunk, villager, villager) ' ]),
   expect_response(carl, '!vote elsa', game, '[game] question(@carl) not_playing '),
-  expect_response(carl, '!history', game, '[game] history(@anne:wolf\n@bob:wolf\n@carl:seer\n@david:villager\n@elsa:thief\n@frank:troublemaker\n@george:drunk\n@harry:clone\n@ignacio:insomniac, villager, villager, villager, command_item(elsa, !steal anne, wolf) \ncommand_item(carl, !see anne, thief) \ncommand_item_empty(frank, !swap anne david) \ncommand_item_empty(george, !take 1) \ncommand_item(harry, !clone david, thief) \ncommand_item(harry, !steal ignacio, insomniac) ) '),
+  expect_response(carl, '!history', game, '[game] history(@anne:wolf\n@bob:wolf\n@carl:seer\n@david:villager\n@elsa:thief\n@frank:troublemaker\n@george:drunk\n@harry:clone\n@ignacio:insomniac, villager, villager, villager, command_item(elsa, !steal anne, wolf) \ncommand_item(carl, !see anne, thief) \ncommand_item_empty(frank, !swap anne, david) \ncommand_item_empty(george, !take 1) \ncommand_item(harry, !clone david, thief) \ncommand_item(harry, !steal ignacio, insomniac) ) '),
 ))
 
 @core.action
@@ -364,7 +364,7 @@ loop.run_until_complete(asyncio.gather(
   expect_response(george, '!reveal 1', bot_dm, '[@bot] confirm(@george) reveal_success(1, wolf) no_reveal_remaining '),
   expect_response(bob, '!clone harry', bot_dm, [ '[@bob] clone_success(wolf) wolf_greeting', '[wolf ] channel_greeting(@bob, wolf ) ' ]),
   expect_response(carl, '!take 1', bot_dm, '[@bot] confirm(@carl) drunk_success(1) '),
-  expect_response(david, '!swap elsa george', bot_dm, '[@bot] confirm(@david) troublemaker_success(elsa, george) '),
+  expect_response(david, '!swap elsa, george', bot_dm, '[@bot] confirm(@david) troublemaker_success(elsa, george) '),
   expect_response(harry, '!sleep', channels['wolf '], '[wolf ] gone_to_sleep(@harry) sleep_wait_other '),
   expect_response(bob, '!sleep', channels['wolf '], '[wolf ] gone_to_sleep(@bob) all_sleeping '),
   expect_response(elsa, '!steal ignacio', bot_dm, [ '[@anne] insomniac_reveal(insomniac) ', '[game] wake_up vote(!vote) ', '[@bot] confirm(@elsa) thief_success(ignacio, minion) ' ]),

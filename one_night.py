@@ -195,7 +195,7 @@ def connect(core):
     @core.check_status()
     @core.single_use()
     async def Swap(self, me, message, args):
-      players = args.split()
+      players = core.split_args(args)
       if len(players) != 2 or players[0] == players[1]:
         return await question(message, tr('troublemaker_wronguse').format(command_name('Swap')))
       if me.extern.name in players:

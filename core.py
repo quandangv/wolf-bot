@@ -158,11 +158,11 @@ def channel_event(func):
 def single_arg(message_key, *message_args):
   def decorator(func):
     async def sa_result(*others, message, args):
-      try:
-        [args] = args.split()
-      except ValueError:
-        return await question(message, tr(message_key).format(command_name(func.__name__), *message_args))
-      await func(*others, message=message, args=args)
+      arr = split_args(args)
+      if len(arr) == 1:
+        await func(*others, message=message, args=arr[0])
+      else:
+        await question(message, tr(message_key).format(command_name(func.__name__), *message_args))
     sa_result.__name__ = func.__name__
     return sa_result
   return decorator
@@ -425,35 +425,41 @@ async def Help(message, args):
 @cmd(SetupCommand())
 async def AddRole(message, args):
   role_list = []
-  for role in args.split(','):
-    role = role.strip()
-    if not role:
-      return await question(message, tr('add_wronguse').format(command_name('AddRole')))
-    elif role in roles:
-      name = roles[role].name
-      played_roles.append(name)
-      role_list.append(name)
-    else:
-      return await confused(message.channel, role)
-  await message.channel.send(tr('add_success').format(join_with_and(role_list)))
+  if args:
+    for role in split_args(args):
+      role = role.strip()
+      if not role:
+        return await question(message, tr('add_wronguse').format(command_name('AddRole')))
+      elif role in roles:
+        name = roles[role].name
+        played_roles.append(name)
+        role_list.append(name)
+      else:
+        return await confused(message.channel, role)
+    await message.channel.send(tr('add_success').format(join_with_and(role_list)))
+  else:
+    await question(message, tr('add_wronguse').format(command_name('AddRole')))
 
 @cmd(SetupCommand())
 async def RemoveRole(message, args):
   role_list = []
-  for role in args.split(','):
-    role = role.strip()
-    if not role:
-      return await question(message, tr('remove_wronguse').format(command_name('RemoveRole')))
-    elif role in roles:
-      name = roles[role].name
-      if name in played_roles:
-        played_roles.pop(played_roles.index(name))
-        role_list.append(name)
+  if args:
+    for role in split_args(args):
+      role = role.strip()
+      if not role:
+        return await question(message, tr('remove_wronguse').format(command_name('RemoveRole')))
+      elif role in roles:
+        name = roles[role].name
+        if name in played_roles:
+          played_roles.pop(played_roles.index(name))
+          role_list.append(name)
+        else:
+          return await question(message, tr('remove_notfound').format(role))
       else:
-        return await question(message, tr('remove_notfound').format(role))
-    else:
-      return await confused(message.channel, args)
-  await message.channel.send(tr('remove_success').format(join_with_and(role_list)))
+        return await confused(message.channel, args)
+    await message.channel.send(tr('remove_success').format(join_with_and(role_list)))
+  else:
+    await question(message, tr('remove_wronguse').format(command_name('RemoveRole')))
 
 @cmd(Command())
 async def Info(message, args):
@@ -668,6 +674,9 @@ async def low_reveal_all(channel):
 
 ############################# UTILS ############################
 
+def split_args(args):
+  return [ arg.strip() for arg in args.split(',') ] if args else []
+
 async def say_good_night(message):
   await confirm(message, tr('good_night'))
 
@@ -829,12 +838,12 @@ async def process_message(message):
     try:
       async with lock:
         full = content[len(BOT_PREFIX):]
-        arr = full.split(" ", 1)
+        arr = full.split(maxsplit=1)
         if len(arr) == 0:
           return
         if len(arr) == 1:
           cmd = arr[0]
-          args = ''
+          args = None
         else:
           [cmd, args] = arr
         cmd = cmd.lower()
