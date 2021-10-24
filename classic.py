@@ -299,20 +299,24 @@ def connect(core):
     def new_night(self):
       if not self.revived or not self.poisoned:
         self.sleep = False
-    async def auto_sleep(self):
-      if (self.revived or (not attack_deaths and not wolf_phase)) and self.poisoned:
-        self.sleep = True
-        await checked_on_used()
+    async def auto_sleep(self, me):
+      if not self.sleep:
+        if (self.revived or (not attack_deaths and not wolf_phase)) and self.poisoned:
+          self.sleep = True
+          await checked_on_used()
+        else:
+          await me.extern.send(tr('remind_sleep').format(command_name('Sleep')))
 
     async def on_wolves_done(self, me):
       if attack_deaths:
         msg = tr('witch_death')
         if not self.revived and not self.sleep:
-          msg += tr('witch_revive').format(*self.commands)
+          await me.extern.send(msg + tr('witch_revive').format(*self.commands))
+          return
         await me.extern.send(msg)
       else:
         await me.extern.send(tr('witch_no_death').format(*self.commands))
-      await self.auto_sleep()
+      await self.auto_sleep(me)
 
     @core.check_dm
     @core.check_status()
@@ -324,7 +328,7 @@ def connect(core):
         self.poisoned = True
         player.alive = False
         await confirm(message, tr('poison_success').format(args))
-        await self.auto_sleep()
+        await self.auto_sleep(me)
 
     @core.check_dm
     @core.check_status()
@@ -335,7 +339,7 @@ def connect(core):
         self.revived = True
         attack_deaths.pop().alive = True
         await confirm(message, tr('revive_success'))
-        await self.auto_sleep()
+        await self.auto_sleep(me)
       else:
         await question(message, tr('revive_no_deaths'))
 
