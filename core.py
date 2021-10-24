@@ -251,31 +251,32 @@ def initialize(admins):
 def connect(admins, role_prefix):
   for base_name, base in list(roles.items()):
     [base.name, base.description, base.greeting, *aliases] = tr(role_prefix + base_name.lower())
-    base.commands = []
-    for command in dir(base):
-      if command[:1].isupper():
-        func = getattr(base, command)
-        if callable(func):
-          base.commands.append(command_name(command))
+    base.commands = [ command_name(cmd) for cmd in dir(base) if cmd[:1].isupper() ]
     base.greeting = base.greeting.format(*base.commands)
     base.__role__ = True
-    roles[base.name] = base
+    def add_role(name):
+      if name not in roles:
+        roles[name] = base
+      else:
+        print("ERROR: Can't add role {}!".format(name))
+    add_role(base.name)
+    for alias in aliases:
+      add_role(alias)
+
+    aliases.append(base.name)
     if CREATE_NORMALIZED_ALIASES:
       import unidecode
-      normalized = unidecode.unidecode(base.name)
-      if normalized != base.name:
-        aliases.append(normalized)
       length = len(aliases)
       for idx in range(length):
         alias = aliases[idx]
         normalized = unidecode.unidecode(alias)
         if normalized != alias:
           aliases.append(normalized)
+          add_role(normalized)
     for alias in aliases:
-      if alias not in roles:
-        roles[alias] = base
-      else:
-        print("ERROR: Can't create alias {} to role {}!".format(alias, base.name))
+      no_space = alias.replace(' ', '')
+      if no_space != alias:
+        add_role(no_space)
 
   for admin in admins:
     players[admin.id] = Player(True, admin)
@@ -427,7 +428,7 @@ async def AddRole(message, args):
   role_list = []
   if args:
     for role in split_args(args):
-      role = role.strip()
+      role = role.lower()
       if not role:
         return await question(message, tr('add_wronguse').format(command_name('AddRole')))
       elif role in roles:
@@ -445,7 +446,7 @@ async def RemoveRole(message, args):
   role_list = []
   if args:
     for role in split_args(args):
-      role = role.strip()
+      role = role.lower()
       if not role:
         return await question(message, tr('remove_wronguse').format(command_name('RemoveRole')))
       elif role in roles:
