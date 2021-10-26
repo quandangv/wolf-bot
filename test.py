@@ -299,7 +299,7 @@ loop.run_until_complete(asyncio.gather(
   expect_response(elsa, '!vote @harry', game, '[game] vote_success(@elsa, @harry) remind_unvote(!unvote) '),
   expect_response(david, '!vote harry', game, '[game] vote_success(@david, @harry) remind_unvote(!unvote) '),
   expect_response(ignacio, '!vote elsa', game, '[game] vote_success(@ignacio, @elsa) remind_unvote(!unvote) ', '[game] vote_countdown({}) '.format(core.VOTE_COUNTDOWN) ),
-  expect_response(not_player, '!votecount', game, '[game] vote_detail(vote_item(@anne, 1) \nvote_item(@harry, 4) \nvote_item(@elsa, 1) ) ', '[game] most_vote(@harry) '),
+  expect_response(not_player, '!votecount', game, '[game] vote_detail(vote_item(@harry, 4) \nvote_item(@anne, 1) \nvote_item(@elsa, 1) ) ', '[game] most_vote(@harry) '),
   expect_response(not_player, '!votedetail', game, '[game] vote_detail(vote_detail_item(anne, @harry) \nvote_detail_item(david, @harry) \nvote_detail_item(elsa, @harry) \nvote_detail_item(frank, @harry) \nvote_detail_item(harry, @anne) \nvote_detail_item(ignacio, @elsa) ) ' ),
   expect_response(bob, '!vote harry', game, '[game] vote_success(@bob, @harry) remind_unvote(!unvote) ', '[game] landslide_vote_countdown(@harry, {}) '.format(core.LANDSLIDE_VOTE_COUNTDOWN) ),
   expect_response(carl, '!vote elsa', game, '[game] vote_success(@carl, @elsa) remind_unvote(!unvote) ')
@@ -308,7 +308,7 @@ loop.run_until_complete(asyncio.gather(
 members.pop()
 
 loop.run_until_complete(asyncio.gather(
-  expect_response(carl, '', game, '[game] vote_result(vote_item(@anne, 1) \nvote_item(@harry, 5) \nvote_item(@elsa, 2) ) ', '[game] lynch(@harry) ', '[game] reveal_player(@harry, insomniac) ', '[game] winners(@bob, @elsa) ', '[game] reveal_all(anne:villager\ncarl:seer\nbob:wolf\ndavid:thief\nelsa:wolf\nfrank:troublemaker\ngeorge:villager\nharry:insomniac\nignacio:thief) \nexcess_roles(drunk, villager, villager) ' ),
+  expect_response(carl, '', game, '[game] vote_result(vote_item(@harry, 5) \nvote_item(@anne, 1) \nvote_item(@elsa, 2) ) ', '[game] lynch(@harry) ', '[game] reveal_player(@harry, insomniac) ', '[game] winners(@bob, @elsa) ', '[game] reveal_all(anne:villager\ncarl:seer\nbob:wolf\ndavid:thief\nelsa:wolf\nfrank:troublemaker\ngeorge:villager\nharry:insomniac\nignacio:thief) \nexcess_roles(drunk, villager, villager) ' ),
   expect_response(carl, '!vote elsa', game, '[game] question(@carl) not_playing '),
   expect_response(carl, '!history', game, '[game] history(@anne:wolf\n@bob:wolf\n@carl:seer\n@david:villager\n@elsa:thief\n@frank:troublemaker\n@george:drunk\n@harry:clone\n@ignacio:insomniac, villager, villager, villager, command_item(elsa, !steal anne, wolf) \ncommand_item(carl, !see anne, thief) \ncommand_item_empty(frank, !swap anne, david) \ncommand_item_empty(george, !take 1) \ncommand_item(harry, !clone david, thief) \ncommand_item(harry, !steal ignacio, insomniac) ) '),
 ))

@@ -283,7 +283,7 @@ def connect(admins, role_prefix):
 
 ######################### SERIALIZATION ########################
 
-@dictionize.custom_keys('excess_roles', 'og_excess', 'vote_list', 'played_roles', 'status', 'og_roles', 'history', 'players', 'tmp_channels', 'player_count')
+@dictionize.custom_keys('excess_roles', 'og_excess', 'played_roles', 'status', 'og_roles', 'history', 'players', 'tmp_channels', 'player_count')
 class Dictionize:
   async def dtemplate(self, dict):
     return THIS_MODULE
@@ -315,6 +315,11 @@ async def json_to_state(fp):
   if 'null' in vote_list:
     vote_list[None] = vote_list['null']
     del vote_list['null']
+  vote_list.clear()
+  if status == 'day':
+    for p in players.values():
+      if p.role:
+        vote_list[p.vote] = vote_list[p.vote] + 1 if p.vote in vote_list else 1
 
 ########################## COMMANDS ############################
 
@@ -484,7 +489,7 @@ async def Unvote(me, message, args):
 async def Vote(me, message, args):
   player = await find_player(message, args)
   if player:
-    await on_voted(me, player.extern.mention)
+    await on_voted(me, player)
 
 @cmd(PlayerCommand())
 @check_public
@@ -574,14 +579,14 @@ async def finish_game_setup():
 @check_public
 async def VoteDetail(message, args):
   item = tr('vote_detail_item')
-  await main_channel().send(tr('vote_detail').format('\n'.join([ item.format(player.extern.name, player.vote) for player in players.values() if player.vote ])))
+  await main_channel().send(tr('vote_detail').format('\n'.join([ item.format(player.extern.name, player.vote.extern.mention) for player in players.values() if player.vote ])))
 
 @cmd(Command())
 @check_public
 @check_status('day')
 async def VoteCount(message, args):
   most_vote = await low_vote_count('vote_detail')
-  await main_channel().send(tr('most_vote').format(most_vote) if most_vote else tr('vote_tie'))
+  await main_channel().send(tr('most_vote').format(most_vote.extern.mention) if most_vote else tr('vote_tie'))
 
 async def low_vote_count(key):
   vote_detail = []
@@ -590,7 +595,7 @@ async def low_vote_count(key):
   vote_item = tr('vote_item')
   for p, votes in vote_list.items():
     if p and votes:
-      vote_detail.append(vote_item.format(p if p != True else tr('no_lynch'), votes))
+      vote_detail.append(vote_item.format(p.extern.mention if p != True else tr('no_lynch'), votes))
       if votes > max_vote:
         max_vote = votes
         most_vote = p
@@ -606,11 +611,8 @@ async def CloseVote(_, __):
     clear_vote_countdown()
   most_vote = await low_vote_count('vote_result')
   if most_vote and most_vote != True:
-    await main_channel().send(tr('lynch').format(most_vote))
-    for lynched in players.values():
-      if lynched.extern.mention == most_vote:
-        await on_lynch(lynched)
-        break
+    await main_channel().send(tr('lynch').format(most_vote.extern.mention))
+    await on_lynch(most_vote)
   else:
     await main_channel().send(tr('no_lynch'))
     await on_no_lynch()
@@ -804,7 +806,7 @@ async def on_voted(me, vote):
   not_voted = vote_list[None]
   channel = main_channel()
   if vote:
-    await channel.send((tr('no_vote_success').format(me.extern.mention) if isinstance(vote, bool) else tr('vote_success').format(me.extern.mention, vote)) + tr('remind_unvote').format(command_name('Unvote')))
+    await channel.send((tr('no_vote_success').format(me.extern.mention) if isinstance(vote, bool) else tr('vote_success').format(me.extern.mention, vote.extern.mention)) + tr('remind_unvote').format(command_name('Unvote')))
     next_most = 0
     for p, votes in vote_list.items():
       if p and p != me.vote and p != True and votes > next_most:
@@ -818,7 +820,7 @@ async def on_voted(me, vote):
           vote_countdown_task.cancel()
         else:
           return
-      await channel.send(tr('landslide_vote_countdown').format(me.vote, LANDSLIDE_VOTE_COUNTDOWN) if me.vote != True else tr('landslide_no_vote_countdown').format(LANDSLIDE_VOTE_COUNTDOWN))
+      await channel.send(tr('landslide_vote_countdown').format(me.vote.extern.mention, LANDSLIDE_VOTE_COUNTDOWN) if me.vote != True else tr('landslide_no_vote_countdown').format(LANDSLIDE_VOTE_COUNTDOWN))
       vote_countdown_task = asyncio.create_task(close_vote_countdown(LANDSLIDE_VOTE_COUNTDOWN))
       vote_countdown_task.time = LANDSLIDE_VOTE_COUNTDOWN
     elif not_voted / player_count <= 1 - SUPERMAJORITY:
