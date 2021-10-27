@@ -639,7 +639,7 @@ async def Save(message, args):
   args = args.strip()
   if '\\' in args or '/' in args:
     return await question(message, tr('invalid_file_name'))
-  fp = open(args, 'w')
+  fp = open('saves/' + args, 'w')
   state_to_json(fp)
   await confirm(message, tr('save_success').format(args))
 
@@ -648,7 +648,7 @@ async def Load(message, args):
   args = args.strip()
   if '\\' in args or '/' in args:
     return await question(message, tr('invalid_file_name'))
-  fp = open(args, 'r')
+  fp = open('saves/' + args, 'r')
   await json_to_state(fp)
   await confirm(message, tr('load_success').format(args))
 

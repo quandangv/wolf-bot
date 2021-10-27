@@ -3,11 +3,11 @@
 - Force fixed or randomized order of action for roles
 - Manually add players to the game
 - Use role class in excess_roles instead of role names
-- Drunk fail when 2 wolves in exccess cards
 
 # DOING
 
 # DONE
+- Drunk fail when 2 wolves in exccess cards
 - List roles when starting game
 - Remind UnVote command when player vote
 - Remind witch to sleep
