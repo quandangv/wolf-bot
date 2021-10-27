@@ -253,13 +253,13 @@ def connect(core):
 
   @core.role
   class Minion(WolfSide):
-    async def on_start(self, player, first_time = True):
-      await super().on_start(player, first_time)
+    async def on_start(self, me, first_time = True):
+      await super().on_start(me, first_time)
       wolves = []
       for player in players.values():
         if isinstance(player.role, Wolf):
           wolves.append(player.extern.name)
-      await player.extern.send(tr('wolves_reveal').format(join_with_and(wolves)) if wolves else tr('no_wolves'))
+      await me.extern.send(tr('wolves_reveal').format(join_with_and(wolves)) if wolves else tr('no_wolves'))
 
   @core.role
   class Wolf(WolfSide):
@@ -303,3 +303,11 @@ def connect(core):
         await channel.add(player)
         if not first_time:
           await channel.extern.send(tr('channel_greeting').format(player.extern.mention, channel.extern.name))
+
+  @core.role
+  class Hunter(Villager):
+    async def on_lynched(self, player):
+      if player.vote:
+        await core.main_channel().send(tr('hunter_reveal').format(player.extern.mention, player.vote.extern.mention))
+        await core.on_lynch(player.vote)
+        return True

@@ -610,6 +610,9 @@ async def CloseVote(_, __):
     vote_countdown_task.cancel()
     clear_vote_countdown()
   most_vote = await low_vote_count('vote_result')
+  if isinstance(most_vote, Player) and hasattr(most_vote.role, 'on_lynched'):
+    if await most_vote.role.on_lynched(most_vote):
+      return
   if most_vote and most_vote != True:
     await main_channel().send(tr('lynch').format(most_vote.extern.mention))
     await on_lynch(most_vote)

@@ -58,6 +58,7 @@ player_needed = [ "; cần có **{}** người chơi", "; đủ cho **{}** ngư�
 no_roles = [ "Làng trống trơnn", "Chưa có chức năng nào cả" ]
 default_roles = ". Quản trò sẽ dùng các chức năng mặc định là **{}**"
 wolf_get_reveal = "Bạn là một con sói cô độc. Vì vậy bạn sẽ được dùng lệnh `{} STT-lá-bài` để soi một trong {} lá ở ngoài"
+hunter_reveal = "Trước khi mọi người kịp treo cổ, {} chứng minh mình là **thợ săn** bằng cách rút súng ra và bắn chết {}"
 reveal_remaining = ". Bạn còn **{}** lượt lật bài"
 no_reveal_remaining = ". Bạn đã hết chức năng lật bài"
 sleep_wait_other = ", còn người khác trong group vẫn chưa ngủ"
@@ -187,6 +188,7 @@ onenight_clone = ( "nhân bản", "Người này sẽ sao chép chức năng c�
 onenight_troublemaker = ( "phá rối", "Vào ban đêm, kẻ này sẽ tráo đổi chức năng của 2 người trong làng", "Hãy dùng lệnh `{}  người-1  người-2` để tráo chức năng của họ", "kẻ phá rối" )
 onenight_drunk = ( "kẻ say rượu", "Người này không biết chức năng của mình, và sẽ lấy một trong những lá bài bên ngoài để làm chức năng", "Hãy dùng lệnh `{}  STT-lá-bài` để đổi chức năng của mình lấy một lá bài bên ngoài", "say rượu" )
 onenight_minion = ( "phản bội", "Người này thuộc phe sói và biết được sói là ai. Nếu làng treo cổ người này, phe sói sẽ thắng", "Hãy tìm cách treo cổ dân làng hoặc treo cổ chính mình", "kẻ phản bội" )
+onenight_hunter = ( "thợ săn", "Thợ săn luôn mang theo câu súng săn của mình. Nếu bị dân làng treo cổ, họ sẽ dùng súng bắn chết người mình đã bỏ phiếu giết", "Hãy chọn kỹ người để bỏ phiếu giết. Nếu bị dân làng treo cổ, bạn sẽ bắn chết người đó" )
 
 classic_guard = ( "bảo vệ", "Mỗi đêm bảo vệ sẽ chọn một người để bảo vệ khỏi bị tấn công", "Hãy dùng lệnh `{}  người-chơi` để chọn người mình bảo vệ", "bv" )
 classic_wolf = ( "sói", "Mỗi đêm các sói sẽ bàn bạc với nhau và giết một người", "Hãy dùng lệnh `{}  mục-tiêu` để chọn người mình muốn giết" )
