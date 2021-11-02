@@ -416,12 +416,12 @@ def connect(core):
       if args in roles:
         role = roles[args]
         if role.name in core.excess_roles:
-          self.take(me, role)
+          await self.take(me, role)
           await core.on_setup_answered()
         else:
-          await question(message, tr('take_notavailable').format(role.name, join_with_and(excess_roles)))
+          await question(message, tr('take_notavailable').format(role.name, join_with_and(core.excess_roles)))
       else:
-        await confused(message, args)
+        await core.confused(message.channel, args)
 
     @staticmethod
     def check_shuffling(shuffled_roles, player_count):

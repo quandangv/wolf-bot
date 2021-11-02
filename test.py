@@ -418,7 +418,7 @@ loop.run_until_complete(asyncio.gather(
 
 core.disconnect()
 classic.connect(core)
-core.connect(admins, 'classic_')
+core.connect(admins)
 
 player_list = 'player_list(anne, bob, carl, david, elsa, frank, george, harry) '
 members = [ anne, bob, carl, david, elsa, frank, george, harry ]
@@ -559,9 +559,36 @@ loop.run_until_complete(asyncio.gather(
   expect_response(george, '!votenolynch', game, '[game] no_vote_success(@george) remind_unvote(!unvote) ', '[game] vote_result(vote_item(no_lynch_vote , 8) ) ', '[game] no_lynch ', '[game] go_to_sleep ' ),
 ))
 
+loop.run_until_complete(asyncio.gather(
+  expect_response(anne, '!load _test_empty', game, '[game] confirm(@anne) load_success(_test_empty) '),
+  expect_response(anne, '!addrole villager, guard, wolf, wolfsheep, witch, wolf, detective, drunk, villager, villager', game, '[game] add_success(villager, guard, wolf, wolfsheep, witch, wolf, detective, drunk, villager, villager) player_needed(8) '),
+  expect_response(anne, '!startimmediate', game,
+      '[game] start(@anne, @bob, @carl, @david, @elsa, @frank, @george, @harry) list_roles(villager, guard, wolf, wolfsheep, witch, wolf, detective, drunk, villager, villager) ',
+      '[@anne] role(villager) villager_greeting',
+      '[@bob] role(guard) guard_greeting(!defend)',
+      '[@bob] ' + player_list,
+      '[@carl] role(wolf) wolf_greeting(!kill)',
+      '[@carl] ' + player_list,
+      '[@david] role(wolfsheep) wolfsheep_greeting(!kill)',
+      '[@david] ' + player_list,
+      '[@elsa] role(witch) witch_greeting(!poison, !revive, !sleep)',
+      '[@elsa] ' + player_list,
+      '[@frank] role(wolf) wolf_greeting(!kill)',
+      '[@frank] ' + player_list,
+      '[@george] role(detective) detective_greeting(!investigate)',
+      '[@george] ' + player_list,
+      '[@harry] role(drunk) drunk_greeting',
+      '[@harry] excess_roles(villager, villager) drunk_choose(!take) ',
+      '[@harry] ' + player_list,
+  ),
+  expect_response(harry, '!take vilager', bot_dm, '[@bot] confused(`vilager`) '),
+  expect_response(harry, '!take wolf', bot_dm, '[@bot] question(@harry) take_notavailable(wolf, villager, villager) '),
+  expect_response(harry, '!take villager', bot_dm, '[@harry] drunk_took_role(villager) villager_greeting', '[wolf ] wolf_channel(@carl, @david, @frank) '),
+))
+
 core.disconnect()
 one_night.connect(core)
-core.connect(admins, 'onenight_')
+core.connect(admins)
 
 @core.action
 def shuffle_copy(arr):

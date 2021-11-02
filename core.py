@@ -246,9 +246,9 @@ def initialize(admins):
         commands[alias] = base.make_alias(alias, description)
       else:
         print("ERROR: Can't create alias {} to command {}!".format(alias, name))
-  connect(admins, role_prefix)
+  connect(admins)
 
-def connect(admins, role_prefix):
+def connect(admins):
   for base_name, base in list(roles.items()):
     [base.name, base.description, base.greeting, *aliases] = tr(role_prefix + base_name.lower())
     base.commands = [ command_name(cmd) for cmd in dir(base) if cmd[:1].isupper() ]
@@ -553,7 +553,7 @@ async def StartImmediate(message, args):
     raise e
 
 async def on_setup_answered():
-  for player in players.values:
+  for player in players.values():
     if player.role and hasattr(player.role, 'prompted_setup'):
       return
   await finish_game_setup()
