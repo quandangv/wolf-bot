@@ -578,7 +578,7 @@ loop.run_until_complete(asyncio.gather(
 
 loop.run_until_complete(asyncio.gather(
   expect_response(anne, '!load _test_empty', game, '[game] confirm(@anne) load_success(_test_empty) '),
-  expect_response(anne, '!addrole villager, guard, wolf, wolfsheep, witch, wolf, detective, drunk, villager, villager', game, '[game] add_success(villager, guard, wolf, wolfsheep, witch, wolf, detective, drunk, villager, villager) player_needed(8) '),
+  expect_response(anne, '!addrole villager, guard, wolf, wolfsheep, witch, wolf, detective, drunk, villager, villager', game, '[game] add_success(villager, guard, wolf, wolfsheep, witch, wolf, detective, drunk, villager, knight) player_needed(8) '),
   expect_response(anne, '!startimmediate', game,
       '[game] start(@anne, @bob, @carl, @david, @elsa, @frank, @george, @harry) list_roles(villager, guard, wolf, wolfsheep, witch, wolf, detective, drunk, villager, villager) ',
       '[@anne] role(villager) villager_greeting',
@@ -600,7 +600,7 @@ loop.run_until_complete(asyncio.gather(
   ),
   expect_response(harry, '!take vilager', bot_dm, '[@bot] confused(`vilager`) '),
   expect_response(harry, '!take wolf', bot_dm, '[@bot] question(@harry) take_notavailable(wolf, villager, villager) '),
-  expect_response(harry, '!take villager', bot_dm, '[@harry] drunk_took_role(villager) villager_greeting', '[wolf ] wolf_channel(@carl, @david, @frank) '),
+  expect_response(harry, '!take knight', bot_dm, '[@harry] drunk_took_role(knight) knight_greeting', '[wolf ] wolf_channel(@carl, @david, @frank) '),
 ))
 
 core.disconnect()

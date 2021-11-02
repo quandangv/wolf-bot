@@ -186,6 +186,8 @@ def connect(core):
     if await not_endgame():
       await core.main_channel().send(core.remind_vote())
 
+############################ ROLES #############################
+
   class ClassicRole(core.Role):
     player_count = 1
     async def on_start(self, player, first_time = True):
@@ -351,16 +353,22 @@ def connect(core):
         await core.say_good_night(message)
         await checked_on_used()
 
-  #@core.role
-  #class Knight(Villager):
-  #  __slots__ = ('target')
-  #  def __init__(self):
-  #    self.target = None
+  @core.role
+  class Knight(Villager):
+    __slots__ = ('target')
+    def __init__(self):
+      self.target = None
 
-  #  @core.check_public
-  #  @core.check_status('day')
-  #  @core.single_use('target')
-  #  async def 
+    @core.check_public
+    @core.check_status('day')
+    @core.single_use('target')
+    async def Kill(self, me, message, args):
+      player = await find_player(message, args)
+      if player:
+        self.target = player
+        await confirm(message, tr('knight_kill').format(me.extern.mention, player.extern.mention))
+        (player if isinstance(player.role, Wolf) else me).alive = False
+        await go_to_sleep()
 
   @core.role
   class Detective(Villager):
