@@ -517,7 +517,15 @@ loop.run_until_complete(asyncio.gather(
   expect_response(carl, '!kill bob', channels['wolf '], '[wolf ] vote_kill(@carl, bob) wolf_need_consensus '),
   expect_response(harry, '!kill bob', channels['wolf '], '[wolf ] vote_kill(@harry, bob) wolf_need_consensus '),
   expect_response(frank, '!kill bob', channels['wolf '], '[wolf ] vote_kill(@frank, bob) wolf_kill(bob) '),
-  expect_response(george, '!investigate george, bob', bot_dm, '[@bot] investigate_same(george, bob) ', '[game] wake_up_death(@bob) ', '[game] wolf_victory ', '[game] winners(@carl, @frank, @harry) ', '[game] reveal_all(anne:villager\ncarl:wolf\nbob:guard\ndavid:villager\nelsa:witch\nfrank:wolf\ngeorge:detective\nharry:wolfsheep) \nexcess_roles(villager) ' ),
+  expect_response(george, '!investigate george, bob', bot_dm, '[@bot] investigate_same(george, bob) ', '[game] wake_up_death(@bob) ', '[game] wolf_victory ', '[game] winners(@carl, @frank, @harry) ', r'''[game] reveal_all(anne:villager
+bob:guard
+carl:wolf
+david:villager
+elsa:witch
+frank:wolf
+george:detective
+harry:wolfsheep) 
+excess_roles(villager) ''' ),
 
   expect_response(anne, '!load _test', game, '[game] confirm(@anne) load_success(_test) '),
 ))
@@ -544,7 +552,15 @@ loop.run_until_complete(asyncio.gather(
   expect_response(elsa, '!vote frank', game, '[game] vote_success(@elsa, @frank) remind_unvote(!unvote) ', '[game] landslide_vote_countdown(@frank, 0.3) ' ),
   expect_response(frank, '!vote frank', game, '[game] vote_success(@frank, @frank) remind_unvote(!unvote) '),
   expect_response(harry, '!vote frank', game, '[game] vote_success(@harry, @frank) remind_unvote(!unvote) '),
-  expect_response(george, '!vote frank', game, '[game] vote_success(@george, @frank) remind_unvote(!unvote) ', '[game] vote_result(vote_item(@frank, 8) ) ', '[game] lynch(@frank) ', '[game] village_victory ', '[game] winners(@anne, @bob, @david, @elsa, @george) ', '[game] reveal_all(anne:villager\ncarl:wolf\nbob:guard\ndavid:villager\nelsa:witch\nfrank:wolf\ngeorge:detective\nharry:wolfsheep) \nexcess_roles(villager) ' ),
+  expect_response(george, '!vote frank', game, '[game] vote_success(@george, @frank) remind_unvote(!unvote) ', '[game] vote_result(vote_item(@frank, 8) ) ', '[game] lynch(@frank) ', '[game] village_victory ', '[game] winners(@anne, @bob, @david, @elsa, @george) ', r'''[game] reveal_all(anne:villager
+bob:guard
+carl:wolf
+david:villager
+elsa:witch
+frank:wolf
+george:detective
+harry:wolfsheep) 
+excess_roles(villager) ''' ),
   expect_response(anne, '!load _test', game, '[game] confirm(@anne) load_success(_test) '),
 ))
 
@@ -626,7 +642,21 @@ loop.run_until_complete(asyncio.gather(
   expect_response(frank, '!vote harry', game, '[game] vote_success(@frank, @harry) remind_unvote(!unvote) '),
   expect_response(george, '!vote harry', game, '[game] vote_success(@george, @harry) remind_unvote(!unvote) '),
   expect_response(ignacio, '!vote harry', game, '[game] vote_success(@ignacio, @harry) remind_unvote(!unvote) '),
-  expect_response(harry, '!vote harry', game, '[game] vote_success(@harry, @harry) remind_unvote(!unvote) ', '[game] vote_result(vote_item(@harry, 9) ) ', '[game] lynch(@harry) ', '[game] reveal_player(@harry, clone) ', '[game] no_winners ', '[game] reveal_all(anne:tanner\ncarl:troublemaker\nbob:thief\ndavid:drunk\nelsa:villager\nfrank:villager\ngeorge:seer\nharry:clone\nignacio:insomniac) \nexcess_roles(wolf, minion, wolf) ' ),
+  expect_response(harry, '!vote harry', game, '[game] vote_success(@harry, @harry) remind_unvote(!unvote) ',
+      '[game] vote_result(vote_item(@harry, 9) ) ',
+      '[game] lynch(@harry) ',
+      '[game] reveal_player(@harry, clone) ',
+      '[game] no_winners ',
+      r'''[game] reveal_all(anne:tanner
+bob:thief
+carl:troublemaker
+david:drunk
+elsa:villager
+frank:villager
+george:seer
+harry:clone
+ignacio:insomniac) 
+excess_roles(wolf, minion, wolf) ''' ),
 ))
 
 loop.run_until_complete(core.greeting())

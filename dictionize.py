@@ -12,16 +12,18 @@ def encode(obj, hint):
       hint.etypical(result, key, val)
   return result
 
+async def decode_fields(template, dict, hint):
+  for key, val in dict.items():
+    if key in hint.dspecials:
+      await hint.dspecials[key](hint, template, val)
+    else:
+      hint.dtypical(template, key, val)
+  return template
 async def decode(dict, hint):
   if dict == None:
     return None
   obj = await hint.dtemplate(dict)
-  for key, val in dict.items():
-    if key in hint.dspecials:
-      await hint.dspecials[key](hint, obj, val)
-    else:
-      hint.dtypical(obj, key, val)
-  return obj
+  return await decode_fields(obj, dict, hint)
 
 def simple_etypical(self, dict, key, val): dict[key] = val
 def simple_dtypical(self, obj, key, val): setattr(obj, key, val)

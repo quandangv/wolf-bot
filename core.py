@@ -292,7 +292,9 @@ class Dictionize:
   async def d_players(self, obj, val):
     player_hint = Player.FullDictionize(await get_available_members())
     for p in val:
-      await dictionize.decode(p, player_hint)
+      await player_hint.dtemplate(p)
+    for p in val:
+      await dictionize.decode_fields(players[p['id']], p, player_hint)
   async def d_tmp_channels(self, obj, val):
     for name, val in val.items():
       tmp_channels[name] = await dictionize.decode(val, Channel.dictionize__)
@@ -651,6 +653,9 @@ async def Save(message, args):
 
 @cmd(AdminCommand())
 async def Load(message, args):
+  if DEBUG:
+    global players
+    players.clear()
   args = args.strip()
   if '\\' in args or '/' in args:
     return await question(message, tr('invalid_file_name'))
