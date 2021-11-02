@@ -161,7 +161,7 @@ def connect(core):
       await go_to_sleep()
 
   @core.injection
-  async def on_no_lynch(player):
+  async def on_no_lynch():
     if await not_endgame():
       await go_to_sleep()
 
@@ -351,6 +351,17 @@ def connect(core):
         await core.say_good_night(message)
         await checked_on_used()
 
+  #@core.role
+  #class Knight(Villager):
+  #  __slots__ = ('target')
+  #  def __init__(self):
+  #    self.target = None
+
+  #  @core.check_public
+  #  @core.check_status('day')
+  #  @core.single_use('target')
+  #  async def 
+
   @core.role
   class Detective(Villager):
     after_wolf_phase = True
@@ -402,10 +413,15 @@ def connect(core):
 
     @core.check_dm
     async def Take(self, me, message, args):
-      role = roles[args]
-      if role.name in core.excess_roles:
-        take(me, role)
-        await core.on_setup_answered()
+      if args in roles:
+        role = roles[args]
+        if role.name in core.excess_roles:
+          self.take(me, role)
+          await core.on_setup_answered()
+        else:
+          await question(message, tr('take_notavailable').format(role.name, join_with_and(excess_roles)))
+      else:
+        await confused(message, args)
 
     @staticmethod
     def check_shuffling(shuffled_roles, player_count):

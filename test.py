@@ -413,7 +413,7 @@ loop.run_until_complete(asyncio.gather(
   expect_response(frank, '!votenolynch', game, '[game] no_vote_success(@frank) remind_unvote(!unvote) '),
   expect_response(george, '!votenolynch', game, '[game] no_vote_success(@george) remind_unvote(!unvote) '),
   expect_response(harry, '!votenolynch', game, '[game] no_vote_success(@harry) remind_unvote(!unvote) '),
-  expect_response(ignacio, '!votenolynch', game, '[game] no_vote_success(@ignacio) remind_unvote(!unvote) ', '[game] vote_result(vote_item(no_lynch , 9) ) ', '[game] no_lynch ', '[game] winners(@carl, @bob, @elsa, @george) ', '[game] reveal_all(anne:insomniac\ncarl:wolf\nbob:wolf\ndavid:troublemaker\nelsa:minion\nfrank:thief\ngeorge:wolf\nharry:seer\nignacio:hunter) \nexcess_roles(drunk, villager, villager) ' ),
+  expect_response(ignacio, '!votenolynch', game, '[game] no_vote_success(@ignacio) remind_unvote(!unvote) ', '[game] vote_result(vote_item(no_lynch_vote , 9) ) ', '[game] no_lynch ', '[game] winners(@carl, @bob, @elsa, @george) ', '[game] reveal_all(anne:insomniac\ncarl:wolf\nbob:wolf\ndavid:troublemaker\nelsa:minion\nfrank:thief\ngeorge:wolf\nharry:seer\nignacio:hunter) \nexcess_roles(drunk, villager, villager) ' ),
 ))
 
 core.disconnect()
@@ -545,6 +545,18 @@ loop.run_until_complete(asyncio.gather(
   expect_response(frank, '!vote frank', game, '[game] vote_success(@frank, @frank) remind_unvote(!unvote) '),
   expect_response(harry, '!vote frank', game, '[game] vote_success(@harry, @frank) remind_unvote(!unvote) '),
   expect_response(george, '!vote frank', game, '[game] vote_success(@george, @frank) remind_unvote(!unvote) ', '[game] vote_result(vote_item(@frank, 8) ) ', '[game] lynch(@frank) ', '[game] village_victory ', '[game] winners(@anne, @bob, @david, @elsa, @george) ', '[game] reveal_all(anne:villager\ncarl:wolf\nbob:guard\ndavid:villager\nelsa:witch\nfrank:wolf\ngeorge:detective\nharry:wolfsheep) \nexcess_roles(villager) ' ),
+  expect_response(anne, '!load _test', game, '[game] confirm(@anne) load_success(_test) '),
+))
+
+loop.run_until_complete(asyncio.gather(
+  expect_response(anne, '!votenolynch', game, '[game] no_vote_success(@anne) remind_unvote(!unvote) '),
+  expect_response(bob, '!votenolynch', game, '[game] no_vote_success(@bob) remind_unvote(!unvote) '),
+  expect_response(carl, '!votenolynch', game, '[game] no_vote_success(@carl) remind_unvote(!unvote) '),
+  expect_response(david, '!votenolynch', game, '[game] no_vote_success(@david) remind_unvote(!unvote) '),
+  expect_response(elsa, '!votenolynch', game, '[game] no_vote_success(@elsa) remind_unvote(!unvote) ', '[game] landslide_no_vote_countdown(0.3) ' ),
+  expect_response(frank, '!votenolynch', game, '[game] no_vote_success(@frank) remind_unvote(!unvote) '),
+  expect_response(harry, '!votenolynch', game, '[game] no_vote_success(@harry) remind_unvote(!unvote) '),
+  expect_response(george, '!votenolynch', game, '[game] no_vote_success(@george) remind_unvote(!unvote) ', '[game] vote_result(vote_item(no_lynch_vote , 8) ) ', '[game] no_lynch ', '[game] go_to_sleep ' ),
 ))
 
 core.disconnect()

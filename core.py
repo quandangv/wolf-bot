@@ -283,7 +283,7 @@ def connect(admins, role_prefix):
 
 ######################### SERIALIZATION ########################
 
-@dictionize.custom_keys('excess_roles', 'og_excess', 'played_roles', 'status', 'og_roles', 'history', 'players', 'tmp_channels', 'player_count')
+@dictionize.custom_keys('players', 'excess_roles', 'og_excess', 'played_roles', 'status', 'og_roles', 'history', 'tmp_channels', 'player_count')
 class Dictionize:
   async def dtemplate(self, dict):
     return THIS_MODULE
@@ -579,7 +579,13 @@ async def finish_game_setup():
 @check_public
 async def VoteDetail(message, args):
   item = tr('vote_detail_item')
-  await main_channel().send(tr('vote_detail').format('\n'.join([ item.format(player.extern.name, player.vote.extern.mention) for player in players.values() if player.vote ])))
+  await main_channel().send(tr('vote_detail').format('\n'.join([
+        item.format(player.extern.name, player.vote.extern.mention)
+      if isinstance(player.vote, Player) else
+        tr('vote_detail_item_nolynch').format(player.extern.name)
+      for player in players.values()
+        if player.vote
+  ])))
 
 @cmd(Command())
 @check_public
@@ -595,7 +601,7 @@ async def low_vote_count(key):
   vote_item = tr('vote_item')
   for p, votes in vote_list.items():
     if p and votes:
-      vote_detail.append(vote_item.format(p.extern.mention if p != True else tr('no_lynch'), votes))
+      vote_detail.append(vote_item.format(p.extern.mention if p != True else tr('no_lynch_vote'), votes))
       if votes > max_vote:
         max_vote = votes
         most_vote = p
@@ -877,7 +883,10 @@ async def process_message(message):
 
 async def process_and_wait(message):
   await process_message(message)
-  await await_vote_countdown()
+  try:
+    await await_vote_countdown()
+  except:
+    await debug(traceback.format_exc())
 
 async def greeting():
   await main_channel().send(tr('greeting').format(command_name('Help'), command_name('StartImmediate')))
