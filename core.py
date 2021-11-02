@@ -698,6 +698,9 @@ async def low_reveal_all(channel):
 
 ############################# UTILS ############################
 
+def warn(msg):
+  msg = traceback.extract_stack() + '\nWARNING: ' + msg
+
 def list_roles():
   return tr('list_roles').format(join_with_and(played_roles))
 def player_needed_msg():
@@ -737,7 +740,10 @@ def record_history(message, result):
   history.append((message.author.name, message.content, result))
 
 def join_with_and(arr):
-  return arr[0] if len(arr) == 1 else ", ".join(arr[:-1]) + ", " + tr('_and') + arr[-1]
+  if hasattr(arr, '__len__'):
+    return arr[0] if len(arr) == 1 else ", ".join(arr[:-1]) + ", " + tr('_and') + arr[-1]
+  warn("Invalid argument for join_with_and: " + repr(arr))
+  return repr(arr)
 
 def command_name(name):
   return BOT_PREFIX + commands[name].name

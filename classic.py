@@ -47,7 +47,11 @@ def connect(core):
       if hasattr(player.role, 'wolf_phase') and not player.role.target:
         return
     globals()['wolf_phase'] = False
-    target = core.tmp_channels['wolf'].target
+    if hasattr(core.tmp_channels['wolf'], 'target'):
+      target = core.tmp_channels['wolf'].target
+    else:
+      core.warn("wolf channel has no target")
+
     if isinstance(target, core.Player) and not hasattr(target, 'defended'):
       target.alive = False
       attack_deaths.append(target)
@@ -355,13 +359,13 @@ def connect(core):
 
   @core.role
   class Knight(Villager):
-    __slots__ = ('target')
+    __slots__ = ('killed')
     def __init__(self):
-      self.target = None
+      self.killed = None
 
     @core.check_public
     @core.check_status('day')
-    @core.single_use('target')
+    @core.single_use('killed')
     async def Kill(self, me, message, args):
       player = await find_player(message, args)
       if player:
