@@ -246,12 +246,13 @@ loop.run_until_complete(asyncio.gather(
 members.append(not_player)
 
 loop.run_until_complete(asyncio.gather(
+  expect_response(anne, '!help villager ', game, '[game] confirm(@anne) villager_desc'),
   expect_response(anne, '!addrole villager ', game, '[game] question(@anne) forbid_game_started(!addrole) '),
   expect_response(anne, '!revealall', bot_dm, '[@bot] reveal_all(anne:wolf\ncarl:seer\nbob:wolf\ndavid:villager\nelsa:thief\nfrank:troublemaker\ngeorge:drunk\nharry:clone\nignacio:insomniac) \nexcess_roles(villager, villager, villager) '),
 
   expect_response(anne, '!swap', game, '[game] question(@anne) wrong_role(!swap) '),
-  expect_response(anne, '!swap carl', bot_dm, '[@bot] question(@anne) wrong_role(!swap) '),
-  expect_response(anne, '!swap carl, carl', bot_dm, '[@bot] question(@anne) wrong_role(!swap) '),
+  expect_response(anne, '!swap carl ', bot_dm, '[@bot] question(@anne) wrong_role(!swap) '),
+  expect_response(anne, '!swap carl , carl', bot_dm, '[@bot] question(@anne) wrong_role(!swap) '),
 
   *check_private_single_player_cmd(elsa, '!steal', 'anne', 'thief_wronguse(!steal)', 'no_swap_self', 'thief_success(anne, wolf) '),
   expect_response(anne, '!revealall', bot_dm, '[@bot] reveal_all(anne:thief\ncarl:seer\nbob:wolf\ndavid:villager\nelsa:wolf\nfrank:troublemaker\ngeorge:drunk\nharry:clone\nignacio:insomniac) \nexcess_roles(villager, villager, villager) '),

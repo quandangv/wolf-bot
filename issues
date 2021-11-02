@@ -3,11 +3,11 @@
 - Force fixed or randomized order of action for roles
 - Manually add players to the game
 - Use role class in excess_roles instead of role names
-- Test for help on role
 
 # DOING
 
 # DONE
+- Test for help on role
 - Drunk fail when 2 wolves in exccess cards
 - List roles when starting game
 - Remind UnVote command when player vote

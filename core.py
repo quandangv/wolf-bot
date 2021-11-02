@@ -415,6 +415,7 @@ for cmd_name in ROLE_COMMANDS:
 @cmd(Command())
 async def Help(message, args):
   if args:
+    args = args.strip()
     if args in commands:
       await confirm(message, commands[args].description)
     elif args in roles:
