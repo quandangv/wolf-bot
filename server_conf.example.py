@@ -1,5 +1,5 @@
-TOKEN = '**bot token here**'
-GAME_CHANNEL = **game channel id here**
-DEBUG_CHANNEL = **debug channel id here**
-ADMINS = [ **admin1 id**, **admin2 id** ]
-LANGUAGE = '**path to a language file in /lang without the file extension**'
+TOKEN = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAA.BBBBB.CCCCCCCCCCCCCCCCCCCCCCCC'
+GAME_CHANNEL = 999999999999999999
+DEBUG_CHANNEL = 999999999999999999
+ADMINS = [ 999999999999999999 ]
+LANGUAGE = 'vn'
