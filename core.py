@@ -3,6 +3,7 @@ import asyncio
 import json
 import traceback
 import dictionize
+import unidecode
 import sys
 
 THIS_MODULE = sys.modules[__name__]
@@ -29,7 +30,6 @@ excess_roles = []
 og_excess = []
 
 BOT_PREFIX = '!'
-CREATE_NORMALIZED_ALIASES = True
 SUPERMAJORITY = 2/3
 DEBUG = False
 VOTE_COUNTDOWN = 60
@@ -264,15 +264,13 @@ def connect(admins):
       add_role(alias)
 
     aliases.append(base.name)
-    if CREATE_NORMALIZED_ALIASES:
-      import unidecode
-      length = len(aliases)
-      for idx in range(length):
-        alias = aliases[idx]
-        normalized = unidecode.unidecode(alias)
-        if normalized != alias:
-          aliases.append(normalized)
-          add_role(normalized)
+    length = len(aliases)
+    for idx in range(length):
+      alias = aliases[idx]
+      normalized = unidecode.unidecode(alias)
+      if normalized != alias:
+        aliases.append(normalized)
+        add_role(normalized)
     for alias in aliases:
       no_space = alias.replace(' ', '')
       if no_space != alias:
@@ -699,7 +697,7 @@ async def low_reveal_all(channel):
 ############################# UTILS ############################
 
 def warn(msg):
-  msg = traceback.extract_stack() + '\nWARNING: ' + msg
+  msg = repr(traceback.extract_stack()) + '\nWARNING: ' + msg
 
 def list_roles():
   return tr('list_roles').format(join_with_and(played_roles))
@@ -884,7 +882,7 @@ async def process_message(message):
           args = None
         else:
           [cmd, args] = arr
-        cmd = cmd.lower()
+        cmd = unidecode.unidecode(cmd.lower())
         if cmd in commands:
           await commands[cmd].func(message=message, args=args)
         else:
