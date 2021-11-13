@@ -35,6 +35,7 @@ DEBUG = False
 VOTE_COUNTDOWN = 60
 LANDSLIDE_VOTE_COUNTDOWN = 10
 DEFAULT_ROLES = None
+PLAYER_PERSISTENT_ATTR = ['is_admin', 'extern', 'role', 'vote']
 
 ############################ ACTIONS ###########################
 
@@ -667,7 +668,10 @@ async def EndGame(_, __):
   global status
   status = None
   for player in players.values():
-    player.real_role = player.role = player.vote = None
+    for attr in list(vars(player).keys()):
+      if not attr in PLAYER_PERSISTENT_ATTR:
+        delattr(player, attr)
+    player.role = player.vote = None
   for channel in tmp_channels.values():
     await channel.delete()
   tmp_channels.clear()

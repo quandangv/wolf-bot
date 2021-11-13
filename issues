@@ -6,11 +6,11 @@
 - Check both vn and en translations when testing
 - Announce end of wolf phase to players
 - Disable lynching dead players
-- normalize command names
 
 # DOING
 
 # DONE
+- normalize command names
 - not_voting missing in language files
 - Test for help on role
 - Drunk fail when 2 wolves in exccess cards
