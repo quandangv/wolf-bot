@@ -203,6 +203,7 @@ good_night = [ "good night", "sweet dreams", "sleep well", "hope you live to tom
 revive_no_deaths = "no one died tonight"
 kill_already = "you can't change your target anymore"
 dead = [ "you are dead", "go back to your grave" ]
+not_voting = "you can't unvote when you haven't vote"
 
 cmd_help = ( "help", "`{0}` lists available commands.\nWhile `{0}  command` provides information about that command\nAlso `{0}  role` will explain that role" )
 cmd_startimmediate = ( "startimmediate", "`{0}` to immediately start a game with all members" )

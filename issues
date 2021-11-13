@@ -6,13 +6,12 @@
 - Check both vn and en translations when testing
 - Announce end of wolf phase to players
 - Disable lynching dead players
-- Handle unvoting when not voted
-- not_voting missing in language files
 - normalize command names
 
 # DOING
 
 # DONE
+- not_voting missing in language files
 - Test for help on role
 - Drunk fail when 2 wolves in exccess cards
 - List roles when starting game
