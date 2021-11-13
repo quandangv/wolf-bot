@@ -46,11 +46,10 @@ def connect(core):
     for player in known_alive:
       if hasattr(player.role, 'wolf_phase') and not player.role.target:
         return
+    if not hasattr(core.tmp_channels['wolf'], 'target'):
+      return
     globals()['wolf_phase'] = False
-    if hasattr(core.tmp_channels['wolf'], 'target'):
-      target = core.tmp_channels['wolf'].target
-    else:
-      core.warn("wolf channel has no target")
+    target = core.tmp_channels['wolf'].target
 
     if isinstance(target, core.Player) and not hasattr(target, 'defended'):
       target.alive = False
