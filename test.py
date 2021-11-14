@@ -56,8 +56,6 @@ def create_tr(lang):
         return (key if arg_count == 0 else '{}({})'.format(key, ', '.join(['{}'] * arg_count)))
     if key == '_and':
       return ''
-    if key == 'reveal_item':
-      return '{}:{}'
     if strip_prefix('cmd_'):
       return [ add_formats(key, sample[0]), add_formats(key + '_desc', sample[1]), key + '_alias' ]
     if strip_prefix('onenight_') or strip_prefix('classic_'):
@@ -100,44 +98,38 @@ class Member:
 game = low_create_channel('game')
 bot_dm = low_create_channel('@bot')
 
-def setup_core():
+@core.action
+async def debug(msg):
+  print("ERROR:")
+  print(msg)
 
-  @core.action
-  async def debug(msg):
-    print("ERROR:")
-    print(msg)
+@core.action
+def sort_players(players):
+  return sorted(players, key=lambda p: p.extern.name)
 
-  @core.action
-  def sort_players(players):
-    return sorted(players, key=lambda p: p.extern.name)
+@core.action
+def main_channel():
+  return game
 
-  @core.action
-  def main_channel():
-    return game
+@core.action
+def is_dm_channel(channel):
+  return channel.name.startswith('@')
 
-  @core.action
-  def is_dm_channel(channel):
-    return channel.name.startswith('@')
+@core.action
+def is_public_channel(channel):
+  return channel.name == 'game'
 
-  @core.action
-  def is_public_channel(channel):
-    return channel.name == 'game'
+@core.action
+async def create_channel(name, *players):
+  return low_create_channel(name, *players)
 
-  @core.action
-  async def create_channel(name, *players):
-    return low_create_channel(name, *players)
+@core.action
+async def add_member(channel, member):
+  channel.members.append(member)
 
-  @core.action
-  async def add_member(channel, member):
-    channel.members.append(member)
-
-  @core.action
-  async def get_available_members():
-    return members
-
-  @core.action
-  def shuffle_copy(arr):
-    return arr[::-1]
+@core.action
+async def get_available_members():
+  return members
 
 ################################ TEST UTILS ################################
 
@@ -163,20 +155,29 @@ Expected: {}.
 async def expect_response(author, message, channel, *response):
   await low_expect_response(core.process_message(Message(author, message, channel)), *response)
 
+async def test_game(author, message, *response):
+  await expect_response(author, message, game, *response)
+
+async def test_dm(author, message, *response):
+  await expect_response(author, message, bot_dm, *response)
+
+async def test_wolf(author, message, *response):
+  await expect_response(author, message, channels['wolf '], *response)
+
 def check_private_single_arg_cmd(author, cmd, target, wronguse_msg, no_self_msg, success_msg, single_use = True):
   result = [
-    expect_response(author, cmd, game, '[game] question({0}) wrong_role({1}) '.format(author.mention, cmd), '[{0}] question({0}) dm_only({1}) '.format(author.mention, cmd)),
-    expect_response(author, cmd, bot_dm, '[@bot] question({}) {} '.format(author.mention, wronguse_msg)),
-    expect_response(author, cmd + ' foo,bar', bot_dm, '[@bot] question({}) {} '.format(author.mention, wronguse_msg)),
-    expect_response(author, cmd + ' ' + target, bot_dm, '[@bot] confirm({}) {}'.format(author.mention, success_msg)),
-    *([ expect_response(author, cmd + ' ' + target, bot_dm, '[@bot] question({}) ability_used({}) '.format(author.mention, cmd)) ] if single_use else [])
+    test_game(author, cmd, '[game] question({0}) wrong_role({1}) '.format(author.mention, cmd), '[{0}] question({0}) dm_only({1}) '.format(author.mention, cmd)),
+    test_dm(author, cmd, '[@bot] question({}) {} '.format(author.mention, wronguse_msg)),
+    test_dm(author, cmd + ' foo,bar', '[@bot] question({}) {} '.format(author.mention, wronguse_msg)),
+    test_dm(author, cmd + ' ' + target, '[@bot] confirm({}) {}'.format(author.mention, success_msg)),
+    *([ test_dm(author, cmd + ' ' + target, '[@bot] question({}) ability_used({}) '.format(author.mention, cmd)) ] if single_use else [])
   ]
   return result
 
 def check_private_single_player_cmd(author, cmd, target, wronguse_msg, no_self_msg, success_msg, single_use = True):
   return [
-    expect_response(author, cmd + ' foobar', bot_dm, '[@bot] question({}) player_notfound(foobar) '.format(author.mention)),
-    expect_response(author, cmd + ' ' + author.name, bot_dm, '[@bot] question({}) {} '.format(author.mention, no_self_msg)),
+    test_dm(author, cmd + ' foobar', '[@bot] question({}) player_notfound(foobar) '.format(author.mention)),
+    test_dm(author, cmd + ' ' + author.name, '[@bot] question({}) {} '.format(author.mention, no_self_msg)),
     *check_private_single_arg_cmd(author, cmd, target, wronguse_msg, no_self_msg, success_msg, single_use)
   ]
 
@@ -193,8 +194,13 @@ def reset_core():
   core.other_commands.clear()
   core.players.clear()
 
-def full_test(lang):
-  core.tr = create_tr(lang)
+def full_test(lang_name):
+  print(f"Testing in {lang_name}")
+  def shuffle_copy(arr):
+    return arr[::-1]
+
+  core.shuffle_copy = shuffle_copy
+  core.tr = create_tr(getattr(lang, lang_name))
   global members
   anne = Member(0, 'anne')
   bob = Member(1, 'bob')
@@ -214,39 +220,39 @@ def full_test(lang):
 
   player_list = 'player_list(anne, bob, carl, david, elsa, frank, george, harry, ignacio) '
   loop.run_until_complete(asyncio.gather(
-    expect_response(anne, '!save _test_empty', game, '[game] confirm(@anne) save_success(_test_empty) '),
-    expect_response(anne, '!info', game, "[game] confirm(@anne) no_roles default_roles(['Wolf', 'Thief', 'Troublemaker', 'Drunk', 'Wolf', 'Villager', 'Seer', 'Clone', 'Minion', 'Insomniac', 'Tanner', 'Villager']) "),
-    expect_response(anne, '!help', game, '[game] confirm(@anne) help_list(!help`, `!info`, `!unvote`, `!vote`, `!votenolynch`, `!votedetail`, `!votecount`, `!history`, `!addrole`, `!removerole`, `!startimmediate`, `!closevote`, `!save`, `!load`, `!endgame`, `!wakeup) help_detail(!help) '),
-    expect_response(carl, '!help', game, '[game] confirm(@carl) help_list(!help`, `!info`, `!unvote`, `!vote`, `!votenolynch`, `!votedetail`, `!votecount`, `!history) help_detail(!help) '),
+    test_game(anne, '!save _test_empty', '[game] confirm(@anne) save_success(_test_empty) '),
+    test_game(anne, '!info', "[game] confirm(@anne) no_roles default_roles(['Wolf', 'Thief', 'Troublemaker', 'Drunk', 'Wolf', 'Villager', 'Seer', 'Clone', 'Minion', 'Insomniac', 'Tanner', 'Villager']) "),
+    test_game(anne, '!help', '[game] confirm(@anne) help_list(!help`, `!info`, `!unvote`, `!vote`, `!votenolynch`, `!votedetail`, `!votecount`, `!history`, `!addrole`, `!removerole`, `!startimmediate`, `!closevote`, `!save`, `!load`, `!endgame`, `!wakeup) help_detail(!help) '),
+    test_game(carl, '!help', '[game] confirm(@carl) help_list(!help`, `!info`, `!unvote`, `!vote`, `!votenolynch`, `!votedetail`, `!votecount`, `!history) help_detail(!help) '),
 
-    expect_response(anne, '!help help', game, '[game] confirm(@anne) help_desc(!help)aliases_list(help_alias) '),
-    expect_response(anne, '!help tanner', game, '[game] confirm(@anne) tanner_desc'),
-    expect_response(anne, '!help seer', game, '[game] confirm(@anne) seer_desc(2)'),
-    expect_response(carl, '!help startimmediate', game, '[game] confirm(@carl) startimmediate_desc(!startimmediate)aliases_list(startimmediate_alias) '),
-    expect_response(carl, '!help blabla', game, '[game] confused(`blabla`) '),
-    expect_response(anne, '!help_alias help', game, '[game] confirm(@anne) help_desc(!help)aliases_list(help_alias) '),
-    expect_response(anne, '!help help_alias', game, '[game] confirm(@anne) alias(help_alias, help) help_desc(!help)'),
+    test_game(anne, '!help help', '[game] confirm(@anne) help_desc(!help)aliases_list(help_alias) '),
+    test_game(anne, '!help tanner', '[game] confirm(@anne) tanner_desc'),
+    test_game(anne, '!help seer', '[game] confirm(@anne) seer_desc(2)'),
+    test_game(carl, '!help startimmediate', '[game] confirm(@carl) startimmediate_desc(!startimmediate)aliases_list(startimmediate_alias) '),
+    test_game(carl, '!help blabla', '[game] confused(`blabla`) '),
+    test_game(anne, '!help_alias help', '[game] confirm(@anne) help_desc(!help)aliases_list(help_alias) '),
+    test_game(anne, '!help help_alias', '[game] confirm(@anne) alias(help_alias, help) help_desc(!help)'),
 
-    expect_response(anne, '!addrole', game, '[game] question(@anne) add_wronguse(!addrole) '),
-    expect_response(anne, '!vote carl', game, '[game] question(@anne) not_playing '),
-    expect_response(carl, '!addrole', game, '[game] question(@carl) require_admin '),
-    expect_response(anne, '!addrole', game, '[game] question(@anne) add_wronguse(!addrole) '),
+    test_game(anne, '!addrole', '[game] question(@anne) add_wronguse(!addrole) '),
+    test_game(anne, '!vote carl', '[game] question(@anne) not_playing '),
+    test_game(carl, '!addrole', '[game] question(@carl) require_admin '),
+    test_game(anne, '!addrole', '[game] question(@anne) add_wronguse(!addrole) '),
 
-    expect_response(anne, '!addrole villager', bot_dm, '[@bot] question(@anne) public_only(!addrole) '),
-    expect_response(anne, '!addrole villager, villager, villager', game, '[game] add_success(villager, villager, villager) player_needed(0) '),
-    expect_response(anne, '!addrole insomniac', game, '[game] add_success(insomniac) player_needed(1) '),
-    expect_response(anne, '!addrole clone,drunk,  troublemaker,thief', game, '[game] add_success(clone, drunk, troublemaker, thief) player_needed(5) '),
-    expect_response(anne, '!addrole villager alias, seer', game, '[game] add_success(villager, seer) player_needed(7) '),
-    expect_response(anne, '!startimmediate', game, '[game] question(@anne) start_needless(9, 7) '),
-    expect_response(anne, '!addrole wolf', game, '[game] add_success(wolf) player_needed(8) '),
+    test_dm(anne, '!addrole villager', '[@bot] question(@anne) public_only(!addrole) '),
+    test_game(anne, '!addrole villager, villager, villager', '[game] add_success(villager, villager, villager) player_needed(0) '),
+    test_game(anne, '!addrole insomniac', '[game] add_success(insomniac) player_needed(1) '),
+    test_game(anne, '!addrole clone,drunk,  troublemaker,thief', '[game] add_success(clone, drunk, troublemaker, thief) player_needed(5) '),
+    test_game(anne, '!addrole villager alias, seer', '[game] add_success(villager, seer) player_needed(7) '),
+    test_game(anne, '!startimmediate', '[game] question(@anne) start_needless(9, 7) '),
+    test_game(anne, '!addrole wolf', '[game] add_success(wolf) player_needed(8) '),
 
-    expect_response(anne, '!save _test', game, '[game] confirm(@anne) save_success(_test) '),
-    expect_response(anne, '!load _test_empty', game, '[game] confirm(@anne) load_success(_test_empty) '),
-    expect_response(anne, '!load _test ', game, '[game] confirm(@anne) load_success(_test) '),
+    test_game(anne, '!save _test', '[game] confirm(@anne) save_success(_test) '),
+    test_game(anne, '!load _test_empty', '[game] confirm(@anne) load_success(_test_empty) '),
+    test_game(anne, '!load _test ', '[game] confirm(@anne) load_success(_test) '),
 
-    expect_response(anne, '!addrole wolf', game, '[game] add_success(wolf) player_needed(9) '),
-    expect_response(anne, '!info', game, '[game] confirm(@anne) list_roles(villager, villager, villager, insomniac, clone, drunk, troublemaker, thief, villager, seer, wolf, wolf) player_needed(9) '),
-    expect_response(anne, '!startimmediate', game,
+    test_game(anne, '!addrole wolf', '[game] add_success(wolf) player_needed(9) '),
+    test_game(anne, '!info', '[game] confirm(@anne) list_roles(villager, villager, villager, insomniac, clone, drunk, troublemaker, thief, villager, seer, wolf, wolf) player_needed(9) '),
+    test_game(anne, '!startimmediate',
       '[game] start(@anne, @bob, @carl, @david, @elsa, @frank, @george, @harry, @ignacio) list_roles(villager, villager, villager, insomniac, clone, drunk, troublemaker, thief, villager, seer, wolf, wolf) ',
       '[@anne] role(wolf) wolf_greeting',
       '[@anne] ' + player_list,
@@ -271,117 +277,104 @@ def full_test(lang):
   members.append(not_player)
 
   loop.run_until_complete(asyncio.gather(
-    expect_response(anne, '!help villager ', game, '[game] confirm(@anne) villager_desc'),
-    expect_response(anne, '!addrole villager ', game, '[game] question(@anne) forbid_game_started(!addrole) '),
-    expect_response(anne, '!revealall', bot_dm, r'''[@bot] reveal_all(anne:wolf
-bob:wolf
-carl:seer
-david:villager
-elsa:thief
-frank:troublemaker
-george:drunk
-harry:clone
-ignacio:insomniac) 
+    test_game(anne, '!help villager ', '[game] confirm(@anne) villager_desc'),
+    test_game(anne, '!addrole villager ', '[game] question(@anne) forbid_game_started(!addrole) '),
+    test_dm(anne, '!revealall', r'''[@bot] reveal_all(reveal_item(anne, wolf) 
+reveal_item(bob, wolf) 
+reveal_item(carl, seer) 
+reveal_item(david, villager) 
+reveal_item(elsa, thief) 
+reveal_item(frank, troublemaker) 
+reveal_item(george, drunk) 
+reveal_item(harry, clone) 
+reveal_item(ignacio, insomniac) ) 
 excess_roles(villager, villager, villager) '''),
-
-    expect_response(anne, '!swap', game, '[game] question(@anne) wrong_role(!swap) '),
-    expect_response(anne, '!swap carl ', bot_dm, '[@bot] question(@anne) wrong_role(!swap) '),
-    expect_response(anne, '!swap carl , carl', bot_dm, '[@bot] question(@anne) wrong_role(!swap) '),
-
+    test_game(anne, '!swap', '[game] question(@anne) wrong_role(!swap) '),
+    test_dm(anne, '!swap carl ', '[@bot] question(@anne) wrong_role(!swap) '),
+    test_dm(anne, '!swap carl , carl', '[@bot] question(@anne) wrong_role(!swap) '),
     *check_private_single_player_cmd(elsa, '!steal', 'anne', 'thief_wronguse(!steal)', 'no_swap_self', 'thief_success(anne, wolf) '),
-    expect_response(anne, '!revealall', bot_dm, r'''[@bot] reveal_all(anne:thief
-bob:wolf
-carl:seer
-david:villager
-elsa:wolf
-frank:troublemaker
-george:drunk
-harry:clone
-ignacio:insomniac) 
+    test_dm(anne, '!revealall', r'''[@bot] reveal_all(reveal_item(anne, thief) 
+reveal_item(bob, wolf) 
+reveal_item(carl, seer) 
+reveal_item(david, villager) 
+reveal_item(elsa, wolf) 
+reveal_item(frank, troublemaker) 
+reveal_item(george, drunk) 
+reveal_item(harry, clone) 
+reveal_item(ignacio, insomniac) ) 
 excess_roles(villager, villager, villager) '''),
-
     *check_private_single_player_cmd(carl, '!see', 'anne', 'see_wronguse(!see)', 'seer_self', 'see_success(anne, thief) '),
-    expect_response(carl, '!reveal', bot_dm, '[@bot] question(@carl) reveal_wronguse(!reveal, 3) '),
-    expect_response(carl, '!reveal 2', bot_dm, '[@bot] question(@carl) seer_see_already '),
-
-    expect_response(frank, '!swap frank, elsa', bot_dm, '[@bot] question(@frank) no_swap_self '),
-    expect_response(frank, '!swap elsa', bot_dm, '[@bot] question(@frank) troublemaker_wronguse(!swap) '),
-    expect_response(frank, '!swap ', bot_dm, '[@bot] question(@frank) troublemaker_wronguse(!swap) '),
-    expect_response(frank, '!swap anne, david', bot_dm, '[@bot] confirm(@frank) troublemaker_success(anne, david) '),
-
-    expect_response(anne, '!save _test', game, '[game] confirm(@anne) save_success(_test) '),
-    expect_response(anne, '!load _test_empty', game, '[game] confirm(@anne) load_success(_test_empty) '),
-    expect_response(anne, '!load _test ', game, '[game] confirm(@anne) load_success(_test) '),
-  ))
-
-  loop.run_until_complete(asyncio.gather(
-    expect_response(frank, '!swap anne, david', bot_dm, '[@bot] question(@frank) ability_used(!swap) '),
-    expect_response(anne, '!revealall', bot_dm, r'''[@bot] reveal_all(anne:villager
-bob:wolf
-carl:seer
-david:thief
-elsa:wolf
-frank:troublemaker
-george:drunk
-harry:clone
-ignacio:insomniac) 
+    test_dm(carl, '!reveal', '[@bot] question(@carl) reveal_wronguse(!reveal, 3) '),
+    test_dm(carl, '!reveal 2', '[@bot] question(@carl) seer_see_already '),
+    test_dm(frank, '!swap frank, elsa', '[@bot] question(@frank) no_swap_self '),
+    test_dm(frank, '!swap elsa', '[@bot] question(@frank) troublemaker_wronguse(!swap) '),
+    test_dm(frank, '!swap ', '[@bot] question(@frank) troublemaker_wronguse(!swap) '),
+    test_dm(frank, '!swap anne, david', '[@bot] confirm(@frank) troublemaker_success(anne, david) '),
+    test_game(anne, '!save _test', '[game] confirm(@anne) save_success(_test) '),
+    test_game(anne, '!load _test_empty', '[game] confirm(@anne) load_success(_test_empty) '),
+    test_game(anne, '!load _test ', '[game] confirm(@anne) load_success(_test) '),
+    test_dm(frank, '!swap anne, david', '[@bot] question(@frank) ability_used(!swap) '),
+    test_dm(anne, '!revealall', r'''[@bot] reveal_all(reveal_item(anne, villager) 
+reveal_item(bob, wolf) 
+reveal_item(carl, seer) 
+reveal_item(david, thief) 
+reveal_item(elsa, wolf) 
+reveal_item(frank, troublemaker) 
+reveal_item(george, drunk) 
+reveal_item(harry, clone) 
+reveal_item(ignacio, insomniac) ) 
 excess_roles(villager, villager, villager) '''),
-
-    expect_response(george, '!take 4', bot_dm, '[@bot] question(@george) choice_outofrange(3) '),
+    test_dm(george, '!take 4', '[@bot] question(@george) choice_outofrange(3) '),
     *check_private_single_arg_cmd(george, '!take', '1', 'drunk_wronguse(!take, 3)', 'no_swap_self', 'drunk_success(1) '),
-    expect_response(anne, '!revealall', bot_dm, r'''[@bot] reveal_all(anne:villager
-bob:wolf
-carl:seer
-david:thief
-elsa:wolf
-frank:troublemaker
-george:villager
-harry:clone
-ignacio:insomniac) 
+    test_dm(anne, '!revealall', r'''[@bot] reveal_all(reveal_item(anne, villager) 
+reveal_item(bob, wolf) 
+reveal_item(carl, seer) 
+reveal_item(david, thief) 
+reveal_item(elsa, wolf) 
+reveal_item(frank, troublemaker) 
+reveal_item(george, villager) 
+reveal_item(harry, clone) 
+reveal_item(ignacio, insomniac) ) 
 excess_roles(drunk, villager, villager) '''),
-
-    expect_response(harry, '!clone david', bot_dm, '[@harry] clone_success(thief) thief_greeting(!steal)'),
-    expect_response(harry, '!steal ignacio', bot_dm, '[@bot] confirm(@harry) thief_success(ignacio, insomniac) '),
-    expect_response(harry, '!sleep', bot_dm, '[@bot] confirm(@harry) good_night '),
-    expect_response(anne, '!sleep', channels['wolf '], '[wolf ] gone_to_sleep(@anne) sleep_wait_other '),
-    expect_response(bob, '!sleep', channels['wolf '], '[wolf ] gone_to_sleep(@bob) all_sleeping ', '[@ignacio] insomniac_reveal(thief) ', '[game] wake_up vote(!vote, !votenolynch) ' ),
-
-    expect_response(harry, '!swap frank', bot_dm, '[@bot] question(@harry) wrong_role(!swap) '),
-    expect_response(not_player, '!vote frank', bot_dm, '[@bot] question(@not_player) not_playing '),
-    expect_response(harry, '!vote frank', bot_dm, '[@harry] question(@harry) public_only(!vote) '),
-    expect_response(harry, '!vote frank', game, '[game] vote_success(@harry, @frank) remind_unvote(!unvote) '),
-    expect_response(harry, '!vote anne', game, '[game] vote_success(@harry, @anne) remind_unvote(!unvote) '),
-    expect_response(anne, '!vote harry', game, '[game] vote_success(@anne, @harry) remind_unvote(!unvote) '),
-    expect_response(frank, '!vote harry', game, '[game] vote_success(@frank, @harry) remind_unvote(!unvote) '),
-
-    expect_response(anne, '!save _test', game, '[game] confirm(@anne) save_success(_test) '),
-    expect_response(anne, '!load _test_empty', game, '[game] confirm(@anne) load_success(_test_empty) '),
-    expect_response(anne, '!load _test ', game, '[game] confirm(@anne) load_success(_test) '),
-
-    expect_response(elsa, '!vote @harry', game, '[game] vote_success(@elsa, @harry) remind_unvote(!unvote) '),
-    expect_response(david, '!vote harry', game, '[game] vote_success(@david, @harry) remind_unvote(!unvote) '),
-    expect_response(ignacio, '!vote elsa', game, '[game] vote_success(@ignacio, @elsa) remind_unvote(!unvote) ', '[game] vote_countdown({}) '.format(core.VOTE_COUNTDOWN) ),
-    expect_response(not_player, '!votecount', game, '[game] vote_detail(vote_item(@harry, 4) \nvote_item(@anne, 1) \nvote_item(@elsa, 1) ) ', '[game] most_vote(@harry) '),
-    expect_response(not_player, '!votedetail', game, '[game] vote_detail(vote_detail_item(anne, @harry) \nvote_detail_item(david, @harry) \nvote_detail_item(elsa, @harry) \nvote_detail_item(frank, @harry) \nvote_detail_item(harry, @anne) \nvote_detail_item(ignacio, @elsa) ) ' ),
-    expect_response(bob, '!vote harry', game, '[game] vote_success(@bob, @harry) remind_unvote(!unvote) ', '[game] landslide_vote_countdown(@harry, {}) '.format(core.LANDSLIDE_VOTE_COUNTDOWN) ),
-    expect_response(carl, '!vote elsa', game, '[game] vote_success(@carl, @elsa) remind_unvote(!unvote) ')
+    test_dm(harry, '!clone david', '[@harry] clone_success(thief) thief_greeting(!steal)'),
+    test_dm(harry, '!steal ignacio', '[@bot] confirm(@harry) thief_success(ignacio, insomniac) '),
+    test_dm(harry, '!sleep', '[@bot] confirm(@harry) good_night '),
+    test_wolf(anne, '!sleep', '[wolf ] gone_to_sleep(@anne) sleep_wait_other '),
+    test_wolf(bob, '!sleep', '[wolf ] gone_to_sleep(@bob) all_sleeping ', '[@ignacio] insomniac_reveal(thief) ', '[game] wake_up vote(!vote, !votenolynch) ' ),
+    test_dm(harry, '!swap frank', '[@bot] question(@harry) wrong_role(!swap) '),
+    test_dm(not_player, '!vote frank', '[@bot] question(@not_player) not_playing '),
+    test_dm(harry, '!vote frank', '[@harry] question(@harry) public_only(!vote) '),
+    test_game(harry, '!vote frank', '[game] vote_success(@harry, @frank) remind_unvote(!unvote) '),
+    test_game(harry, '!vote anne', '[game] vote_success(@harry, @anne) remind_unvote(!unvote) '),
+    test_game(anne, '!vote harry', '[game] vote_success(@anne, @harry) remind_unvote(!unvote) '),
+    test_game(frank, '!vote harry', '[game] vote_success(@frank, @harry) remind_unvote(!unvote) '),
+    test_game(anne, '!save _test', '[game] confirm(@anne) save_success(_test) '),
+    test_game(anne, '!load _test_empty', '[game] confirm(@anne) load_success(_test_empty) '),
+    test_game(anne, '!load _test ', '[game] confirm(@anne) load_success(_test) '),
+    test_game(elsa, '!vote @harry', '[game] vote_success(@elsa, @harry) remind_unvote(!unvote) '),
+    test_game(david, '!vote harry', '[game] vote_success(@david, @harry) remind_unvote(!unvote) '),
+    test_game(ignacio, '!vote elsa', '[game] vote_success(@ignacio, @elsa) remind_unvote(!unvote) ', '[game] vote_countdown({}) '.format(core.VOTE_COUNTDOWN) ),
+    test_game(not_player, '!votecount', '[game] vote_detail(vote_item(@harry, 4) \nvote_item(@anne, 1) \nvote_item(@elsa, 1) ) ', '[game] most_vote(@harry) '),
+    test_game(not_player, '!votedetail', '[game] vote_detail(vote_detail_item(anne, @harry) \nvote_detail_item(david, @harry) \nvote_detail_item(elsa, @harry) \nvote_detail_item(frank, @harry) \nvote_detail_item(harry, @anne) \nvote_detail_item(ignacio, @elsa) ) ' ),
+    test_game(bob, '!vote harry', '[game] vote_success(@bob, @harry) remind_unvote(!unvote) ', '[game] landslide_vote_countdown(@harry, {}) '.format(core.LANDSLIDE_VOTE_COUNTDOWN) ),
+    test_game(carl, '!vote elsa', '[game] vote_success(@carl, @elsa) remind_unvote(!unvote) ')
   ))
 
   members.pop()
 
   loop.run_until_complete(asyncio.gather(
-    expect_response(carl, '', game, '[game] vote_result(vote_item(@harry, 5) \nvote_item(@anne, 1) \nvote_item(@elsa, 2) ) ', '[game] lynch(@harry) ', '[game] reveal_player(@harry, insomniac) ', '[game] winners(@bob, @elsa) ', r'''[game] reveal_all(anne:villager
-bob:wolf
-carl:seer
-david:thief
-elsa:wolf
-frank:troublemaker
-george:villager
-harry:insomniac
-ignacio:thief) 
+    test_game(carl, '', '[game] vote_result(vote_item(@harry, 5) \nvote_item(@anne, 1) \nvote_item(@elsa, 2) ) ', '[game] lynch(@harry) ', '[game] reveal_player(@harry, insomniac) ', '[game] winners(@bob, @elsa) ', r'''[game] reveal_all(reveal_item(anne, villager) 
+reveal_item(bob, wolf) 
+reveal_item(carl, seer) 
+reveal_item(david, thief) 
+reveal_item(elsa, wolf) 
+reveal_item(frank, troublemaker) 
+reveal_item(george, villager) 
+reveal_item(harry, insomniac) 
+reveal_item(ignacio, thief) ) 
 excess_roles(drunk, villager, villager) ''' ),
-    expect_response(carl, '!vote elsa', game, '[game] question(@carl) not_playing '),
-    expect_response(carl, '!history', game, '[game] history(@anne:wolf\n@bob:wolf\n@carl:seer\n@david:villager\n@elsa:thief\n@frank:troublemaker\n@george:drunk\n@harry:clone\n@ignacio:insomniac, villager, villager, villager, command_item(elsa, !steal anne, wolf) \ncommand_item(carl, !see anne, thief) \ncommand_item_empty(frank, !swap anne, david) \ncommand_item_empty(george, !take 1) \ncommand_item(harry, !clone david, thief) \ncommand_item(harry, !steal ignacio, insomniac) ) '),
+    test_game(carl, '!vote elsa', '[game] question(@carl) not_playing '),
+    test_game(carl, '!history', '[game] history(reveal_item(@anne, wolf) \nreveal_item(@bob, wolf) \nreveal_item(@carl, seer) \nreveal_item(@david, villager) \nreveal_item(@elsa, thief) \nreveal_item(@frank, troublemaker) \nreveal_item(@george, drunk) \nreveal_item(@harry, clone) \nreveal_item(@ignacio, insomniac) , villager, villager, villager, command_item(elsa, !steal anne, wolf) \ncommand_item(carl, !see anne, thief) \ncommand_item_empty(frank, !swap anne, david) \ncommand_item_empty(george, !take 1) \ncommand_item(harry, !clone david, thief) \ncommand_item(harry, !steal ignacio, insomniac) ) '),
   ))
 
   @core.action
@@ -389,12 +382,12 @@ excess_roles(drunk, villager, villager) ''' ),
     return arr[:]
 
   loop.run_until_complete(asyncio.gather(
-    expect_response(anne, '!removerole', game, '[game] question(@anne) remove_wronguse(!removerole) '),
-    expect_response(anne, '!removerole villager', game, '[game] remove_success(villager) player_needed(8) '),
-    expect_response(anne, '!removerole villager, villager, villager, wolf', game, '[game] remove_success(villager, villager, villager, wolf) player_needed(4) '),
-    expect_response(anne, '!removerole minion', game, '[game] question(@anne) remove_notfound(minion) '),
-    expect_response(anne, '!addrole minion, hunter, villager, villager, wolf', game, '[game] add_success(minion, hunter, villager, villager, wolf) player_needed(9) '),
-    expect_response(anne, '!startimmediate', game,
+    test_game(anne, '!removerole', '[game] question(@anne) remove_wronguse(!removerole) '),
+    test_game(anne, '!removerole villager', '[game] remove_success(villager) player_needed(8) '),
+    test_game(anne, '!removerole villager, villager, villager, wolf', '[game] remove_success(villager, villager, villager, wolf) player_needed(4) '),
+    test_game(anne, '!removerole minion', '[game] question(@anne) remove_notfound(minion) '),
+    test_game(anne, '!addrole minion, hunter, villager, villager, wolf', '[game] add_success(minion, hunter, villager, villager, wolf) player_needed(9) '),
+    test_game(anne, '!startimmediate',
       '[game] start(@anne, @bob, @carl, @david, @elsa, @frank, @george, @harry, @ignacio) list_roles(insomniac, clone, drunk, troublemaker, thief, seer, wolf, minion, hunter, villager, villager, wolf) ',
       '[@anne] role(insomniac) insomniac_greeting',
       '[@bob] role(clone) clone_greeting(!clone)',
@@ -414,124 +407,119 @@ excess_roles(drunk, villager, villager) ''' ),
       '[@ignacio] role(hunter) hunter_greeting',
       '[wolf ] wolf_channel(@george) sleep_info(!sleep) ',
       '[wolf ] wolf_get_reveal(!reveal, 3) '
-    )
-  ))
-
-  loop.run_until_complete(asyncio.gather(
-    expect_response(anne, '!revealall', bot_dm, r'''[@bot] reveal_all(anne:insomniac
-bob:clone
-carl:drunk
-david:troublemaker
-elsa:thief
-frank:seer
-george:wolf
-harry:minion
-ignacio:hunter) 
+    ),
+    test_dm(anne, '!revealall', r'''[@bot] reveal_all(reveal_item(anne, insomniac) 
+reveal_item(bob, clone) 
+reveal_item(carl, drunk) 
+reveal_item(david, troublemaker) 
+reveal_item(elsa, thief) 
+reveal_item(frank, seer) 
+reveal_item(george, wolf) 
+reveal_item(harry, minion) 
+reveal_item(ignacio, hunter) ) 
 excess_roles(wolf, villager, villager) '''),
-    expect_response(george, '!reveal 1', game, '[game] question(@george) wrong_role(!reveal) ', '[@george] question(@george) wolf_only(!reveal) ' ),
-    expect_response(george, '!reveal 1', channels['wolf '], '[wolf ] confirm(@george) reveal_success(1, wolf) '),
-    expect_response(george, '!reveal 1', channels['wolf '], '[wolf ] question(@george) ability_used(!reveal) '),
-    expect_response(frank, '!reveal 2', bot_dm, '[@bot] confirm(@frank) reveal_success(2, villager) reveal_remaining(1) '),
-    expect_response(frank, '!see george', bot_dm, '[@bot] question(@frank) seer_reveal_already '),
-    expect_response(frank, '!reveal 1', bot_dm, '[@bot] confirm(@frank) reveal_success(1, wolf) no_reveal_remaining '),
-    expect_response(bob, '!clone george', bot_dm, '[@bob] clone_success(wolf) wolf_greeting', '[wolf ] channel_greeting(@bob, wolf ) ' ),
-    expect_response(carl, '!take 1', bot_dm, '[@bot] confirm(@carl) drunk_success(1) '),
-    expect_response(david, '!swap elsa, frank', bot_dm, '[@bot] confirm(@david) troublemaker_success(elsa, frank) '),
-    expect_response(george, '!sleep', channels['wolf '], '[wolf ] gone_to_sleep(@george) sleep_wait_other '),
-    expect_response(bob, '!sleep', channels['wolf '], '[wolf ] gone_to_sleep(@bob) all_sleeping '),
-    expect_response(elsa, '!steal harry', bot_dm, '[@anne] insomniac_reveal(insomniac) ', '[game] wake_up vote(!vote, !votenolynch) ', '[@bot] confirm(@elsa) thief_success(harry, minion) ' ),
-    expect_response(anne, '!save _test', bot_dm, '[@bot] confirm(@anne) save_success(_test) '),
-
-    expect_response(not_player, '!vote frank', bot_dm, '[@bot] question(@not_player) not_playing '),
-    expect_response(george, '!vote frank', game, '[game] vote_success(@george, @frank) remind_unvote(!unvote) '),
-    expect_response(george, '!vote anne', game, '[game] vote_success(@george, @anne) remind_unvote(!unvote) '),
-    expect_response(anne, '!vote george', game, '[game] vote_success(@anne, @george) remind_unvote(!unvote) '),
-    expect_response(frank, '!vote george', game, '[game] vote_success(@frank, @george) remind_unvote(!unvote) '),
-    expect_response(elsa, '!vote george', game, '[game] vote_success(@elsa, @george) remind_unvote(!unvote) '),
-    expect_response(david, '!vote frank', game, '[game] vote_success(@david, @frank) remind_unvote(!unvote) '),
-    expect_response(harry, '!vote david', game, '[game] vote_success(@harry, @david) remind_unvote(!unvote) ', '[game] vote_countdown({}) '.format(core.VOTE_COUNTDOWN) ),
-    expect_response(harry, '!unvote', game, '[game] unvote_success(@harry) ', '[game] vote_countdown_cancelled ' ),
-    expect_response(harry, '!vote elsa', game, '[game] vote_success(@harry, @elsa) remind_unvote(!unvote) ', '[game] vote_countdown({}) '.format(core.VOTE_COUNTDOWN) ),
-    expect_response(bob, '!vote elsa', game, '[game] vote_success(@bob, @elsa) remind_unvote(!unvote) '),
-    expect_response(carl, '!vote elsa', game, '[game] vote_success(@carl, @elsa) remind_unvote(!unvote) '),
-    expect_response(not_player, '!votecount', game, '[game] vote_detail(vote_item(@frank, 1) \nvote_item(@anne, 1) \nvote_item(@george, 3) \nvote_item(@elsa, 3) ) ', '[game] vote_tie ' ),
-    expect_response(ignacio, '!vote david', game,
+    test_game(george, '!reveal 1', '[game] question(@george) wrong_role(!reveal) ', '[@george] question(@george) wolf_only(!reveal) ' ),
+    test_wolf(george, '!reveal 1', '[wolf ] confirm(@george) reveal_success(1, wolf) '),
+    test_wolf(george, '!reveal 1', '[wolf ] question(@george) ability_used(!reveal) '),
+    test_dm(frank, '!reveal 2', '[@bot] confirm(@frank) reveal_success(2, villager) reveal_remaining(1) '),
+    test_dm(frank, '!see george', '[@bot] question(@frank) seer_reveal_already '),
+    test_dm(frank, '!reveal 1', '[@bot] confirm(@frank) reveal_success(1, wolf) no_reveal_remaining '),
+    test_dm(bob, '!clone george', '[@bob] clone_success(wolf) wolf_greeting', '[wolf ] channel_greeting(@bob, wolf ) ' ),
+    test_dm(carl, '!take 1', '[@bot] confirm(@carl) drunk_success(1) '),
+    test_dm(david, '!swap elsa, frank', '[@bot] confirm(@david) troublemaker_success(elsa, frank) '),
+    test_wolf(george, '!sleep', '[wolf ] gone_to_sleep(@george) sleep_wait_other '),
+    test_wolf(bob, '!sleep', '[wolf ] gone_to_sleep(@bob) all_sleeping '),
+    test_dm(elsa, '!steal harry', '[@anne] insomniac_reveal(insomniac) ', '[game] wake_up vote(!vote, !votenolynch) ', '[@bot] confirm(@elsa) thief_success(harry, minion) ' ),
+    test_dm(anne, '!save _test', '[@bot] confirm(@anne) save_success(_test) '),
+    test_dm(not_player, '!vote frank', '[@bot] question(@not_player) not_playing '),
+    test_game(george, '!vote frank', '[game] vote_success(@george, @frank) remind_unvote(!unvote) '),
+    test_game(george, '!vote anne', '[game] vote_success(@george, @anne) remind_unvote(!unvote) '),
+    test_game(anne, '!vote george', '[game] vote_success(@anne, @george) remind_unvote(!unvote) '),
+    test_game(frank, '!vote george', '[game] vote_success(@frank, @george) remind_unvote(!unvote) '),
+    test_game(elsa, '!vote george', '[game] vote_success(@elsa, @george) remind_unvote(!unvote) '),
+    test_game(david, '!vote frank', '[game] vote_success(@david, @frank) remind_unvote(!unvote) '),
+    test_game(harry, '!vote david', '[game] vote_success(@harry, @david) remind_unvote(!unvote) ', '[game] vote_countdown({}) '.format(core.VOTE_COUNTDOWN) ),
+    test_game(harry, '!unvote', '[game] unvote_success(@harry) ', '[game] vote_countdown_cancelled ' ),
+    test_game(harry, '!vote elsa', '[game] vote_success(@harry, @elsa) remind_unvote(!unvote) ', '[game] vote_countdown({}) '.format(core.VOTE_COUNTDOWN) ),
+    test_game(bob, '!vote elsa', '[game] vote_success(@bob, @elsa) remind_unvote(!unvote) '),
+    test_game(carl, '!vote elsa', '[game] vote_success(@carl, @elsa) remind_unvote(!unvote) '),
+    test_game(not_player, '!votecount', '[game] vote_detail(vote_item(@frank, 1) \nvote_item(@anne, 1) \nvote_item(@george, 3) \nvote_item(@elsa, 3) ) ', '[game] vote_tie ' ),
+    test_game(ignacio, '!vote david',
         '[game] vote_success(@ignacio, @david) remind_unvote(!unvote) ',
         '[game] vote_result(vote_item(@frank, 1) \nvote_item(@anne, 1) \nvote_item(@george, 3) \nvote_item(@david, 1) \nvote_item(@elsa, 3) ) ',
         '[game] no_lynch ',
         '[game] winners(@bob, @carl, @elsa, @george) ',
-        r'''[game] reveal_all(anne:insomniac
-bob:wolf
-carl:wolf
-david:troublemaker
-elsa:minion
-frank:thief
-george:wolf
-harry:seer
-ignacio:hunter) 
+        r'''[game] reveal_all(reveal_item(anne, insomniac) 
+reveal_item(bob, wolf) 
+reveal_item(carl, wolf) 
+reveal_item(david, troublemaker) 
+reveal_item(elsa, minion) 
+reveal_item(frank, thief) 
+reveal_item(george, wolf) 
+reveal_item(harry, seer) 
+reveal_item(ignacio, hunter) ) 
 excess_roles(drunk, villager, villager) ''' ),
-    expect_response(anne, '!load _test', game, '[game] confirm(@anne) load_success(_test) '),
   ))
 
   loop.run_until_complete(asyncio.gather(
-    expect_response(anne, '!vote ignacio', game, '[game] vote_success(@anne, @ignacio) remind_unvote(!unvote) '),
-    expect_response(bob, '!vote ignacio', game, '[game] vote_success(@bob, @ignacio) remind_unvote(!unvote) '),
-    expect_response(carl, '!vote ignacio', game, '[game] vote_success(@carl, @ignacio) remind_unvote(!unvote) '),
-    expect_response(david, '!vote ignacio', game, '[game] vote_success(@david, @ignacio) remind_unvote(!unvote) '),
-    expect_response(elsa, '!vote ignacio', game, '[game] vote_success(@elsa, @ignacio) remind_unvote(!unvote) ', '[game] landslide_vote_countdown(@ignacio, 0.3) '),
-    expect_response(frank, '!vote ignacio', game, '[game] vote_success(@frank, @ignacio) remind_unvote(!unvote) '),
-    expect_response(george, '!vote ignacio', game, '[game] vote_success(@george, @ignacio) remind_unvote(!unvote) '),
-    expect_response(harry, '!vote ignacio', game, '[game] vote_success(@harry, @ignacio) remind_unvote(!unvote) '),
-    expect_response(ignacio, '!vote carl', game,
+    test_game(anne, '!load _test', '[game] confirm(@anne) load_success(_test) '),
+    test_game(anne, '!vote ignacio', '[game] vote_success(@anne, @ignacio) remind_unvote(!unvote) '),
+    test_game(bob, '!vote ignacio', '[game] vote_success(@bob, @ignacio) remind_unvote(!unvote) '),
+    test_game(carl, '!vote ignacio', '[game] vote_success(@carl, @ignacio) remind_unvote(!unvote) '),
+    test_game(david, '!vote ignacio', '[game] vote_success(@david, @ignacio) remind_unvote(!unvote) '),
+    test_game(elsa, '!vote ignacio', '[game] vote_success(@elsa, @ignacio) remind_unvote(!unvote) ', '[game] landslide_vote_countdown(@ignacio, 0.3) '),
+    test_game(frank, '!vote ignacio', '[game] vote_success(@frank, @ignacio) remind_unvote(!unvote) '),
+    test_game(george, '!vote ignacio', '[game] vote_success(@george, @ignacio) remind_unvote(!unvote) '),
+    test_game(harry, '!vote ignacio', '[game] vote_success(@harry, @ignacio) remind_unvote(!unvote) '),
+    test_game(ignacio, '!vote carl',
         '[game] vote_success(@ignacio, @carl) remind_unvote(!unvote) ',
         '[game] vote_result(vote_item(@ignacio, 8) \nvote_item(@carl, 1) ) ',
         '[game] hunter_reveal(@ignacio, @carl) ',
         '[game] reveal_player(@carl, wolf) ',
         '[game] winners(@anne, @david, @frank, @harry, @ignacio) ',
-        r'''[game] reveal_all(anne:insomniac
-bob:wolf
-carl:wolf
-david:troublemaker
-elsa:minion
-frank:thief
-george:wolf
-harry:seer
-ignacio:hunter) 
+        r'''[game] reveal_all(reveal_item(anne, insomniac) 
+reveal_item(bob, wolf) 
+reveal_item(carl, wolf) 
+reveal_item(david, troublemaker) 
+reveal_item(elsa, minion) 
+reveal_item(frank, thief) 
+reveal_item(george, wolf) 
+reveal_item(harry, seer) 
+reveal_item(ignacio, hunter) ) 
 excess_roles(drunk, villager, villager) '''),
-
-    expect_response(anne, '!load _test', game, '[game] confirm(@anne) load_success(_test) '),
   ))
 
   loop.run_until_complete(asyncio.gather(
-    expect_response(anne, '!votenolynch', game, '[game] no_vote_success(@anne) remind_unvote(!unvote) '),
-    expect_response(bob, '!votenolynch', game, '[game] no_vote_success(@bob) remind_unvote(!unvote) '),
-    expect_response(carl, '!votenolynch', game, '[game] no_vote_success(@carl) remind_unvote(!unvote) '),
-    expect_response(david, '!votenolynch', game, '[game] no_vote_success(@david) remind_unvote(!unvote) '),
-    expect_response(elsa, '!votenolynch', game, '[game] no_vote_success(@elsa) remind_unvote(!unvote) ', '[game] landslide_no_vote_countdown(0.3) ' ),
-    expect_response(frank, '!votenolynch', game, '[game] no_vote_success(@frank) remind_unvote(!unvote) '),
-    expect_response(george, '!votenolynch', game, '[game] no_vote_success(@george) remind_unvote(!unvote) '),
-    expect_response(harry, '!votenolynch', game, '[game] no_vote_success(@harry) remind_unvote(!unvote) '),
-    expect_response(ignacio, '!votenolynch', game, '[game] no_vote_success(@ignacio) remind_unvote(!unvote) ', '[game] vote_result(vote_item(no_lynch_vote , 9) ) ', '[game] no_lynch ', '[game] winners(@bob, @carl, @elsa, @george) ', r'''[game] reveal_all(anne:insomniac
-bob:wolf
-carl:wolf
-david:troublemaker
-elsa:minion
-frank:thief
-george:wolf
-harry:seer
-ignacio:hunter) 
+    test_game(anne, '!load _test', '[game] confirm(@anne) load_success(_test) '),
+    test_game(anne, '!votenolynch', '[game] no_vote_success(@anne) remind_unvote(!unvote) '),
+    test_game(bob, '!votenolynch', '[game] no_vote_success(@bob) remind_unvote(!unvote) '),
+    test_game(carl, '!votenolynch', '[game] no_vote_success(@carl) remind_unvote(!unvote) '),
+    test_game(david, '!votenolynch', '[game] no_vote_success(@david) remind_unvote(!unvote) '),
+    test_game(elsa, '!votenolynch', '[game] no_vote_success(@elsa) remind_unvote(!unvote) ', '[game] landslide_no_vote_countdown(0.3) ' ),
+    test_game(frank, '!votenolynch', '[game] no_vote_success(@frank) remind_unvote(!unvote) '),
+    test_game(george, '!votenolynch', '[game] no_vote_success(@george) remind_unvote(!unvote) '),
+    test_game(harry, '!votenolynch', '[game] no_vote_success(@harry) remind_unvote(!unvote) '),
+    test_game(ignacio, '!votenolynch', '[game] no_vote_success(@ignacio) remind_unvote(!unvote) ', '[game] vote_result(vote_item(no_lynch_vote , 9) ) ', '[game] no_lynch ', '[game] winners(@bob, @carl, @elsa, @george) ', r'''[game] reveal_all(reveal_item(anne, insomniac) 
+reveal_item(bob, wolf) 
+reveal_item(carl, wolf) 
+reveal_item(david, troublemaker) 
+reveal_item(elsa, minion) 
+reveal_item(frank, thief) 
+reveal_item(george, wolf) 
+reveal_item(harry, seer) 
+reveal_item(ignacio, hunter) ) 
 excess_roles(drunk, villager, villager) ''' ),
   ))
 
   core.disconnect()
   classic.connect(core)
   core.connect(admins)
-
   player_list = 'player_list(anne, bob, carl, david, elsa, frank, george, harry) '
   members = [ anne, bob, carl, david, elsa, frank, george, harry ]
+
   loop.run_until_complete(asyncio.gather(
-    expect_response(anne, '!save _test_empty', game, '[game] confirm(@anne) save_success(_test_empty) '),
-    expect_response(anne, '!startimmediate', game,
+    test_game(anne, '!save _test_empty', '[game] confirm(@anne) save_success(_test_empty) '),
+    test_game(anne, '!startimmediate',
         '[game] start(@anne, @bob, @carl, @david, @elsa, @frank, @george, @harry) list_roles(villager, guard, wolf, villager, witch, wolf, detective, drunk, villager, wolfsheep) ',
         '[@anne] role(villager) villager_greeting',
         '[@bob] role(guard) guard_greeting(!defend)',
@@ -551,141 +539,136 @@ excess_roles(drunk, villager, villager) ''' ),
         '[@harry] ' + player_list,
         '[wolf ] wolf_channel(@carl, @frank, @harry) ',
     ),
+    test_game(david, '!sleep', '[game] confirm(@david) good_night '),
+    test_game(carl, '!sleep', '[game] confirm(@carl) good_night ', '[@carl] question(@carl) wolf_only(!sleep) ' ),
+    test_wolf(frank, '!kill anne', '[wolf ] vote_kill(@frank, anne) wolf_need_consensus '),
+    test_game(bob, '!defend anne', '[game] question(@bob) wrong_role(!defend) ', '[@bob] question(@bob) dm_only(!defend) ' ),
+    test_dm(bob, '!defend anne', '[@bot] confirm(@bob) defend_success(anne) '),
+    test_game(anne, '!save _test', '[game] confirm(@anne) save_success(_test) '),
+    test_dm(george, '!investigate george, carl', '[@bot] confirm(@george) wait '),
+    test_dm(bob, '!defend carl', '[@bot] question(@bob) ability_used(!defend) '),
+    test_wolf(carl, '!kill elsa', '[wolf ] vote_kill(@carl, elsa) wolf_need_consensus '),
+    test_dm(elsa, '!poison carl', '[@bot] confirm(@elsa) poison_success(carl) ', '[@elsa] remind_sleep(!sleep) '),
+    test_wolf(harry, '!kill anne', '[wolf ] vote_kill(@harry, anne) wolf_need_consensus '),
+    test_wolf(carl, '!kill anne', '[@elsa] witch_no_death ', '[@bot] investigate_diff(george, carl) ', '[game] wake_up_death(@carl) ', '[game] vote(!vote, !votenolynch) ', '[wolf ] vote_kill(@carl, anne) wolf_kill(anne) ' ),
   ))
 
   loop.run_until_complete(asyncio.gather(
-    expect_response(david, '!sleep', game, '[game] confirm(@david) good_night '),
-    expect_response(carl, '!sleep', game, '[game] confirm(@carl) good_night ', '[@carl] question(@carl) wolf_only(!sleep) ' ),
-    expect_response(frank, '!kill anne', channels['wolf '], '[wolf ] vote_kill(@frank, anne) wolf_need_consensus '),
-    expect_response(bob, '!defend anne', game, '[game] question(@bob) wrong_role(!defend) ', '[@bob] question(@bob) dm_only(!defend) ' ),
-    expect_response(bob, '!defend anne', bot_dm, '[@bot] confirm(@bob) defend_success(anne) '),
-    expect_response(anne, '!save _test', game, '[game] confirm(@anne) save_success(_test) '),
-    expect_response(george, '!investigate george, carl', bot_dm, '[@bot] confirm(@george) wait '),
-    expect_response(bob, '!defend carl', bot_dm, '[@bot] question(@bob) ability_used(!defend) '),
-    expect_response(carl, '!kill elsa', channels['wolf '], '[wolf ] vote_kill(@carl, elsa) wolf_need_consensus '),
-    expect_response(elsa, '!poison carl', bot_dm, '[@bot] confirm(@elsa) poison_success(carl) ', '[@elsa] remind_sleep(!sleep) '),
-    expect_response(harry, '!kill anne', channels['wolf '], '[wolf ] vote_kill(@harry, anne) wolf_need_consensus '),
-    expect_response(carl, '!kill anne', channels['wolf '], '[@elsa] witch_no_death ', '[@bot] investigate_diff(george, carl) ', '[game] wake_up_death(@carl) ', '[game] vote(!vote, !votenolynch) ', '[wolf ] vote_kill(@carl, anne) wolf_kill(anne) ' ),
-    expect_response(anne, '!load _test', game, '[game] confirm(@anne) load_success(_test) '),
+    test_game(anne, '!load _test', '[game] confirm(@anne) load_success(_test) '),
+    test_dm(bob, '!defend david', '[@bot] question(@bob) ability_used(!defend) '),
+    test_wolf(carl, '!kill david', '[wolf ] vote_kill(@carl, david) wolf_need_consensus '),
+    test_wolf(harry, '!kill david', '[wolf ] vote_kill(@harry, david) wolf_need_consensus '),
+    test_wolf(frank, '!kill david', '[@elsa] witch_death witch_revive(!revive) ', '[wolf ] vote_kill(@frank, david) wolf_kill(david) ' ),
+    test_dm(george, '!investigate frank, carl', '[@bot] investigate_same(frank, carl) '),
+    test_dm(elsa, '!revive', '[@bot] confirm(@elsa) revive_success ', '[@elsa] remind_sleep(!sleep) '),
+    test_dm(elsa, '!sleep', '[@bot] confirm(@elsa) good_night ', '[game] wake_up_no_death ', '[game] vote(!vote, !votenolynch) ' ),
   ))
 
   loop.run_until_complete(asyncio.gather(
-    expect_response(bob, '!defend david', bot_dm, '[@bot] question(@bob) ability_used(!defend) '),
-    expect_response(carl, '!kill david', channels['wolf '], '[wolf ] vote_kill(@carl, david) wolf_need_consensus '),
-    expect_response(harry, '!kill david', channels['wolf '], '[wolf ] vote_kill(@harry, david) wolf_need_consensus '),
-    expect_response(frank, '!kill david', channels['wolf '], '[@elsa] witch_death witch_revive(!revive) ', '[wolf ] vote_kill(@frank, david) wolf_kill(david) ' ),
-    expect_response(george, '!investigate frank, carl', bot_dm, '[@bot] investigate_same(frank, carl) '),
-    expect_response(elsa, '!revive', bot_dm, '[@bot] confirm(@elsa) revive_success ', '[@elsa] remind_sleep(!sleep) '),
-    expect_response(elsa, '!sleep', bot_dm, '[@bot] confirm(@elsa) good_night ', '[game] wake_up_no_death ', '[game] vote(!vote, !votenolynch) ' ),
-    expect_response(anne, '!load _test', game, '[game] confirm(@anne) load_success(_test) '),
+    test_game(anne, '!load _test', '[game] confirm(@anne) load_success(_test) '),
+    test_dm(bob, '!defend david', '[@bot] question(@bob) ability_used(!defend) '),
+    test_wolf(carl, '!sleep', '[wolf ] vote_no_kill(@carl) wolf_need_consensus '),
+    test_wolf(harry, '!sleep', '[wolf ] vote_no_kill(@harry) wolf_need_consensus '),
+    test_dm(george, '!investigate elsa, harry', '[@bot] confirm(@george) wait '),
+    test_dm(elsa, '!sleep', '[@bot] confirm(@elsa) good_night '),
+    test_wolf(frank, '!sleep', '[@elsa] witch_no_death ', '[@bot] investigate_same(elsa, harry) ', '[game] wake_up_no_death ', '[game] vote(!vote, !votenolynch) ', '[wolf ] vote_no_kill(@frank) wolf_no_kill ' ),
+    test_game(anne, '!load _test', '[game] confirm(@anne) load_success(_test) '),
   ))
 
   loop.run_until_complete(asyncio.gather(
-    expect_response(bob, '!defend david', bot_dm, '[@bot] question(@bob) ability_used(!defend) '),
-    expect_response(carl, '!sleep', channels['wolf '], '[wolf ] vote_no_kill(@carl) wolf_need_consensus '),
-    expect_response(harry, '!sleep', channels['wolf '], '[wolf ] vote_no_kill(@harry) wolf_need_consensus '),
-    expect_response(george, '!investigate elsa, harry', bot_dm, '[@bot] confirm(@george) wait '),
-    expect_response(elsa, '!sleep', bot_dm, '[@bot] confirm(@elsa) good_night '),
-    expect_response(frank, '!sleep', channels['wolf '], '[@elsa] witch_no_death ', '[@bot] investigate_same(elsa, harry) ', '[game] wake_up_no_death ', '[game] vote(!vote, !votenolynch) ', '[wolf ] vote_no_kill(@frank) wolf_no_kill ' ),
-    expect_response(anne, '!load _test', game, '[game] confirm(@anne) load_success(_test) '),
+    test_dm(bob, '!defend david', '[@bot] question(@bob) ability_used(!defend) '),
+    test_wolf(carl, '!kill david', '[wolf ] vote_kill(@carl, david) wolf_need_consensus '),
+    test_wolf(harry, '!kill david', '[wolf ] vote_kill(@harry, david) wolf_need_consensus '),
+    test_wolf(frank, '!kill david', '[@elsa] witch_death witch_revive(!revive) ', '[wolf ] vote_kill(@frank, david) wolf_kill(david) ' ),
+    test_wolf(carl, '!kill carl', '[wolf ] question(@carl) kill_already '),
+    test_dm(elsa, '!sleep', '[@bot] confirm(@elsa) good_night '),
+    test_dm(george, '!investigate elsa, bob', '[@bot] investigate_same(elsa, bob) ', '[game] wake_up_death(@david) ', '[game] vote(!vote, !votenolynch) ' ),
   ))
 
   loop.run_until_complete(asyncio.gather(
-    expect_response(bob, '!defend david', bot_dm, '[@bot] question(@bob) ability_used(!defend) '),
-    expect_response(carl, '!kill david', channels['wolf '], '[wolf ] vote_kill(@carl, david) wolf_need_consensus '),
-    expect_response(harry, '!kill david', channels['wolf '], '[wolf ] vote_kill(@harry, david) wolf_need_consensus '),
-    expect_response(frank, '!kill david', channels['wolf '], '[@elsa] witch_death witch_revive(!revive) ', '[wolf ] vote_kill(@frank, david) wolf_kill(david) ' ),
-    expect_response(carl, '!kill carl', channels['wolf '], '[wolf ] question(@carl) kill_already '),
-    expect_response(elsa, '!sleep', bot_dm, '[@bot] confirm(@elsa) good_night '),
-    expect_response(george, '!investigate elsa, bob', bot_dm, '[@bot] investigate_same(elsa, bob) ', '[game] wake_up_death(@david) ', '[game] vote(!vote, !votenolynch) ' ),
-    expect_response(anne, '!load _test', game, '[game] confirm(@anne) load_success(_test) '),
-  ))
-
-  loop.run_until_complete(asyncio.gather(
-    expect_response(carl, '!kill david', channels['wolf '], '[wolf ] vote_kill(@carl, david) wolf_need_consensus '),
-    expect_response(elsa, '!revive', bot_dm, '[@bot] confirm(@elsa) wait '),
-    expect_response(elsa, '!sleep', bot_dm, '[@bot] confirm(@elsa) good_night '),
-    expect_response(george, '!investigate elsa, bob', bot_dm, '[@bot] confirm(@george) wait '),
-    expect_response(harry, '!kill david', channels['wolf '], '[wolf ] vote_kill(@harry, david) wolf_need_consensus '),
-    expect_response(frank, '!kill david', channels['wolf '], '[@elsa] witch_death ', '[@bot] confirm(@elsa) revive_success ', '[@bot] investigate_same(elsa, bob) ', '[game] wake_up_no_death ', '[game] vote(!vote, !votenolynch) ', '[wolf ] vote_kill(@frank, david) wolf_kill(david) ' ),
-    expect_response(anne, '!save _test', game, '[game] confirm(@anne) save_success(_test) '),
-
-    expect_response(anne, '!vote elsa', game, '[game] vote_success(@anne, @elsa) remind_unvote(!unvote) '),
-    expect_response(bob, '!vote elsa', game, '[game] vote_success(@bob, @elsa) remind_unvote(!unvote) '),
-    expect_response(carl, '!vote elsa', game, '[game] vote_success(@carl, @elsa) remind_unvote(!unvote) '),
-    expect_response(david, '!vote elsa', game, '[game] vote_success(@david, @elsa) remind_unvote(!unvote) '),
-    expect_response(elsa, '!vote elsa', game, '[game] vote_success(@elsa, @elsa) remind_unvote(!unvote) ', '[game] landslide_vote_countdown(@elsa, 0.3) ' ),
-    expect_response(frank, '!vote elsa', game, '[game] vote_success(@frank, @elsa) remind_unvote(!unvote) '),
-    expect_response(harry, '!vote elsa', game, '[game] vote_success(@harry, @elsa) remind_unvote(!unvote) '),
-    expect_response(george, '!vote elsa', game, '[game] vote_success(@george, @elsa) remind_unvote(!unvote) ', '[game] vote_result(vote_item(@elsa, 8) ) ', '[game] lynch(@elsa) ', '[game] go_to_sleep ' ),
-    expect_response(elsa, '!poison david', bot_dm, '[@bot] question(@elsa) dead '),
-    expect_response(bob, '!defend anne', bot_dm, '[@bot] question(@bob) defend_repeat '),
-    expect_response(bob, '!defend david', bot_dm, '[@bot] confirm(@bob) defend_success(david) '),
-    expect_response(carl, '!kill bob', channels['wolf '], '[wolf ] vote_kill(@carl, bob) wolf_need_consensus '),
-    expect_response(harry, '!kill bob', channels['wolf '], '[wolf ] vote_kill(@harry, bob) wolf_need_consensus '),
-    expect_response(frank, '!kill bob', channels['wolf '], '[wolf ] vote_kill(@frank, bob) wolf_kill(bob) '),
-    expect_response(george, '!investigate george, bob', bot_dm, '[@bot] investigate_same(george, bob) ', '[game] wake_up_death(@bob) ', '[game] wolf_victory ', '[game] winners(@carl, @frank, @harry) ', r'''[game] reveal_all(anne:villager
-bob:guard
-carl:wolf
-david:villager
-elsa:witch
-frank:wolf
-george:detective
-harry:wolfsheep) 
+    test_game(anne, '!load _test', '[game] confirm(@anne) load_success(_test) '),
+    test_wolf(carl, '!kill david', '[wolf ] vote_kill(@carl, david) wolf_need_consensus '),
+    test_dm(elsa, '!revive', '[@bot] confirm(@elsa) wait '),
+    test_dm(elsa, '!sleep', '[@bot] confirm(@elsa) good_night '),
+    test_dm(george, '!investigate elsa, bob', '[@bot] confirm(@george) wait '),
+    test_wolf(harry, '!kill david', '[wolf ] vote_kill(@harry, david) wolf_need_consensus '),
+    test_wolf(frank, '!kill david', '[@elsa] witch_death ', '[@bot] confirm(@elsa) revive_success ', '[@bot] investigate_same(elsa, bob) ', '[game] wake_up_no_death ', '[game] vote(!vote, !votenolynch) ', '[wolf ] vote_kill(@frank, david) wolf_kill(david) ' ),
+    test_game(anne, '!save _test', '[game] confirm(@anne) save_success(_test) '),
+    test_game(anne, '!vote elsa', '[game] vote_success(@anne, @elsa) remind_unvote(!unvote) '),
+    test_game(bob, '!vote elsa', '[game] vote_success(@bob, @elsa) remind_unvote(!unvote) '),
+    test_game(carl, '!vote elsa', '[game] vote_success(@carl, @elsa) remind_unvote(!unvote) '),
+    test_game(david, '!vote elsa', '[game] vote_success(@david, @elsa) remind_unvote(!unvote) '),
+    test_game(elsa, '!vote elsa', '[game] vote_success(@elsa, @elsa) remind_unvote(!unvote) ', '[game] landslide_vote_countdown(@elsa, 0.3) ' ),
+    test_game(frank, '!vote elsa', '[game] vote_success(@frank, @elsa) remind_unvote(!unvote) '),
+    test_game(harry, '!vote elsa', '[game] vote_success(@harry, @elsa) remind_unvote(!unvote) '),
+    test_game(george, '!vote elsa', '[game] vote_success(@george, @elsa) remind_unvote(!unvote) ', '[game] vote_result(vote_item(@elsa, 8) ) ', '[game] lynch(@elsa) ', '[game] go_to_sleep ' ),
+    test_dm(elsa, '!poison david', '[@bot] question(@elsa) dead '),
+    test_dm(bob, '!defend anne', '[@bot] question(@bob) defend_repeat '),
+    test_dm(bob, '!defend david', '[@bot] confirm(@bob) defend_success(david) '),
+    test_wolf(carl, '!kill bob', '[wolf ] vote_kill(@carl, bob) wolf_need_consensus '),
+    test_wolf(harry, '!kill bob', '[wolf ] vote_kill(@harry, bob) wolf_need_consensus '),
+    test_wolf(frank, '!kill bob', '[wolf ] vote_kill(@frank, bob) wolf_kill(bob) '),
+    test_dm(george, '!investigate george, bob', '[@bot] investigate_same(george, bob) ', '[game] wake_up_death(@bob) ', '[game] wolf_victory ', '[game] winners(@carl, @frank, @harry) ', r'''[game] reveal_all(reveal_item(anne, villager) 
+reveal_item(bob, guard) 
+reveal_item(carl, wolf) 
+reveal_item(david, villager) 
+reveal_item(elsa, witch) 
+reveal_item(frank, wolf) 
+reveal_item(george, detective) 
+reveal_item(harry, wolfsheep) ) 
 excess_roles(villager) ''' ),
-
-    expect_response(anne, '!load _test', game, '[game] confirm(@anne) load_success(_test) '),
   ))
 
   loop.run_until_complete(asyncio.gather(
-    expect_response(anne, '!vote carl', game, '[game] vote_success(@anne, @carl) remind_unvote(!unvote) '),
-    expect_response(bob, '!vote carl', game, '[game] vote_success(@bob, @carl) remind_unvote(!unvote) '),
-    expect_response(carl, '!vote carl', game, '[game] vote_success(@carl, @carl) remind_unvote(!unvote) '),
-    expect_response(david, '!vote carl', game, '[game] vote_success(@david, @carl) remind_unvote(!unvote) '),
-    expect_response(elsa, '!vote carl', game, '[game] vote_success(@elsa, @carl) remind_unvote(!unvote) ', '[game] landslide_vote_countdown(@carl, 0.3) ' ),
-    expect_response(frank, '!vote carl', game, '[game] vote_success(@frank, @carl) remind_unvote(!unvote) '),
-    expect_response(harry, '!vote carl', game, '[game] vote_success(@harry, @carl) remind_unvote(!unvote) '),
-    expect_response(george, '!vote carl', game, '[game] vote_success(@george, @carl) remind_unvote(!unvote) ', '[game] vote_result(vote_item(@carl, 8) ) ', '[game] lynch(@carl) ', '[game] go_to_sleep ' ),
-    expect_response(bob, '!defend elsa', bot_dm, '[@bot] confirm(@bob) defend_success(elsa) '),
-    expect_response(elsa, '!poison harry', bot_dm, '[@bot] confirm(@elsa) poison_success(harry) '),
-    expect_response(carl, '!kill elsa', channels['wolf '], '[wolf ] question(@carl) dead '),
-    expect_response(harry, '!kill elsa', channels['wolf '], '[wolf ] vote_kill(@harry, elsa) wolf_need_consensus '),
-    expect_response(frank, '!kill elsa', channels['wolf '], '[@elsa] witch_no_death ', '[wolf ] vote_kill(@frank, elsa) wolf_kill(elsa) ' ),
-    expect_response(george, '!investigate elsa, harry', bot_dm, '[@bot] investigate_same(elsa, harry) ', '[game] wake_up_death(@harry) ', '[game] vote(!vote, !votenolynch) ' ),
-    expect_response(anne, '!vote frank', game, '[game] vote_success(@anne, @frank) remind_unvote(!unvote) '),
-    expect_response(bob, '!vote frank', game, '[game] vote_success(@bob, @frank) remind_unvote(!unvote) '),
-    expect_response(carl, '!vote frank', game, '[game] vote_success(@carl, @frank) remind_unvote(!unvote) '),
-    expect_response(david, '!vote frank', game, '[game] vote_success(@david, @frank) remind_unvote(!unvote) '),
-    expect_response(elsa, '!vote frank', game, '[game] vote_success(@elsa, @frank) remind_unvote(!unvote) ', '[game] landslide_vote_countdown(@frank, 0.3) ' ),
-    expect_response(frank, '!vote frank', game, '[game] vote_success(@frank, @frank) remind_unvote(!unvote) '),
-    expect_response(harry, '!vote frank', game, '[game] vote_success(@harry, @frank) remind_unvote(!unvote) '),
-    expect_response(george, '!vote frank', game, '[game] vote_success(@george, @frank) remind_unvote(!unvote) ', '[game] vote_result(vote_item(@frank, 8) ) ', '[game] lynch(@frank) ', '[game] village_victory ', '[game] winners(@anne, @bob, @david, @elsa, @george) ', r'''[game] reveal_all(anne:villager
-bob:guard
-carl:wolf
-david:villager
-elsa:witch
-frank:wolf
-george:detective
-harry:wolfsheep) 
+    test_game(anne, '!load _test', '[game] confirm(@anne) load_success(_test) '),
+    test_game(anne, '!vote carl', '[game] vote_success(@anne, @carl) remind_unvote(!unvote) '),
+    test_game(bob, '!vote carl', '[game] vote_success(@bob, @carl) remind_unvote(!unvote) '),
+    test_game(carl, '!vote carl', '[game] vote_success(@carl, @carl) remind_unvote(!unvote) '),
+    test_game(david, '!vote carl', '[game] vote_success(@david, @carl) remind_unvote(!unvote) '),
+    test_game(elsa, '!vote carl', '[game] vote_success(@elsa, @carl) remind_unvote(!unvote) ', '[game] landslide_vote_countdown(@carl, 0.3) ' ),
+    test_game(frank, '!vote carl', '[game] vote_success(@frank, @carl) remind_unvote(!unvote) '),
+    test_game(harry, '!vote carl', '[game] vote_success(@harry, @carl) remind_unvote(!unvote) '),
+    test_game(george, '!vote carl', '[game] vote_success(@george, @carl) remind_unvote(!unvote) ', '[game] vote_result(vote_item(@carl, 8) ) ', '[game] lynch(@carl) ', '[game] go_to_sleep ' ),
+    test_dm(bob, '!defend elsa', '[@bot] confirm(@bob) defend_success(elsa) '),
+    test_dm(elsa, '!poison harry', '[@bot] confirm(@elsa) poison_success(harry) '),
+    test_wolf(carl, '!kill elsa', '[wolf ] question(@carl) dead '),
+    test_wolf(harry, '!kill elsa', '[wolf ] vote_kill(@harry, elsa) wolf_need_consensus '),
+    test_wolf(frank, '!kill elsa', '[@elsa] witch_no_death ', '[wolf ] vote_kill(@frank, elsa) wolf_kill(elsa) ' ),
+    test_dm(george, '!investigate elsa, harry', '[@bot] investigate_same(elsa, harry) ', '[game] wake_up_death(@harry) ', '[game] vote(!vote, !votenolynch) ' ),
+    test_game(anne, '!vote frank', '[game] vote_success(@anne, @frank) remind_unvote(!unvote) '),
+    test_game(bob, '!vote frank', '[game] vote_success(@bob, @frank) remind_unvote(!unvote) '),
+    test_game(carl, '!vote frank', '[game] vote_success(@carl, @frank) remind_unvote(!unvote) '),
+    test_game(david, '!vote frank', '[game] vote_success(@david, @frank) remind_unvote(!unvote) '),
+    test_game(elsa, '!vote frank', '[game] vote_success(@elsa, @frank) remind_unvote(!unvote) ', '[game] landslide_vote_countdown(@frank, 0.3) ' ),
+    test_game(frank, '!vote frank', '[game] vote_success(@frank, @frank) remind_unvote(!unvote) '),
+    test_game(harry, '!vote frank', '[game] vote_success(@harry, @frank) remind_unvote(!unvote) '),
+    test_game(george, '!vote frank', '[game] vote_success(@george, @frank) remind_unvote(!unvote) ', '[game] vote_result(vote_item(@frank, 8) ) ', '[game] lynch(@frank) ', '[game] village_victory ', '[game] winners(@anne, @bob, @david, @elsa, @george) ', r'''[game] reveal_all(reveal_item(anne, villager) 
+reveal_item(bob, guard) 
+reveal_item(carl, wolf) 
+reveal_item(david, villager) 
+reveal_item(elsa, witch) 
+reveal_item(frank, wolf) 
+reveal_item(george, detective) 
+reveal_item(harry, wolfsheep) ) 
 excess_roles(villager) ''' ),
-    expect_response(anne, '!load _test', game, '[game] confirm(@anne) load_success(_test) '),
   ))
 
   loop.run_until_complete(asyncio.gather(
-    expect_response(anne, '!votenolynch', game, '[game] no_vote_success(@anne) remind_unvote(!unvote) '),
-    expect_response(bob, '!votenolynch', game, '[game] no_vote_success(@bob) remind_unvote(!unvote) '),
-    expect_response(carl, '!votenolynch', game, '[game] no_vote_success(@carl) remind_unvote(!unvote) '),
-    expect_response(david, '!votenolynch', game, '[game] no_vote_success(@david) remind_unvote(!unvote) '),
-    expect_response(elsa, '!votenolynch', game, '[game] no_vote_success(@elsa) remind_unvote(!unvote) ', '[game] landslide_no_vote_countdown(0.3) ' ),
-    expect_response(frank, '!votenolynch', game, '[game] no_vote_success(@frank) remind_unvote(!unvote) '),
-    expect_response(harry, '!votenolynch', game, '[game] no_vote_success(@harry) remind_unvote(!unvote) '),
-    expect_response(george, '!votenolynch', game, '[game] no_vote_success(@george) remind_unvote(!unvote) ', '[game] vote_result(vote_item(no_lynch_vote , 8) ) ', '[game] no_lynch ', '[game] go_to_sleep ' ),
+    test_game(anne, '!load _test', '[game] confirm(@anne) load_success(_test) '),
+    test_game(anne, '!votenolynch', '[game] no_vote_success(@anne) remind_unvote(!unvote) '),
+    test_game(bob, '!votenolynch', '[game] no_vote_success(@bob) remind_unvote(!unvote) '),
+    test_game(carl, '!votenolynch', '[game] no_vote_success(@carl) remind_unvote(!unvote) '),
+    test_game(david, '!votenolynch', '[game] no_vote_success(@david) remind_unvote(!unvote) '),
+    test_game(elsa, '!votenolynch', '[game] no_vote_success(@elsa) remind_unvote(!unvote) ', '[game] landslide_no_vote_countdown(0.3) ' ),
+    test_game(frank, '!votenolynch', '[game] no_vote_success(@frank) remind_unvote(!unvote) '),
+    test_game(harry, '!votenolynch', '[game] no_vote_success(@harry) remind_unvote(!unvote) '),
+    test_game(george, '!votenolynch', '[game] no_vote_success(@george) remind_unvote(!unvote) ', '[game] vote_result(vote_item(no_lynch_vote , 8) ) ', '[game] no_lynch ', '[game] go_to_sleep ' ),
   ))
 
   loop.run_until_complete(asyncio.gather(
-    expect_response(anne, '!load _test_empty', game, '[game] confirm(@anne) load_success(_test_empty) '),
-    expect_response(anne, '!addrole villager, guard, wolf, wolfsheep, witch, wolf, detective, drunk, villager, knight', game, '[game] add_success(villager, guard, wolf, wolfsheep, witch, wolf, detective, drunk, villager, knight) player_needed(8) '),
-    expect_response(anne, '!startimmediate', game,
+    test_game(anne, '!load _test_empty', '[game] confirm(@anne) load_success(_test_empty) '),
+    test_game(anne, '!addrole villager, guard, wolf, wolfsheep, witch, wolf, detective, drunk, villager, knight', '[game] add_success(villager, guard, wolf, wolfsheep, witch, wolf, detective, drunk, villager, knight) player_needed(8) '),
+    test_game(anne, '!startimmediate',
         '[game] start(@anne, @bob, @carl, @david, @elsa, @frank, @george, @harry) list_roles(villager, guard, wolf, wolfsheep, witch, wolf, detective, drunk, villager, knight) ',
         '[@anne] role(villager) villager_greeting',
         '[@bob] role(guard) guard_greeting(!defend)',
@@ -704,21 +687,18 @@ excess_roles(villager) ''' ),
         '[@harry] excess_roles(knight, villager) drunk_choose(!take) ',
         '[@harry] ' + player_list,
     ),
-    expect_response(harry, '!take vilager', bot_dm, '[@bot] confused(`vilager`) '),
-    expect_response(harry, '!take wolf', bot_dm, '[@bot] question(@harry) take_notavailable(wolf, knight, villager) '),
-    expect_response(harry, '!take knight', bot_dm, '[@harry] drunk_took_role(knight) knight_greeting(!kill)', '[wolf ] wolf_channel(@carl, @david, @frank) '),
-  ))
-
-  loop.run_until_complete(asyncio.gather(
-    expect_response(carl, '!kill anne', channels['wolf '], '[wolf ] vote_kill(@carl, anne) wolf_need_consensus '),
-    expect_response(david, '!kill anne', channels['wolf '], '[wolf ] vote_kill(@david, anne) wolf_need_consensus '),
-    expect_response(frank, '!kill anne', channels['wolf '], '[wolf ] vote_kill(@frank, anne) wolf_kill(anne) '),
-    expect_response(bob, '!defend bob', bot_dm, '[@bot] confirm(@bob) defend_success(bob) ', '[@elsa] witch_death witch_revive(!revive) '),
-    expect_response(elsa, '!sleep', bot_dm, '[@bot] confirm(@elsa) good_night '),
-    expect_response(george, '!investigate elsa, bob', bot_dm, '[@bot] investigate_same(elsa, bob) ', '[game] wake_up_death(@anne) ', '[game] vote(!vote, !votenolynch) '),
-    expect_response(harry, '!kill anne', game, '[game] question(@harry) target_dead '),
-    expect_response(harry, '!kill bob', game, '[game] confirm(@harry) knight_kill(@harry, @bob) ', '[game] go_to_sleep '),
-    expect_response(carl, '!kill elsa', channels['wolf '], '[wolf ] vote_kill(@carl, elsa) wolf_need_consensus '),
+    test_dm(harry, '!take vilager', '[@bot] confused(`vilager`) '),
+    test_dm(harry, '!take wolf', '[@bot] question(@harry) take_notavailable(wolf, knight, villager) '),
+    test_dm(harry, '!take knight', '[@harry] drunk_took_role(knight) knight_greeting(!kill)', '[wolf ] wolf_channel(@carl, @david, @frank) '),
+    test_wolf(carl, '!kill anne', '[wolf ] vote_kill(@carl, anne) wolf_need_consensus '),
+    test_wolf(david, '!kill anne', '[wolf ] vote_kill(@david, anne) wolf_need_consensus '),
+    test_wolf(frank, '!kill anne', '[wolf ] vote_kill(@frank, anne) wolf_kill(anne) '),
+    test_dm(bob, '!defend bob', '[@bot] confirm(@bob) defend_success(bob) ', '[@elsa] witch_death witch_revive(!revive) '),
+    test_dm(elsa, '!sleep', '[@bot] confirm(@elsa) good_night '),
+    test_dm(george, '!investigate elsa, bob', '[@bot] investigate_same(elsa, bob) ', '[game] wake_up_death(@anne) ', '[game] vote(!vote, !votenolynch) '),
+    test_game(harry, '!kill anne', '[game] question(@harry) target_dead '),
+    test_game(harry, '!kill bob', '[game] confirm(@harry) knight_kill(@harry, @bob) ', '[game] go_to_sleep '),
+    test_wolf(carl, '!kill elsa', '[wolf ] vote_kill(@carl, elsa) wolf_need_consensus '),
   ))
 
   core.disconnect()
@@ -734,8 +714,8 @@ excess_roles(villager) ''' ),
   members = [ anne, bob, carl, david, elsa, frank, george, harry, ignacio ]
   player_list = 'player_list(anne, bob, carl, david, elsa, frank, george, harry, ignacio) '
   loop.run_until_complete(asyncio.gather(
-    expect_response(anne, '!load _test_empty', game, '[game] confirm(@anne) load_success(_test_empty) '),
-    expect_response(anne, '!startimmediate', game,
+    test_game(anne, '!load _test_empty', '[game] confirm(@anne) load_success(_test_empty) '),
+    test_game(anne, '!startimmediate',
         '[game] start(@anne, @bob, @carl, @david, @elsa, @frank, @george, @harry, @ignacio) list_roles(wolf, thief, troublemaker, drunk, wolf, villager, seer, clone, minion, insomniac, tanner, villager) ',
         '[@anne] role(tanner) tanner_greeting',
         '[@bob] role(thief) thief_greeting(!steal)',
@@ -752,29 +732,29 @@ excess_roles(villager) ''' ),
         '[@harry] ' + player_list,
         '[@ignacio] role(insomniac) insomniac_greeting',
     ),
-    expect_response(anne, '!wakeup', game, '[@ignacio] insomniac_reveal(insomniac) ', '[game] wake_up vote(!vote, !votenolynch) ' ),
-    expect_response(anne, '!vote harry', game, '[game] vote_success(@anne, @harry) remind_unvote(!unvote) '),
-    expect_response(bob, '!vote harry', game, '[game] vote_success(@bob, @harry) remind_unvote(!unvote) '),
-    expect_response(elsa, '!vote harry', game, '[game] vote_success(@elsa, @harry) remind_unvote(!unvote) '),
-    expect_response(david, '!vote harry', game, '[game] vote_success(@david, @harry) remind_unvote(!unvote) '),
-    expect_response(carl, '!vote harry', game, '[game] vote_success(@carl, @harry) remind_unvote(!unvote) ', '[game] landslide_vote_countdown(@harry, {}) '.format(core.LANDSLIDE_VOTE_COUNTDOWN) ),
-    expect_response(frank, '!vote harry', game, '[game] vote_success(@frank, @harry) remind_unvote(!unvote) '),
-    expect_response(george, '!vote harry', game, '[game] vote_success(@george, @harry) remind_unvote(!unvote) '),
-    expect_response(ignacio, '!vote harry', game, '[game] vote_success(@ignacio, @harry) remind_unvote(!unvote) '),
-    expect_response(harry, '!vote harry', game, '[game] vote_success(@harry, @harry) remind_unvote(!unvote) ',
+    test_game(anne, '!wakeup', '[@ignacio] insomniac_reveal(insomniac) ', '[game] wake_up vote(!vote, !votenolynch) ' ),
+    test_game(anne, '!vote harry', '[game] vote_success(@anne, @harry) remind_unvote(!unvote) '),
+    test_game(bob, '!vote harry', '[game] vote_success(@bob, @harry) remind_unvote(!unvote) '),
+    test_game(elsa, '!vote harry', '[game] vote_success(@elsa, @harry) remind_unvote(!unvote) '),
+    test_game(david, '!vote harry', '[game] vote_success(@david, @harry) remind_unvote(!unvote) '),
+    test_game(carl, '!vote harry', '[game] vote_success(@carl, @harry) remind_unvote(!unvote) ', '[game] landslide_vote_countdown(@harry, {}) '.format(core.LANDSLIDE_VOTE_COUNTDOWN) ),
+    test_game(frank, '!vote harry', '[game] vote_success(@frank, @harry) remind_unvote(!unvote) '),
+    test_game(george, '!vote harry', '[game] vote_success(@george, @harry) remind_unvote(!unvote) '),
+    test_game(ignacio, '!vote harry', '[game] vote_success(@ignacio, @harry) remind_unvote(!unvote) '),
+    test_game(harry, '!vote harry', '[game] vote_success(@harry, @harry) remind_unvote(!unvote) ',
         '[game] vote_result(vote_item(@harry, 9) ) ',
         '[game] lynch(@harry) ',
         '[game] reveal_player(@harry, clone) ',
         '[game] no_winners ',
-        r'''[game] reveal_all(anne:tanner
-bob:thief
-carl:troublemaker
-david:drunk
-elsa:villager
-frank:villager
-george:seer
-harry:clone
-ignacio:insomniac) 
+        r'''[game] reveal_all(reveal_item(anne, tanner) 
+reveal_item(bob, thief) 
+reveal_item(carl, troublemaker) 
+reveal_item(david, drunk) 
+reveal_item(elsa, villager) 
+reveal_item(frank, villager) 
+reveal_item(george, seer) 
+reveal_item(harry, clone) 
+reveal_item(ignacio, insomniac) ) 
 excess_roles(wolf, minion, wolf) ''' ),
   ))
 
@@ -784,9 +764,6 @@ excess_roles(wolf, minion, wolf) ''' ),
 
 ################################ MAIN ################################
 
-setup_core()
-full_test(lang.vn)
-
+full_test('vn')
 reset_core()
-setup_core()
-full_test(lang.en)
+full_test('en')
