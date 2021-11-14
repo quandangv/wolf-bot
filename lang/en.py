@@ -134,8 +134,9 @@ vote_result = "The village have finished voting! The result is:\n{}"
 vote_item = "- {} with **{}** votes"
 vote_detail_item = "- **{}** votes for {}"
 vote_detail_item_nokill = "- **{}** votes not to kill"
-no_lynch = "**No kill**"
+no_lynch_vote = "**No kill**"
 remove_notfound = "there is currently no {} in the game"
+take_notavailable = "you can't choose **{}**, you have to choose between **{}**"
 
 add_wronguse = "send `{0}  role` to add a role to the game. For example, `{0} villager`"
 remove_wronguse = "send `{0}  role` to remove a role from the game. For example, `{0} seer`"
@@ -174,6 +175,8 @@ poison_success = "you poisoned **{}**"
 revive_success = "you revived"
 investigate_same = "{} **=** {}"
 investigate_diff = "{} **≠** {}"
+drunk_took_role = "you have become a **{}**. "
+knight_kill = "{} pulled out their lance and swiftly end {}'s life"
 
 no_swap_self = "you can't swap your own role"
 seer_self = "you shouldn't see yourself"
@@ -254,4 +257,4 @@ classic_witch = ( "phù thủy", "Người này sẽ có một bình thuốc c�
 classic_detective = ( "thám tử", "Thám tử sẽ điều tra 2 người mỗi đêm, biết được họ có cùng phe với nhau không", "Mỗi đêm bạn hãy dùng lệnh `{}  người-chơi-1,  người-chơi-2` để chọn hai người để điều tra xem họ có cùng phe với nhau không" )
 classic_wolfsheep = ( "sói trắng", "Đây là một con sói, nhưng mang dáng vóc và hành vi của dân làng, giúp nó qua mặt được các chức năng soi và điều tra", "Hãy dùng lệnh `{}  mục-tiêu` để chọn người mình muốn giết" )
 classic_drunk = ( "kẻ say rượu", "Khi chơi chức năng này, trò chơi sẽ được set dư ra 2 lá bài. Đêm đầu tiên, kẻ say rượu sẽ được xem 2 lá bài dư và chọn một trong hai làm chức năng của mình. Nếu một trong 2 chức năng đó là sói, người chơi phải chọn sói", "", "say rượu" )
-
+classic_knight = ( "hiệp sĩ", "Một lần trong game, vào ban ngày, hiệp sĩ có thể tiết lộ chức năng của mình và rút gươm giết một người. Cả làng sẽ lập tức đi ngủ", "Khi trời sáng, bạn có thể dùng lệnh `{}  mục tiêu` để giết một người và buộc cả làng đi ngủ", "kỵ sĩ" )

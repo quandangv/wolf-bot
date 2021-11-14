@@ -43,10 +43,10 @@ PLAYER_PERSISTENT_ATTR = ['is_admin', 'extern', 'role', 'vote']
 # They must be provided to the module via the @action decorator
 
 def action(func):
-  accepted_names = [ 'get_available_members', 'shuffle_copy', 'is_dm_channel', 'tr', 'add_member', 'create_channel', 'main_channel', 'is_public_channel', 'debug' ]
+  accepted_names = [ 'get_available_members', 'shuffle_copy', 'is_dm_channel', 'tr', 'add_member', 'create_channel', 'main_channel', 'is_public_channel', 'debug', 'sort_players' ]
   name = func.__name__
   if not name in accepted_names:
-    raise ValueError("Action not used: {}".format(name))
+    raise ValueError("Invalid action: {}".format(name))
   else:
     globals()[name] = func
   return func
@@ -60,6 +60,7 @@ def is_dm_channel(channel): raise missing_action_error('is_dm_channel')
 def is_public_channel(channel): raise missing_action_error('is_public_channel')
 def main_channel(): raise missing_action_error('get_main_channel')
 def shuffle_copy(arr): return random.sample(arr, k=len(arr))
+def sort_players(players): return players
 
 def missing_action_error(name):
   return NotImplementedError("Action `{}` not implemented! Implement it using the @action decorator".format(name))
@@ -89,6 +90,8 @@ class Player:
     self.extern = extern
     self.role = None
     self.vote = None
+  def persistent(self):
+    return self.role or self.is_admin
 
   @dictionize.dict_keys
   @dictionize.sub_hint('role', Role.dictionize__)
@@ -287,7 +290,7 @@ class Dictionize:
   async def dtemplate(self, dict):
     return THIS_MODULE
   def e_players(self, dict, val):
-    dict['players'] = [ dictionize.encode(p, Player.full_dictionize__) for p in val.values() ]
+    dict['players'] = [ dictionize.encode(p, Player.full_dictionize__) for p in val.values() if p.persistent() ]
   async def d_players(self, obj, val):
     player_hint = Player.FullDictionize(await get_available_members())
     for p in val:
@@ -696,7 +699,7 @@ async def RevealAll(message, args):
 
 async def low_reveal_all(channel):
   reveal_item = tr('reveal_item')
-  await channel.send(tr('reveal_all').format('\n'.join([ reveal_item.format(player.extern.name, get_role(player)) for player in players.values() if player.role ])) + '\n' + tr('excess_roles').format(', '.join([name for name in excess_roles])))
+  await channel.send(tr('reveal_all').format('\n'.join([ reveal_item.format(player.extern.name, get_role(player)) for player in sort_players(players.values()) if player.role ])) + '\n' + tr('excess_roles').format(', '.join([name for name in excess_roles])))
 
 ############################# UTILS ############################
 
@@ -721,6 +724,7 @@ def disconnect():
   roles.clear()
   channel_events.clear()
   generate_injections()
+  played_roles.clear()
 
 async def confirm(message, text):
   await message.reply(tr('confirm').format(message.author.mention) + str(text))
