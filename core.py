@@ -522,8 +522,7 @@ async def StartImmediate(message, args):
       for idx in range(len(shuffled_roles) - player_count):
         excess_roles.append(shuffled_roles[-idx - 1])
       globals()['og_excess'] = excess_roles[:]
-
-      player_list = tr('player_list').format(', '.join([member.name for member in members]))
+      globals()['player_list'] = tr('player_list').format(', '.join([member.name for member in members]))
       prompted_setup = False
       for idx, member in enumerate(members):
         player = get_player(member)
@@ -559,6 +558,7 @@ async def finish_game_setup():
     msg = tr(channel_name).format(join_with_and([player.extern.mention for player in channel.players]))
     if hasattr(channel, 'discussing'):
       msg += tr('sleep_info').format(command_name('Sleep'))
+    msg += '\n' + player_list
     await channel.extern.send(msg)
     if channel_name in channel_events:
       await channel_events[channel_name](channel)

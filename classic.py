@@ -54,6 +54,7 @@ def connect(core):
     if isinstance(target, core.Player) and not hasattr(target, 'defended'):
       target.alive = False
       attack_deaths.append(target)
+    await core.tmp_channels['wolf'].extern.send(tr('wolf_target_locked'))
     for player in known_alive:
       if hasattr(player.role, 'on_wolves_done'):
         await player.role.on_wolves_done(player)
@@ -243,7 +244,6 @@ def connect(core):
           return False
       else:
         wolf_channel.target = self.target
-        await on_wolf_phase_use()
         return True
 
     async def on_start(self, player, first_time = True):
@@ -260,6 +260,7 @@ def connect(core):
           msg = tr('vote_kill').format(me.extern.mention, player.extern.name)
           if await self.check_consensus(msg, player, tmp_channel):
             await tmp_channel.extern.send(msg + tr('wolf_kill').format(self.target.extern.name))
+            await on_wolf_phase_use()
       else:
         await question(message, tr('kill_already'))
 
@@ -270,6 +271,7 @@ def connect(core):
         msg = tr('vote_no_kill').format(me.extern.mention)
         if await self.check_consensus(msg, True, tmp_channel):
           await tmp_channel.extern.send(msg + tr('wolf_no_kill'))
+          await on_wolf_phase_use()
       else:
         await question(message, tr('kill_already'))
 

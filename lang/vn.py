@@ -20,6 +20,7 @@ wake_up = [ "Ò ó ooo, sáng rồi nè, dậy treo cổ mấy con sói đii. ",
 wake_up_death = [ "Cả làng dậy đi nào! Đêm qua có **{}** chết", "Ò ó ooo, trời đã sáng, còn **{}** đã chết", "Mọi người hãy dành một giây mặc niệm cho **{}** đã chết trong đêm" ]
 wake_up_no_death = [ "Thật là một ngày đẹp trời! Cả làng dậy và không ai chết cả", "Ò ó ooo cả làng dậy đi, hôm nay không có ai chết cả", "Chúc mừng mọi người trong làng đã an toàn trải qua một đêm dài" ]
 go_to_sleep = [ "Và thế là cả làng đi ngủ", "Màn đêm buông xuống, mọi người hãy ngủ đi", "Không còn gì để làm nữa, mọi người trong làng cùng đi ngủ" ]
+wolf_target_locked = "Mục tiêu của bầy sói đã được ghi nhận, các bạn sẽ không được đổi mục tiêu nữa"
 winners = [ "Chúc mừng {} đã chiến thắng!", "{} đã giành lấy chiến thắng trong bàn này" ]
 no_winners = [ "Hahaha trò chơi không ai thắng cả", "Ván này mọi người đều thua nha :)" ]
 wolf_victory = [ "Những con sói để lộ bộ mặt thật của mình và cùng nhau cắn chết hết những dân làng còn lại", "Không còn chần chờ gì nữa, những con sói vồ lấy những dân làng còn lại ăn thịt" ]

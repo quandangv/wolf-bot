@@ -48,6 +48,7 @@ go_to_sleep = [
     "The day is fading, everyone need to go to bed",
     "With nothing else to do, everyone in the village went to sleep"
 ]
+wolf_target_locked = "The wolves' target has been locked"
 winners = [
     "Congratulations to {} for winning the game!",
     "{} snatched the victory of the game"

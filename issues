@@ -3,11 +3,11 @@
 - Force fixed or randomized order of action for roles
 - Manually add players to the game
 - Use role class in excess_roles instead of role names
-- Announce end of wolf phase to players
 
 # DOING
 
 # DONE
+- Announce end of wolf phase to players
 - Disable lynching dead players
 - Check both vn and en translations when testing
 - normalize command names
