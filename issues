@@ -3,13 +3,13 @@
 - Force fixed or randomized order of action for roles
 - Manually add players to the game
 - Use role class in excess_roles instead of role names
-- Check both vn and en translations when testing
 - Announce end of wolf phase to players
 - Disable lynching dead players
 
 # DOING
 
 # DONE
+- Check both vn and en translations when testing
 - normalize command names
 - not_voting missing in language files
 - Test for help on role
