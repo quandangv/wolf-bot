@@ -110,6 +110,18 @@ def connect(core):
   class OneNightRole(core.Role):
     async def on_start(self, player, first_time = True):
       player.real_role = self.name
+    @core.single_arg('vote_wronguse')
+    @core.check_public
+    @core.check_status('day')
+    async def Vote(self, me, message, args):
+      player = await find_player(message, args)
+      if player:
+        await core.on_voted(me, player)
+    @core.check_public
+    @core.check_status('day')
+    async def VoteNoLynch(self, me, message, args):
+      await core.on_voted(me, True)
+
 
   @core.role
   class Villager(OneNightRole): pass
@@ -125,6 +137,7 @@ def connect(core):
   @core.role
   class Seer(Villager):
     __slots__ = ('target', 'reveal_count')
+    get_player_list = True
     def __init__(self):
       self.target = None
       self.reveal_count = 0
@@ -169,6 +182,7 @@ def connect(core):
   @core.role
   class Clone(Villager):
     __slots__ = ('target',)
+    get_player_list = True
     def __init__(self):
       self.target = None
 
@@ -188,6 +202,7 @@ def connect(core):
   @core.role
   class Troublemaker(Villager):
     __slots__ = ('target',)
+    get_player_list = True
     def __init__(self):
       self.target = None
 
@@ -212,6 +227,7 @@ def connect(core):
   @core.role
   class Thief(Villager):
     __slots__ = ('target',)
+    get_player_list = True
     def __init__(self):
       self.target = None
 

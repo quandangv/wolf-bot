@@ -4,11 +4,11 @@
 - Manually add players to the game
 - Use role class in excess_roles instead of role names
 - Announce end of wolf phase to players
-- Disable lynching dead players
 
 # DOING
 
 # DONE
+- Disable lynching dead players
 - Check both vn and en translations when testing
 - normalize command names
 - not_voting missing in language files

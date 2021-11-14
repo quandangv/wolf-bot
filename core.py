@@ -408,7 +408,7 @@ class SetupCommand(AdminCommand):
       await func(message, args)
     super().decorate(check)
 
-ROLE_COMMANDS = [ 'Kill', 'Defend', 'See', 'Swap', 'Steal', 'Take', 'Clone', 'Reveal', 'Sleep', 'Revive', 'Poison', 'Investigate' ]
+ROLE_COMMANDS = [ 'Kill', 'Defend', 'See', 'Swap', 'Steal', 'Take', 'Clone', 'Reveal', 'Sleep', 'Revive', 'Poison', 'Investigate', 'Vote', 'VoteNoLynch' ]
 for cmd_name in ROLE_COMMANDS:
   def func(): pass
   func.__name__ = cmd_name
@@ -487,21 +487,6 @@ async def Unvote(me, message, args):
     return await question(message, tr('not_voting'))
   await on_voted(me, None)
 
-@cmd(PlayerCommand())
-@single_arg('vote_wronguse')
-@check_public
-@check_status('day')
-async def Vote(me, message, args):
-  player = await find_player(message, args)
-  if player:
-    await on_voted(me, player)
-
-@cmd(PlayerCommand())
-@check_public
-@check_status('day')
-async def VoteNoLynch(me, message, args):
-  await on_voted(me, True)
-
 @cmd(SetupCommand())
 async def StartImmediate(message, args):
   try:
@@ -543,7 +528,7 @@ async def StartImmediate(message, args):
       for idx, member in enumerate(members):
         player = get_player(member)
         await set_role('role', player, roles[shuffled_roles[idx]], True)
-        if player.role.commands:
+        if getattr(player.role, 'get_player_list', False):
           await player.extern.send(player_list)
         if hasattr(player.role, 'new_night'):
           player.role.new_night()
@@ -687,11 +672,11 @@ async def WakeUp(_, __):
       await player.role.before_dawn(player)
   global status
   status = 'day'
+  await on_wake_up()
   global vote_list
   vote_list = { None: player_count }
   for p in players.values():
     p.vote = None
-  await on_wake_up()
 
 @cmd(DebugCommand())
 async def RevealAll(message, args):

@@ -109,6 +109,7 @@ def connect(core):
   def know_dead(player):
     if player in known_alive:
       known_alive.pop(known_alive.index(player))
+    core.player_count = len(known_alive)
     player.role = Dead(player.role)
 
   async def not_endgame():
@@ -197,6 +198,17 @@ def connect(core):
       if first_time:
         player.alive = True
         player.side = self.default_side()
+    @core.single_arg('vote_wronguse')
+    @core.check_public
+    @core.check_status('day')
+    async def Vote(self, me, message, args):
+      player = await find_player(message, args)
+      if player:
+        await core.on_voted(me, player)
+    @core.check_public
+    @core.check_status('day')
+    async def VoteNoLynch(self, me, message, args):
+      await core.on_voted(me, True)
 
   class Dead:
     def __init__(self, role):
@@ -267,6 +279,7 @@ def connect(core):
 
   @core.role
   class Guard(Villager):
+    get_player_list = True
     wolf_phase = True
     __slots__ = ('target', 'prev_target')
     def __init__(self):
@@ -296,6 +309,7 @@ def connect(core):
   @core.role
   class Witch(Villager):
     after_wolf_phase = True
+    get_player_list = True
     __slots__ = ('revived', 'poisoned', 'sleep')
     def __init__(self):
       self.revived = False
@@ -376,6 +390,7 @@ def connect(core):
   @core.role
   class Detective(Villager):
     after_wolf_phase = True
+    get_player_list = True
     __slots__ = ('sleep',)
     def __init__(self):
       self.sleep = False

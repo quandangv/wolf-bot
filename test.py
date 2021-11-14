@@ -141,9 +141,14 @@ async def low_expect_response(coroutine, *response):
     try:
       if isinstance(response, str):
         response = [ response ]
-      assert len(posts) == len(response), r"""
-Expected: {},
-     Got: {}""".format(response, posts)
+      if isinstance(response, tuple):
+        response = list(response)
+      global posts
+      diff = len(posts) - len(response)
+      if diff < 0:
+        posts += [''] * (-diff)
+      elif diff > 0:
+        response += [''] * diff
       for idx, r in enumerate(response):
         assert r == posts[idx], r"""At index {},
 Expected: {}.
@@ -222,8 +227,8 @@ def full_test(lang_name):
   loop.run_until_complete(asyncio.gather(
     test_game(anne, '!save _test_empty', '[game] confirm(@anne) save_success(_test_empty) '),
     test_game(anne, '!info', "[game] confirm(@anne) no_roles default_roles(['Wolf', 'Thief', 'Troublemaker', 'Drunk', 'Wolf', 'Villager', 'Seer', 'Clone', 'Minion', 'Insomniac', 'Tanner', 'Villager']) "),
-    test_game(anne, '!help', '[game] confirm(@anne) help_list(!help`, `!info`, `!unvote`, `!vote`, `!votenolynch`, `!votedetail`, `!votecount`, `!history`, `!addrole`, `!removerole`, `!startimmediate`, `!closevote`, `!save`, `!load`, `!endgame`, `!wakeup) help_detail(!help) '),
-    test_game(carl, '!help', '[game] confirm(@carl) help_list(!help`, `!info`, `!unvote`, `!vote`, `!votenolynch`, `!votedetail`, `!votecount`, `!history) help_detail(!help) '),
+    test_game(anne, '!help', '[game] confirm(@anne) help_list(!help`, `!info`, `!unvote`, `!votedetail`, `!votecount`, `!history`, `!addrole`, `!removerole`, `!startimmediate`, `!closevote`, `!save`, `!load`, `!endgame`, `!wakeup) help_detail(!help) '),
+    test_game(carl, '!help', '[game] confirm(@carl) help_list(!help`, `!info`, `!unvote`, `!votedetail`, `!votecount`, `!history) help_detail(!help) '),
 
     test_game(anne, '!help help', '[game] confirm(@anne) help_desc(!help)aliases_list(help_alias) '),
     test_game(anne, '!help tanner', '[game] confirm(@anne) tanner_desc'),
@@ -255,9 +260,7 @@ def full_test(lang_name):
     test_game(anne, '!startimmediate',
       '[game] start(@anne, @bob, @carl, @david, @elsa, @frank, @george, @harry, @ignacio) list_roles(villager, villager, villager, insomniac, clone, drunk, troublemaker, thief, villager, seer, wolf, wolf) ',
       '[@anne] role(wolf) wolf_greeting',
-      '[@anne] ' + player_list,
       '[@bob] role(wolf) wolf_greeting',
-      '[@bob] ' + player_list,
       '[@carl] role(seer) seer_greeting(!reveal, !see)',
       '[@carl] ' + player_list,
       '[@david] role(villager) villager_greeting',
@@ -266,7 +269,6 @@ def full_test(lang_name):
       '[@frank] role(troublemaker) troublemaker_greeting(!swap)',
       '[@frank] ' + player_list,
       '[@george] role(drunk) drunk_greeting(!take)',
-      '[@george] ' + player_list,
       '[@harry] role(clone) clone_greeting(!clone)',
       '[@harry] ' + player_list,
       '[@ignacio] role(insomniac) insomniac_greeting',
@@ -393,7 +395,6 @@ excess_roles(drunk, villager, villager) ''' ),
       '[@bob] role(clone) clone_greeting(!clone)',
       '[@bob] ' + player_list,
       '[@carl] role(drunk) drunk_greeting(!take)',
-      '[@carl] ' + player_list,
       '[@david] role(troublemaker) troublemaker_greeting(!swap)',
       '[@david] ' + player_list,
       '[@elsa] role(thief) thief_greeting(!steal)',
@@ -401,7 +402,6 @@ excess_roles(drunk, villager, villager) ''' ),
       '[@frank] role(seer) seer_greeting(!reveal, !see)',
       '[@frank] ' + player_list,
       '[@george] role(wolf) wolf_greeting',
-      '[@george] ' + player_list,
       '[@harry] role(minion) minion_greeting',
       '[@harry] wolves_reveal(george) ',
       '[@ignacio] role(hunter) hunter_greeting',
@@ -525,18 +525,15 @@ excess_roles(drunk, villager, villager) ''' ),
         '[@bob] role(guard) guard_greeting(!defend)',
         '[@bob] ' + player_list,
         '[@carl] role(wolf) wolf_greeting(!kill)',
-        '[@carl] ' + player_list,
         '[@david] role(villager) villager_greeting',
         '[@elsa] role(witch) witch_greeting(!poison, !revive, !sleep)',
         '[@elsa] ' + player_list,
         '[@frank] role(wolf) wolf_greeting(!kill)',
-        '[@frank] ' + player_list,
         '[@george] role(detective) detective_greeting(!investigate)',
         '[@george] ' + player_list,
         '[@harry] role(drunk) drunk_greeting',
         '[@harry] excess_roles(wolfsheep, villager) drunk_choose_wolf ',
         '[@harry] drunk_took_role(wolfsheep) wolfsheep_greeting(!kill)',
-        '[@harry] ' + player_list,
         '[wolf ] wolf_channel(@carl, @frank, @harry) ',
     ),
     test_game(david, '!sleep', '[game] confirm(@david) good_night '),
@@ -637,12 +634,13 @@ excess_roles(villager) ''' ),
     test_dm(george, '!investigate elsa, harry', '[@bot] investigate_same(elsa, harry) ', '[game] wake_up_death(@harry) ', '[game] vote(!vote, !votenolynch) ' ),
     test_game(anne, '!vote frank', '[game] vote_success(@anne, @frank) remind_unvote(!unvote) '),
     test_game(bob, '!vote frank', '[game] vote_success(@bob, @frank) remind_unvote(!unvote) '),
-    test_game(carl, '!vote frank', '[game] vote_success(@carl, @frank) remind_unvote(!unvote) '),
+    test_game(carl, '!vote frank', '[game] question(@carl) dead '),
+    test_game(david, '!vote carl', '[game] question(@david) target_dead '),
     test_game(david, '!vote frank', '[game] vote_success(@david, @frank) remind_unvote(!unvote) '),
     test_game(elsa, '!vote frank', '[game] vote_success(@elsa, @frank) remind_unvote(!unvote) ', '[game] landslide_vote_countdown(@frank, 0.3) ' ),
     test_game(frank, '!vote frank', '[game] vote_success(@frank, @frank) remind_unvote(!unvote) '),
-    test_game(harry, '!vote frank', '[game] vote_success(@harry, @frank) remind_unvote(!unvote) '),
-    test_game(george, '!vote frank', '[game] vote_success(@george, @frank) remind_unvote(!unvote) ', '[game] vote_result(vote_item(@frank, 8) ) ', '[game] lynch(@frank) ', '[game] village_victory ', '[game] winners(@anne, @bob, @david, @elsa, @george) ', r'''[game] reveal_all(reveal_item(anne, villager) 
+    test_game(harry, '!vote frank', '[game] question(@harry) dead '),
+    test_game(george, '!vote frank', '[game] vote_success(@george, @frank) remind_unvote(!unvote) ', '[game] vote_result(vote_item(@frank, 6) ) ', '[game] lynch(@frank) ', '[game] village_victory ', '[game] winners(@anne, @bob, @david, @elsa, @george) ', r'''[game] reveal_all(reveal_item(anne, villager) 
 reveal_item(bob, guard) 
 reveal_item(carl, wolf) 
 reveal_item(david, villager) 
@@ -674,18 +672,14 @@ excess_roles(villager) ''' ),
         '[@bob] role(guard) guard_greeting(!defend)',
         '[@bob] ' + player_list,
         '[@carl] role(wolf) wolf_greeting(!kill)',
-        '[@carl] ' + player_list,
         '[@david] role(wolfsheep) wolfsheep_greeting(!kill)',
-        '[@david] ' + player_list,
         '[@elsa] role(witch) witch_greeting(!poison, !revive, !sleep)',
         '[@elsa] ' + player_list,
         '[@frank] role(wolf) wolf_greeting(!kill)',
-        '[@frank] ' + player_list,
         '[@george] role(detective) detective_greeting(!investigate)',
         '[@george] ' + player_list,
         '[@harry] role(drunk) drunk_greeting',
         '[@harry] excess_roles(knight, villager) drunk_choose(!take) ',
-        '[@harry] ' + player_list,
     ),
     test_dm(harry, '!take vilager', '[@bot] confused(`vilager`) '),
     test_dm(harry, '!take wolf', '[@bot] question(@harry) take_notavailable(wolf, knight, villager) '),
@@ -723,7 +717,6 @@ excess_roles(villager) ''' ),
         '[@carl] role(troublemaker) troublemaker_greeting(!swap)',
         '[@carl] ' + player_list,
         '[@david] role(drunk) drunk_greeting(!take)',
-        '[@david] ' + player_list,
         '[@elsa] role(villager) villager_greeting',
         '[@frank] role(villager) villager_greeting',
         '[@george] role(seer) seer_greeting(!reveal, !see)',
