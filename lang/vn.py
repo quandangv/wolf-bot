@@ -52,7 +52,7 @@ command_item_empty = "- {} gọi `{}`"
 witch_revive = ". Hãy nhắn lệnh `{1}` để cứu họ"
 
 vote = [ "Dùng lệnh `{} người chơi` để bỏ phiếu treo cổ người đó, hoặc `{}`để không treo ai cả", "Bạn ghét đứa nào thì cứ `{} đứa đó` nha, còn không muốn giết ai thì nhắn `{}`" ]
-help_list = [ "các lệnh được thực hiện là `{}`.", "ngoài cắn người, bạn còn có thể dùng lệnh `{}`. (giỡn thoi nha)", "hãy thử một trong các lệnh `{}`" ]
+help_list = [ "Các lệnh bạn được thực hiện là `{}`.", "Hãy thử một trong các lệnh `{}`" ]
 help_detail = ". Để tìm hiểu thêm về từng lệnh, hãy nhắn `{0}  tên lệnh`"
 list_roles = [ "Ván này mình chơi **{}**", "Trong làng có **{}**" ]
 player_needed = [ "; cần có **{}** người chơi", "; đủ cho **{}** người chơi" ]

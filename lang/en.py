@@ -105,8 +105,7 @@ vote = [
     "If you hate  someone, just send `{} them`, or send `{}` if you don't want to kill"
 ]
 help_list = [
-    "available commands are `{}`",
-    "other than killing villagers, you can also `{}`. (just kidding)",
+    "Available commands are `{}`",
     "Try sending one of `{}`"
 ]
 help_detail = ". To learn more about each command `{0}  command-name`"

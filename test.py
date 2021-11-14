@@ -227,8 +227,8 @@ def full_test(lang_name):
   loop.run_until_complete(asyncio.gather(
     test_game(anne, '!save _test_empty', '[game] confirm(@anne) save_success(_test_empty) '),
     test_game(anne, '!info', "[game] confirm(@anne) no_roles default_roles(['Wolf', 'Thief', 'Troublemaker', 'Drunk', 'Wolf', 'Villager', 'Seer', 'Clone', 'Minion', 'Insomniac', 'Tanner', 'Villager']) "),
-    test_game(anne, '!help', '[game] confirm(@anne) help_list(!help`, `!info`, `!unvote`, `!votedetail`, `!votecount`, `!history`, `!addrole`, `!removerole`, `!startimmediate`, `!closevote`, `!save`, `!load`, `!endgame`, `!wakeup) help_detail(!help) '),
-    test_game(carl, '!help', '[game] confirm(@carl) help_list(!help`, `!info`, `!unvote`, `!votedetail`, `!votecount`, `!history) help_detail(!help) '),
+    test_game(anne, '!help', '[@anne] help_list(!help`, `!info`, `!unvote`, `!votedetail`, `!votecount`, `!history`, `!addrole`, `!removerole`, `!startimmediate`, `!closevote`, `!save`, `!load`, `!endgame`, `!wakeup) help_detail(!help) '),
+    test_game(carl, '!help', '[@carl] help_list(!help`, `!info`, `!unvote`, `!votedetail`, `!votecount`, `!history) help_detail(!help) '),
 
     test_game(anne, '!help help', '[game] confirm(@anne) help_desc(!help)aliases_list(help_alias) '),
     test_game(anne, '!help tanner', '[game] confirm(@anne) tanner_desc'),
@@ -279,6 +279,7 @@ def full_test(lang_name):
   members.append(not_player)
 
   loop.run_until_complete(asyncio.gather(
+    test_dm(carl, '!help', '[@carl] help_list(!reveal`, `!see`, `!vote`, `!votenolynch`, `!help`, `!info`, `!unvote`, `!votedetail`, `!votecount`, `!history) help_detail(!help) '),
     test_game(anne, '!help villager ', '[game] confirm(@anne) villager_desc'),
     test_game(anne, '!addrole villager ', '[game] question(@anne) forbid_game_started(!addrole) '),
     test_dm(anne, '!revealall', r'''[@bot] reveal_all(reveal_item(anne, wolf) 

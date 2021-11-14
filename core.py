@@ -431,7 +431,7 @@ async def Help(message, args):
       command_list += admin_commands
     if player.role:
       command_list = player.role.commands + command_list
-    await confirm(message, tr('help_list').format('`, `'.join(command_list)) + tr('help_detail').format(command_name('Help')))
+    await message.author.send(tr('help_list').format('`, `'.join(command_list)) + tr('help_detail').format(command_name('Help')))
 
 @cmd(SetupCommand())
 async def AddRole(message, args):
