@@ -684,7 +684,10 @@ async def RevealAll(message, args):
 
 async def low_reveal_all(channel):
   reveal_item = tr('reveal_item')
-  await channel.send(tr('reveal_all').format('\n'.join([ reveal_item.format(player.extern.name, get_role(player)) for player in sort_players(players.values()) if player.role ])) + '\n' + tr('excess_roles').format(', '.join([name for name in excess_roles])))
+  msg = tr('reveal_all').format('\n'.join([ reveal_item.format(player.extern.name, get_role(player)) for player in sort_players(players.values()) if player.role ]))
+  if excess_roles:
+    msg += '\n' + tr('excess_roles').format(', '.join([name for name in excess_roles]))
+  await channel.send(msg)
 
 ############################# UTILS ############################
 
