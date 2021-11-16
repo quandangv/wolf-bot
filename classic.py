@@ -104,6 +104,8 @@ def connect(core):
     globals()['wolf_phase'] = True
     core.status = 'night'
     for player in core.players.values():
+      if hasattr(player, 'defended'):
+        del player.defended
       if hasattr(player.role, 'new_night'):
         player.role.new_night()
 
@@ -301,8 +303,6 @@ def connect(core):
         elif not GUARD_DEFEND_SELF and me.extern.id == player.extern.id:
           await question(message, tr('no_defend_self'))
         else:
-          if self.prev_target:
-            del self.prev_target.defended
           self.target = self.prev_target = player
           player.defended = True
           await confirm(message, tr('defend_success').format(player.extern.name))
