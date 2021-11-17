@@ -175,6 +175,9 @@ poison_success = "you poisoned **{}**"
 revive_success = "you revived"
 investigate_same = "{} **=** {}"
 investigate_diff = "{} **≠** {}"
+is_wolf = "🐺"
+is_human = "👶"
+unknown = "﻿:grey_question:﻿"
 drunk_took_role = "you have become a **{}**. "
 knight_kill = "{} pulled out their lance and swiftly end {}'s life"
 
@@ -238,12 +241,12 @@ cmd_revive = ( "revive", "When there is a death at night, witches can use `{0}` 
 cmd_poison = ( "poison", "Witches can use `{0}  player` to kill that player" )
 cmd_investigate = ( "investigate", "Detectives can use `{0}  player1, player2` to find out if they are on the same side" )
 
-onenight_villager = ( "dân thường", "Một con dân thường không có chức năng. Nhờ vậy, bạn sẽ được yên giấc vào ban đêm", "Ban đêm bạn không phải làm gì cả. Sáng dậy, bạn có thể vote người để treo cổ", "dân làng", "dân" )
-onenight_wolf = ( "sói", "Sói chống lại dân làng. Chúng sẽ thắng nếu người bị treo cổ là phe dân", "Bạn sẽ được thêm vào group sói. Ban ngày, hãy tìm cách treo cổ một người dân để chiến thắng" )
-onenight_tanner = ( "kẻ chán đời", "Một người với mục tiêu duy nhất là bị treo cổ. Nếu làng treo cổ nó, nó sẽ thắng và mọi người đều thua", "Sáng hôm sau, hãy cố gắng thuyết phục làng treo cổ mình", "chán đời" )
-onenight_insomniac = ( "cú đêm", "Đây là người ngủ trễ nhất làng. Trước khi ngủ, họ sẽ được xem lại chức năng của mình", "Bạn sẽ được thông báo chức năng cuối cùng của mình trước khi trời sáng", "kẻ mất ngủ" )
-onenight_thief = ( "trộm", "Người này sẽ đánh cắp chức năng của một người khác trong làng, thay thế bằng chức năng hiện có của mình", "Hãy dùng lệnh `{}  người-khác` để ăn cắp lá bài của họ", "kẻ trộm" )
-onenight_seer = ( "tiên tri", "Người này được soi chức năng của một người trong làng, hoặc soi {0.SEER_REVEAL} lá bài bên ngoài", "Hãy dùng lệnh `{0}  STT-lá-bài` để xem một lá bài bên ngoài, hoặc dùng lệnh `{1}  người-khác` để soi chức năng của họ" )
+onenight_villager = ( "villager", "An average villager with no special power. At least you will get to sleep the whole night", "You don't have anything to do at night. In the morning, you can vote to lynch someone" )
+onenight_wolf = ( "wolf", "Wolves plays against the village. They will win if the lynched person is on the village's side", "You have been added to the wolf group. In the morning, lynch a villager to win" )
+onenight_tanner = ( "tanner", "Một người với mục tiêu duy nhất là bị treo cổ. Nếu làng treo cổ nó, nó sẽ thắng và mọi người đều thua", "Sáng hôm sau, hãy cố gắng thuyết phục làng treo cổ mình", "chán đời" )
+onenight_insomniac = ( "insomniac", "Đây là người ngủ trễ nhất làng. Trước khi ngủ, họ sẽ được xem lại chức năng của mình", "Bạn sẽ được thông báo chức năng cuối cùng của mình trước khi trời sáng", "kẻ mất ngủ" )
+onenight_thief = ( "thief", "Người này sẽ đánh cắp chức năng của một người khác trong làng, thay thế bằng chức năng hiện có của mình", "Hãy dùng lệnh `{}  người-khác` để ăn cắp lá bài của họ", "kẻ trộm" )
+onenight_seer = ( "seer", "Người này được soi chức năng của một người trong làng, hoặc soi {0.SEER_REVEAL} lá bài bên ngoài", "Hãy dùng lệnh `{0}  STT-lá-bài` để xem một lá bài bên ngoài, hoặc dùng lệnh `{1}  người-khác` để soi chức năng của họ" )
 onenight_clone = ( "nhân bản", "Người này sẽ sao chép chức năng của một người khác trong làng", "Dùng lệnh `{}  người-khác` để sao chép chức năng của họ" )
 onenight_troublemaker = ( "phá rối", "Vào ban đêm, kẻ này sẽ tráo đổi chức năng của 2 người trong làng", "Hãy dùng lệnh `{}  người-1, người-2` để tráo chức năng của họ", "kẻ phá rối" )
 onenight_drunk = ( "kẻ say rượu", "Người này không biết chức năng của mình, và sẽ lấy một trong những lá bài bên ngoài để làm chức năng", "Hãy dùng lệnh `{}  STT-lá-bài` để đổi chức năng của mình lấy một lá bài bên ngoài", "say rượu" )
@@ -258,3 +261,4 @@ classic_detective = ( "thám tử", "Thám tử sẽ điều tra 2 người mỗ
 classic_wolfsheep = ( "sói trắng", "Đây là một con sói, nhưng mang dáng vóc và hành vi của dân làng, giúp nó qua mặt được các chức năng soi và điều tra", "Hãy dùng lệnh `{}  mục-tiêu` để chọn người mình muốn giết" )
 classic_drunk = ( "kẻ say rượu", "Khi chơi chức năng này, trò chơi sẽ được set dư ra 2 lá bài. Đêm đầu tiên, kẻ say rượu sẽ được xem 2 lá bài dư và chọn một trong hai làm chức năng của mình. Nếu một trong 2 chức năng đó là sói, người chơi phải chọn sói", "", "say rượu" )
 classic_knight = ( "hiệp sĩ", "Một lần trong game, vào ban ngày, hiệp sĩ có thể tiết lộ chức năng của mình và rút gươm giết một người. Cả làng sẽ lập tức đi ngủ", "Khi trời sáng, bạn có thể dùng lệnh `{}  mục tiêu` để giết một người và buộc cả làng đi ngủ", "kỵ sĩ" )
+classic_seer = ( "tiên tri", "Mỗi đêm, bạn sẽ được soi một người để xem họ theo phe sói hay người", "Hãy dùng lệnh `{}  người chơi` để soi chức năng của họ" )

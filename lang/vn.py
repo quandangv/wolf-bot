@@ -120,6 +120,9 @@ poison_success = "bạn đã dùng bình giết **{}**"
 revive_success = "bạn đã dùng cứu"
 investigate_same = "{} **=** {}"
 investigate_diff = "{} **≠** {}"
+is_wolf = "🐺"
+is_human = "👶"
+unknown = "﻿:grey_question:﻿"
 drunk_took_role = "bạn đã trở thành **{}**. "
 knight_kill = "{} rút thanh gươm hiệp sĩ của mình ra và đâm chết {}"
 
@@ -203,3 +206,4 @@ classic_detective = ( "thám tử", "Thám tử sẽ điều tra 2 người mỗ
 classic_wolfsheep = ( "sói trắng", "Đây là một con sói, nhưng mang dáng vóc và hành vi của dân làng, giúp nó qua mặt được các chức năng soi và điều tra", "Hãy dùng lệnh `{}  mục tiêu` để chọn người mình muốn giết" )
 classic_drunk = ( "trộm", "Khi chơi chức năng này, trò chơi sẽ được set dư ra 2 lá bài. Đêm đầu tiên, kẻ say rượu sẽ được xem 2 lá bài dư và chọn một trong hai làm chức năng của mình. Nếu một trong 2 chức năng đó là sói, người chơi phải chọn sói", "", "say rượu", "kẻ say rượu" )
 classic_knight = ( "hiệp sĩ", "Một lần trong game, vào ban ngày, hiệp sĩ có thể tiết lộ chức năng của mình và rút gươm giết một người. Cả làng sẽ lập tức đi ngủ", "Khi trời sáng, bạn có thể dùng lệnh `{}  mục tiêu` để giết một người và buộc cả làng đi ngủ", "kỵ sĩ" )
+classic_seer = ( "tiên tri", "Mỗi đêm, bạn sẽ được soi một người để xem họ theo phe sói hay người", "Hãy dùng lệnh `{}  người chơi` để soi chức năng của họ" )

@@ -419,6 +419,37 @@ def connect(core):
         await on_used()
 
   @core.role
+  class Seer(Villager):
+    after_wolf_phase = True
+    get_player_list = True
+    __slots__ = ('sleep',)
+    def __init__(self):
+      self.sleep = False
+    def new_night(self):
+      self.sleep = False
+
+    @core.check_dm
+    @core.check_status()
+    @wait_after_wolf_phase
+    @core.single_use('sleep')
+    async def See(self, me, message, args):
+      player = [arg.strip() for arg in args.split(',')]
+      if len(player) != 1:
+        return await question(message, tr('see_wronguse').format(command_name('See')))
+      player = await find_player(message, player[0])
+      if player:
+        side = player.side
+        if side == 'villager':
+          msg = tr('is_human')
+        elif side == 'wolf':
+          msg = tr('is_wolf')
+        else:
+          msg = tr('unknown')
+        await message.reply(msg)
+        self.sleep = True
+        await on_used()
+
+  @core.role
   class Drunk:
     player_count = -1
     prompted_setup = True
