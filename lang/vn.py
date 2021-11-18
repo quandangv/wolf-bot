@@ -157,6 +157,7 @@ dead = [ "bạn đã chết rồi mà", "hồn ma vất vưởng hãy ngủ đi,
 not_voting = "bạn chưa bỏ phiếu, sao mà hủy phiếu được"
 
 cmd_help = ( "giupdo", "`{0}` liệt kê các lệnh bạn được thực hiện.\nCòn `{0} câu lệnh` sẽ nhắn thông tin trợ giúp về lệnh\nVà `{0}  chức năng` sẽ giải thích chức năng đó", "trogiup" )
+cmd_start = ( "choi", "`{0}` để bắt đầu trò chơi" )
 cmd_startimmediate = ( "choingay", "`{0}` để bắt đầu chơi ngay" )
 cmd_addrole = ( "them", "`{0}  chức năng` sẽ thêm một chức năng vào game" )
 cmd_removerole = ( "bot", "`{0}  chức năng` để bỏ một chức năng khỏi game", "xoa" )

@@ -19,7 +19,6 @@ def connect(core):
   players = core.players
   confirm = core.confirm
   question = core.question
-  command_name = core.command_name
   find_player = core.find_player
   record_history = core.record_history
   on_used = core.on_used
@@ -326,7 +325,7 @@ def connect(core):
           self.sleep = True
           await checked_on_used()
         else:
-          await me.extern.send(tr('remind_sleep').format(command_name('Sleep')))
+          await me.extern.send(tr('remind_sleep').format(core.cmd_names['Sleep']))
 
     async def on_wolves_done(self, me):
       if attack_deaths:
@@ -406,7 +405,7 @@ def connect(core):
     async def Investigate(self, me, message, args):
       players = [arg.strip() for arg in args.split(',')]
       if len(players) != 2 or players[0] == players[1]:
-        return await question(message, tr('detective_wronguse').format(command_name('Investigate')))
+        return await question(message, tr('detective_wronguse').format(core.cmd_names['Investigate']))
       players = [ await find_player(message, name) for name in players ]
       if players[0] and players[1]:
         sides = [ p.side for p in players ]
@@ -435,7 +434,7 @@ def connect(core):
     async def See(self, me, message, args):
       player = [arg.strip() for arg in args.split(',')]
       if len(player) != 1:
-        return await question(message, tr('see_wronguse').format(command_name('See')))
+        return await question(message, tr('see_wronguse').format(core.cmd_names['See']))
       player = await find_player(message, player[0])
       if player:
         side = player.side
@@ -463,7 +462,7 @@ def connect(core):
             await self.take(me, role)
             break
         else:
-          await me.extern.send(msg + tr('drunk_choose').format(command_name('Take')))
+          await me.extern.send(msg + tr('drunk_choose').format(core.cmd_names['Take']))
 
     async def take(self, me, role):
       core.excess_roles.pop(core.excess_roles.index(role.name))

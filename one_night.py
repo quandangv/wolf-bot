@@ -10,7 +10,6 @@ def connect(core):
   players = core.players
   confirm = core.confirm
   question = core.question
-  command_name = core.command_name
   find_player = core.find_player
   record_history = core.record_history
   on_used = core.on_used
@@ -89,7 +88,7 @@ def connect(core):
     try:
       number = int(args)
     except ValueError:
-      return await question(message, tr(wronguse_msg).format(command_name(cmd_name), EXCESS_ROLES))
+      return await question(message, tr(wronguse_msg).format(core.cmd_names[cmd_name], EXCESS_ROLES))
     if number < 1 or number > EXCESS_ROLES:
       return await question(message, tr('choice_outofrange').format(EXCESS_ROLES))
     return number
@@ -102,7 +101,7 @@ def connect(core):
           if not player.extern.bot:
             lone_wolf = players[player.extern.id]
             lone_wolf.role.target = None
-        await channel.extern.send(tr('wolf_get_reveal').format(command_name('Reveal'), EXCESS_ROLES))
+        await channel.extern.send(tr('wolf_get_reveal').format(core.cmd_names['Reveal'], EXCESS_ROLES))
         break
 
 ############################ ROLES #############################
@@ -149,7 +148,7 @@ def connect(core):
       if self.reveal_count:
         return await question(message, tr('seer_reveal_already'))
       if self.target:
-        return await question(message, tr('ability_used').format(command_name('See')))
+        return await question(message, tr('ability_used').format(core.cmd_names['See']))
       if me.extern.name == args:
         return await question(message, tr('seer_self'))
       player = await find_player(message, args)
@@ -212,7 +211,7 @@ def connect(core):
     async def Swap(self, me, message, args):
       players = core.split_args(args)
       if len(players) != 2 or players[0] == players[1]:
-        return await question(message, tr('troublemaker_wronguse').format(command_name('Swap')))
+        return await question(message, tr('troublemaker_wronguse').format(core.cmd_names['Swap']))
       if me.extern.name in players:
         return await question(message, tr('no_swap_self'))
       players = [ await find_player(message, name) for name in players ]

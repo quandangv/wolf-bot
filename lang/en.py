@@ -212,6 +212,7 @@ dead = [ "you are dead", "go back to your grave" ]
 not_voting = "you can't unvote when you haven't vote"
 
 cmd_help = ( "help", "`{0}` lists available commands.\nWhile `{0}  command` provides information about that command\nAlso `{0}  role` will explain that role" )
+cmd_start = ( "start", "`{0}` to start a game" )
 cmd_startimmediate = ( "startimmediate", "`{0}` to immediately start a game with all members" )
 cmd_addrole = ( "add", "`{0}  role` will add a role into the game" )
 cmd_removerole = ( "remove", "`{0}  role` to remove a role from the game" )

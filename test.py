@@ -218,7 +218,7 @@ def full_test(lang_name):
   ignacio = Member(8, 'ignacio')
   not_player = Member(100, 'not_player')
   members = [ anne, bob, carl, david, elsa, frank, george, harry, ignacio ]
-  admins = [ anne ]
+  admins = [ 0 ]
 
   one_night.connect(core)
   core.initialize(admins)
@@ -226,9 +226,9 @@ def full_test(lang_name):
   player_list = 'player_list(anne, bob, carl, david, elsa, frank, george, harry, ignacio) '
   loop.run_until_complete(asyncio.gather(
     test_game(anne, '!save _test_empty', '[game] confirm(@anne) save_success(_test_empty) '),
-    test_game(anne, '!info', "[game] confirm(@anne) no_roles default_roles(['Wolf', 'Thief', 'Troublemaker', 'Drunk', 'Wolf', 'Villager', 'Seer', 'Clone', 'Minion', 'Insomniac', 'Tanner', 'Villager']) "),
-    test_game(anne, '!help', '[@anne] help_list(!help`, `!info`, `!unvote`, `!votedetail`, `!votecount`, `!history`, `!addrole`, `!removerole`, `!startimmediate`, `!closevote`, `!save`, `!load`, `!endgame`, `!wakeup) help_detail(!help) '),
-    test_game(carl, '!help', '[@carl] help_list(!help`, `!info`, `!unvote`, `!votedetail`, `!votecount`, `!history) help_detail(!help) '),
+    test_game(anne, '!info', "[game] confirm(@anne) no_roles "),
+    test_game(anne, '!help', '[@anne] help_list(!help`, `!sleep`, `!start`, `!info`, `!unvote`, `!votedetail`, `!votecount`, `!history`, `!addrole`, `!removerole`, `!startimmediate`, `!closevote`, `!save`, `!load`, `!endgame`, `!wakeup) help_detail(!help) '),
+    test_game(carl, '!help', '[@carl] help_list(!help`, `!sleep`, `!start`, `!info`, `!unvote`, `!votedetail`, `!votecount`, `!history) help_detail(!help) '),
 
     test_game(anne, '!help help', '[game] confirm(@anne) help_desc(!help)aliases_list(help_alias) '),
     test_game(anne, '!help tanner', '[game] confirm(@anne) tanner_desc'),
@@ -279,7 +279,7 @@ def full_test(lang_name):
   members.append(not_player)
 
   loop.run_until_complete(asyncio.gather(
-    test_dm(carl, '!help', '[@carl] help_list(!reveal`, `!see`, `!vote`, `!votenolynch`, `!help`, `!info`, `!unvote`, `!votedetail`, `!votecount`, `!history) help_detail(!help) '),
+    test_dm(carl, '!help', '[@carl] help_list(!reveal`, `!see`, `!vote`, `!votenolynch`, `!help`, `!sleep`, `!start`, `!info`, `!unvote`, `!votedetail`, `!votecount`, `!history) help_detail(!help) '),
     test_game(anne, '!help villager ', '[game] confirm(@anne) villager_desc'),
     test_game(anne, '!addrole villager ', '[game] question(@anne) forbid_game_started(!addrole) '),
     test_dm(anne, '!revealall', r'''[@bot] reveal_all(reveal_item(anne, wolf) 
