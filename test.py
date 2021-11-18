@@ -223,12 +223,12 @@ def full_test(lang_name):
   one_night.connect(core)
   core.initialize(admins)
 
-  player_list = 'player_list(anne, bob, carl, david, elsa, frank, george, harry, ignacio) '
+  player_names = 'player_names(anne, bob, carl, david, elsa, frank, george, harry, ignacio) '
   loop.run_until_complete(asyncio.gather(
     test_game(anne, '!save _test_empty', '[game] confirm(@anne) save_success(_test_empty) '),
     test_game(anne, '!info', "[game] confirm(@anne) no_roles "),
-    test_game(anne, '!help', '[@anne] help_list(!help`, `!sleep`, `!start`, `!info`, `!unvote`, `!votedetail`, `!votecount`, `!history`, `!addrole`, `!removerole`, `!startimmediate`, `!closevote`, `!save`, `!load`, `!endgame`, `!wakeup) help_detail(!help) '),
-    test_game(carl, '!help', '[@carl] help_list(!help`, `!sleep`, `!start`, `!info`, `!unvote`, `!votedetail`, `!votecount`, `!history) help_detail(!help) '),
+    test_game(anne, '!help', '[@anne] help_list(!help`, `!sleep`, `!start`, `!info`, `!votedetail`, `!votecount`, `!history`, `!addrole`, `!removerole`, `!startimmediate`, `!closevote`, `!save`, `!load`, `!endgame`, `!wakeup) help_detail(!help) '),
+    test_game(carl, '!help', '[@carl] help_list(!help`, `!sleep`, `!start`, `!info`, `!votedetail`, `!votecount`, `!history) help_detail(!help) '),
 
     test_game(anne, '!help help', '[game] confirm(@anne) help_desc(!help)aliases_list(help_alias) '),
     test_game(anne, '!help tanner', '[game] confirm(@anne) tanner_desc'),
@@ -262,24 +262,24 @@ def full_test(lang_name):
       '[@anne] role(wolf) wolf_greeting',
       '[@bob] role(wolf) wolf_greeting',
       '[@carl] role(seer) seer_greeting(!reveal, !see)',
-      '[@carl] ' + player_list,
+      '[@carl] ' + player_names,
       '[@david] role(villager) villager_greeting',
       '[@elsa] role(thief) thief_greeting(!steal)',
-      '[@elsa] ' + player_list,
+      '[@elsa] ' + player_names,
       '[@frank] role(troublemaker) troublemaker_greeting(!swap)',
-      '[@frank] ' + player_list,
+      '[@frank] ' + player_names,
       '[@george] role(drunk) drunk_greeting(!take)',
       '[@harry] role(clone) clone_greeting(!clone)',
-      '[@harry] ' + player_list,
+      '[@harry] ' + player_names,
       '[@ignacio] role(insomniac) insomniac_greeting',
-      '[wolf ] wolf_channel(@anne, @bob) sleep_info(!sleep) \n' + player_list
+      '[wolf ] wolf_channel(@anne, @bob) sleep_info(!sleep) \n' + player_names
     )
   ))
 
   members.append(not_player)
 
   loop.run_until_complete(asyncio.gather(
-    test_dm(carl, '!help', '[@carl] help_list(!reveal`, `!see`, `!vote`, `!votenolynch`, `!help`, `!sleep`, `!start`, `!info`, `!unvote`, `!votedetail`, `!votecount`, `!history) help_detail(!help) '),
+    test_dm(carl, '!help', '[@carl] help_list(!reveal`, `!see`, `!unvote`, `!vote`, `!votenolynch`, `!help`, `!sleep`, `!start`, `!info`, `!votedetail`, `!votecount`, `!history) help_detail(!help) '),
     test_game(anne, '!help villager ', '[game] confirm(@anne) villager_desc'),
     test_game(anne, '!addrole villager ', '[game] question(@anne) forbid_game_started(!addrole) '),
     test_dm(anne, '!revealall', r'''[@bot] reveal_all(reveal_item(anne, wolf) 
@@ -394,19 +394,19 @@ excess_roles(drunk, villager, villager) ''' ),
       '[game] start(@anne, @bob, @carl, @david, @elsa, @frank, @george, @harry, @ignacio) list_roles(insomniac, clone, drunk, troublemaker, thief, seer, wolf, minion, hunter, villager, villager, wolf) ',
       '[@anne] role(insomniac) insomniac_greeting',
       '[@bob] role(clone) clone_greeting(!clone)',
-      '[@bob] ' + player_list,
+      '[@bob] ' + player_names,
       '[@carl] role(drunk) drunk_greeting(!take)',
       '[@david] role(troublemaker) troublemaker_greeting(!swap)',
-      '[@david] ' + player_list,
+      '[@david] ' + player_names,
       '[@elsa] role(thief) thief_greeting(!steal)',
-      '[@elsa] ' + player_list,
+      '[@elsa] ' + player_names,
       '[@frank] role(seer) seer_greeting(!reveal, !see)',
-      '[@frank] ' + player_list,
+      '[@frank] ' + player_names,
       '[@george] role(wolf) wolf_greeting',
       '[@harry] role(minion) minion_greeting',
       '[@harry] wolves_reveal(george) ',
       '[@ignacio] role(hunter) hunter_greeting',
-      '[wolf ] wolf_channel(@george) sleep_info(!sleep) \n' + player_list,
+      '[wolf ] wolf_channel(@george) sleep_info(!sleep) \n' + player_names,
       '[wolf ] wolf_get_reveal(!reveal, 3) '
     ),
     test_dm(anne, '!revealall', r'''[@bot] reveal_all(reveal_item(anne, insomniac) 
@@ -515,7 +515,7 @@ excess_roles(drunk, villager, villager) ''' ),
   core.disconnect()
   classic.connect(core)
   core.connect(admins)
-  player_list = 'player_list(anne, bob, carl, david, elsa, frank, george, harry) '
+  player_names = 'player_names(anne, bob, carl, david, elsa, frank, george, harry) '
   members = [ anne, bob, carl, david, elsa, frank, george, harry ]
 
   loop.run_until_complete(asyncio.gather(
@@ -524,18 +524,18 @@ excess_roles(drunk, villager, villager) ''' ),
         '[game] start(@anne, @bob, @carl, @david, @elsa, @frank, @george, @harry) list_roles(villager, guard, wolf, villager, witch, wolf, detective, drunk, villager, wolfsheep) ',
         '[@anne] role(villager) villager_greeting',
         '[@bob] role(guard) guard_greeting(!defend)',
-        '[@bob] ' + player_list,
+        '[@bob] ' + player_names,
         '[@carl] role(wolf) wolf_greeting(!kill)',
         '[@david] role(villager) villager_greeting',
         '[@elsa] role(witch) witch_greeting(!poison, !revive, !sleep)',
-        '[@elsa] ' + player_list,
+        '[@elsa] ' + player_names,
         '[@frank] role(wolf) wolf_greeting(!kill)',
         '[@george] role(detective) detective_greeting(!investigate)',
-        '[@george] ' + player_list,
+        '[@george] ' + player_names,
         '[@harry] role(drunk) drunk_greeting',
         '[@harry] excess_roles(wolfsheep, villager) drunk_choose_wolf ',
         '[@harry] drunk_took_role(wolfsheep) wolfsheep_greeting(!kill)',
-        '[wolf ] wolf_channel(@carl, @frank, @harry) \n' + player_list,
+        '[wolf ] wolf_channel(@carl, @frank, @harry) \n' + player_names,
     ),
     test_game(david, '!sleep', '[game] confirm(@david) good_night '),
     test_game(carl, '!sleep', '[game] confirm(@carl) good_night ', '[@carl] question(@carl) wolf_only(!sleep) ' ),
@@ -671,20 +671,20 @@ excess_roles(villager) ''' ),
         '[game] start(@anne, @bob, @carl, @david, @elsa, @frank, @george, @harry) list_roles(villager, guard, wolf, wolfsheep, witch, wolf, seer, drunk, villager, knight) ',
         '[@anne] role(villager) villager_greeting',
         '[@bob] role(guard) guard_greeting(!defend)',
-        '[@bob] ' + player_list,
+        '[@bob] ' + player_names,
         '[@carl] role(wolf) wolf_greeting(!kill)',
         '[@david] role(wolfsheep) wolfsheep_greeting(!kill)',
         '[@elsa] role(witch) witch_greeting(!poison, !revive, !sleep)',
-        '[@elsa] ' + player_list,
+        '[@elsa] ' + player_names,
         '[@frank] role(wolf) wolf_greeting(!kill)',
         '[@george] role(seer) seer_greeting(!see)',
-        '[@george] ' + player_list,
+        '[@george] ' + player_names,
         '[@harry] role(drunk) drunk_greeting',
         '[@harry] excess_roles(knight, villager) drunk_choose(!take) ',
     ),
     test_dm(harry, '!take vilager', '[@bot] confused(`vilager`) '),
     test_dm(harry, '!take wolf', '[@bot] question(@harry) take_notavailable(wolf, knight, villager) '),
-    test_dm(harry, '!take knight', '[@harry] drunk_took_role(knight) knight_greeting(!kill)', '[wolf ] wolf_channel(@carl, @david, @frank) \n' + player_list),
+    test_dm(harry, '!take knight', '[@harry] drunk_took_role(knight) knight_greeting(!kill)', '[wolf ] wolf_channel(@carl, @david, @frank) \n' + player_names),
     test_wolf(carl, '!kill bob', '[wolf ] vote_kill(@carl, bob) wolf_need_consensus '),
     test_wolf(david, '!kill bob', '[wolf ] vote_kill(@david, bob) wolf_need_consensus '),
     test_wolf(frank, '!kill bob', '[wolf ] vote_kill(@frank, bob) wolf_kill(bob) '),
@@ -709,23 +709,23 @@ excess_roles(villager) ''' ),
     return result
 
   members = [ anne, bob, carl, david, elsa, frank, george, harry, ignacio ]
-  player_list = 'player_list(anne, bob, carl, david, elsa, frank, george, harry, ignacio) '
+  player_names = 'player_names(anne, bob, carl, david, elsa, frank, george, harry, ignacio) '
   loop.run_until_complete(asyncio.gather(
     test_game(anne, '!load _test_empty', '[game] confirm(@anne) load_success(_test_empty) '),
     test_game(anne, '!startimmediate',
         '[game] start(@anne, @bob, @carl, @david, @elsa, @frank, @george, @harry, @ignacio) list_roles(wolf, thief, troublemaker, drunk, wolf, villager, seer, clone, minion, insomniac, tanner, villager) ',
         '[@anne] role(tanner) tanner_greeting',
         '[@bob] role(thief) thief_greeting(!steal)',
-        '[@bob] ' + player_list,
+        '[@bob] ' + player_names,
         '[@carl] role(troublemaker) troublemaker_greeting(!swap)',
-        '[@carl] ' + player_list,
+        '[@carl] ' + player_names,
         '[@david] role(drunk) drunk_greeting(!take)',
         '[@elsa] role(villager) villager_greeting',
         '[@frank] role(villager) villager_greeting',
         '[@george] role(seer) seer_greeting(!reveal, !see)',
-        '[@george] ' + player_list,
+        '[@george] ' + player_names,
         '[@harry] role(clone) clone_greeting(!clone)',
-        '[@harry] ' + player_list,
+        '[@harry] ' + player_names,
         '[@ignacio] role(insomniac) insomniac_greeting',
     ),
     test_game(anne, '!wakeup', '[@ignacio] insomniac_reveal(insomniac) ', '[game] wake_up vote(!vote, !votenolynch) ' ),

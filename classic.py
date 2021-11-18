@@ -19,7 +19,6 @@ def connect(core):
   players = core.players
   confirm = core.confirm
   question = core.question
-  find_player = core.find_player
   record_history = core.record_history
   on_used = core.on_used
   join_with_and = core.join_with_and
@@ -65,15 +64,6 @@ def connect(core):
   async def checked_on_used():
     if not wolf_phase:
       await on_used()
-
-  async def find_player(message, name):
-    player = await core.find_player(message, name)
-    if not player:
-      return None
-    if player in known_alive:
-      return player
-    else:
-      await question(message, tr('target_dead').format(player.extern.name))
 
   def wait_after_wolf_phase(func):
     async def handler(*others, message, args):
@@ -140,6 +130,16 @@ def connect(core):
       return True
 
   @core.injection
+  async def find_player(message, name):
+    player = await core.base_find_player(message, name)
+    if not player:
+      return None
+    if player in known_alive:
+      return player
+    else:
+      await question(message, tr('target_dead').format(player.extern.name))
+
+  @core.injection
   def get_role(player):
     return player.role.name
 
@@ -194,33 +194,20 @@ def connect(core):
 
 ############################ ROLES #############################
 
-  class ClassicRole(core.Role):
+  class ClassicRole(core.Role, core.Voter):
     player_count = 1
     async def on_start(self, player, first_time = True):
       if first_time:
         player.alive = True
         player.side = self.default_side()
-    @core.single_arg('vote_wronguse')
-    @core.check_public
-    @core.check_status('day')
-    async def Vote(self, me, message, args):
-      player = await find_player(message, args)
-      if player:
-        await core.on_voted(me, player)
-    @core.check_public
-    @core.check_status('day')
-    async def VoteNoLynch(self, me, message, args):
-      await core.on_voted(me, True)
 
-  class Dead:
+  class Dead(core.Role):
     def __init__(self, role):
       self.role = role
-
     async def other(self, me, message, args):
       await question(message, tr('dead'))
     for cmd in core.ROLE_COMMANDS:
       locals()[cmd] = other
-
     async def Sleep(self, me, message, args):
       await core.say_good_night(message)
 
@@ -282,7 +269,7 @@ def connect(core):
 
   @core.role
   class Guard(Villager):
-    get_player_list = True
+    get_player_names = True
     wolf_phase = True
     __slots__ = ('target', 'prev_target')
     def __init__(self):
@@ -310,7 +297,7 @@ def connect(core):
   @core.role
   class Witch(Villager):
     after_wolf_phase = True
-    get_player_list = True
+    get_player_names = True
     __slots__ = ('revived', 'poisoned', 'sleep')
     def __init__(self):
       self.revived = False
@@ -391,7 +378,7 @@ def connect(core):
   @core.role
   class Detective(Villager):
     after_wolf_phase = True
-    get_player_list = True
+    get_player_names = True
     __slots__ = ('sleep',)
     def __init__(self):
       self.sleep = False
@@ -420,7 +407,7 @@ def connect(core):
   @core.role
   class Seer(Villager):
     after_wolf_phase = True
-    get_player_list = True
+    get_player_names = True
     __slots__ = ('sleep',)
     def __init__(self):
       self.sleep = False

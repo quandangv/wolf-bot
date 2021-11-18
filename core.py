@@ -38,6 +38,135 @@ LANDSLIDE_VOTE_COUNTDOWN = 10
 DEFAULT_ROLES = None
 PLAYER_PERSISTENT_ATTR = ['extern', 'role', 'vote']
 
+########################### EVENTS #############################
+
+async def start_game(message, player_list):
+  try:
+    current_count = len(player_list)
+    if not played_roles:
+      globals()['played_roles'] = [ roles[DEFAULT_ROLES[idx]].name for idx in range(default_roles_needed(current_count))]
+    needed_count = needed_players_count(played_roles)
+    if current_count > needed_count:
+      await question(message, tr('start_needless').format(current_count, needed_count))
+    elif current_count < needed_count:
+      await question(message, tr('start_needmore').format(current_count, needed_count))
+    else:
+      await message.channel.send(tr('start').format(join_with_and(
+        [player.extern.mention for player in player_list]
+      )) + list_roles())
+      globals()['status'] = 'night'
+      globals()['player_count'] = current_count
+      history.clear()
+      og_roles.clear()
+
+      while True:
+        shuffled_roles = shuffle_copy(played_roles)
+        for role in shuffled_roles:
+          role = roles[role]
+          if hasattr(role, 'check_shuffling') and role.check_shuffling(shuffled_roles, player_count):
+            break
+        else:
+          break
+
+      og_excess.clear()
+      excess_roles.clear()
+      for idx in range(len(shuffled_roles) - player_count):
+        excess_roles.append(shuffled_roles[-idx - 1])
+      globals()['og_excess'] = excess_roles[:]
+      player_names = tr('player_names').format(', '.join([p.extern.name for p in player_list]))
+      prompted_setup = False
+      for idx, player in enumerate(player_list):
+        await set_role('role', player, roles[shuffled_roles[idx]], True)
+        if getattr(player.role, 'get_player_names', False):
+          await player.extern.send(player_names)
+        if hasattr(player.role, 'new_night'):
+          player.role.new_night()
+        og_roles[player.extern.mention] = player.role.name
+        prompted_setup = prompted_setup or hasattr(player.role, 'prompted_setup')
+      after_shuffle(shuffled_roles)
+
+      async def finish_game_setup():
+        for id, channel in tmp_channels.items():
+          channel_name = id + '_channel'
+          msg = tr(channel_name).format(join_with_and([player.extern.mention for player in channel.players]))
+          if hasattr(channel, 'discussing'):
+            msg += tr('sleep_info').format(cmd_names['Sleep'])
+          msg += '\n' + player_names
+          await channel.extern.send(msg)
+          if channel_name in channel_events:
+            await channel_events[channel_name](channel)
+        await on_used()
+        start_night()
+      if not prompted_setup:
+        await finish_game_setup()
+      else:
+        async def on_setup_answered():
+          for player in players.values():
+            if player.role and hasattr(player.role, 'prompted_setup'):
+              return
+          await finish_game_setup()
+        globals()['on_setup_answered'] = on_setup_answered
+  except BaseException as e:
+    await end_game()
+    raise e
+
+async def set_role(greeting_key, player, role, first_time):
+  player.role = role()
+  await player.extern.send(tr(greeting_key).format(role.name) + role.greeting)
+  if hasattr(player.role, 'on_start'):
+    await player.role.on_start(player, first_time)
+
+async def on_used():
+  if status == 'night':
+    for player in players.values():
+      if player.role:
+        if (hasattr(player.role, 'target') and not player.role.target) or (hasattr(player.role, 'sleep') and not player.role.sleep):
+          return
+    await wake_up()
+    return True
+
+async def on_voted(me, vote):
+  async def close_vote_countdown(seconds):
+    await asyncio.sleep(seconds)
+    clear_vote_countdown()
+    async with lock:
+      await close_vote()
+
+  vote_list[me.vote] -= 1
+  me.vote = vote
+  my_vote_count = vote_list[me.vote] = vote_list[me.vote] + 1 if me.vote in vote_list else 1
+  not_voted = vote_list[None]
+  channel = main_channel()
+  if vote:
+    await channel.send((tr('no_vote_success').format(me.extern.mention) if isinstance(vote, bool) else tr('vote_success').format(me.extern.mention, vote.extern.mention)) + tr('remind_unvote').format(cmd_names['Unvote']))
+    next_most = 0
+    for p, votes in vote_list.items():
+      if p and p != me.vote and p != True and votes > next_most:
+        next_most = votes
+    global vote_countdown_task
+    if not_voted == 0:
+      await close_vote()
+    elif my_vote_count - next_most > not_voted:
+      if vote_countdown_task:
+        if vote_countdown_task.time > LANDSLIDE_VOTE_COUNTDOWN:
+          vote_countdown_task.cancel()
+        else:
+          return
+      await channel.send(tr('landslide_vote_countdown').format(me.vote.extern.mention, LANDSLIDE_VOTE_COUNTDOWN) if me.vote != True else tr('landslide_no_vote_countdown').format(LANDSLIDE_VOTE_COUNTDOWN))
+      vote_countdown_task = asyncio.create_task(close_vote_countdown(LANDSLIDE_VOTE_COUNTDOWN))
+      vote_countdown_task.time = LANDSLIDE_VOTE_COUNTDOWN
+    elif not_voted / player_count <= 1 - SUPERMAJORITY:
+      if not vote_countdown_task:
+        await channel.send(tr('vote_countdown').format(VOTE_COUNTDOWN))
+        vote_countdown_task = asyncio.create_task(close_vote_countdown(VOTE_COUNTDOWN))
+        vote_countdown_task.time = VOTE_COUNTDOWN
+  else:
+    await channel.send(tr('unvote_success').format(me.extern.mention))
+    if vote_countdown_task:
+      vote_countdown_task.cancel()
+      clear_vote_countdown()
+      await channel.send(tr('vote_countdown_cancelled'))
+
 ############################ ACTIONS ###########################
 
 # These functions are for intergration with a messenger
@@ -169,13 +298,13 @@ def channel_event(func):
 def initialize(admins):
   globals()['admins'] = admins
   random.seed()
-  command_names = {}
+  name_dict = {}
   global cmd_names
   for cmd_name in cmd_names:
     [name, description, *aliases] = tr('cmd_' + cmd_name.lower())
     description = description.format(BOT_PREFIX + name)
     func = globals()[cmd_name]
-    command_names[cmd_name] = BOT_PREFIX + name
+    name_dict[cmd_name] = BOT_PREFIX + name
     commands[name] = Command(func, name, description)
     if not 'role' in func.cmd_types and not 'debug' in func.cmd_types:
       (admin_commands if 'admin' in func.cmd_types else other_commands).append(BOT_PREFIX + name)
@@ -186,7 +315,7 @@ def initialize(admins):
         commands[alias] = Command(func, alias, tr('alias').format(alias, name) + description)
       else:
         print("ERROR: Can't create alias {} to command {}!".format(alias, name))
-  cmd_names = command_names
+  cmd_names = name_dict
   connect(admins)
 
 def connect(admins):
@@ -269,32 +398,14 @@ def copy_cmd_info(src, dest):
 
 def debug_cmd(func):
   async def check(message, args):
-    if DEBUG:
-      await func(message, args)
-    else:
-      await question(message, tr('debug_command'))
+    await (func(message, args) if DEBUG else question(message, tr('debug_command')))
   func.cmd_types.append('debug')
   return copy_cmd_info(func, check)
 
 def admin_cmd(func):
   async def check(message, args):
-    if not message.author.id in admins:
-      await question(message, tr('require_admin'))
-    else:
-      await func(message, args)
+    await (func(message, args) if message.author.id in admins else question(message, tr('require_admin')))
   func.cmd_types.append('admin')
-  return copy_cmd_info(func, check)
-
-def player_cmd(func):
-  async def check(message, args):
-    if not message.author.id in players:
-      return await question(message, tr('not_playing'))
-    player = players[message.author.id]
-    if not player.role:
-      await question(message, tr('not_playing'))
-    else:
-      await func(player, message=message, args=args)
-  func.cmd_types.append('player')
   return copy_cmd_info(func, check)
 
 def setup_cmd(func):
@@ -365,19 +476,23 @@ def check_channel(channel_name):
   return decorator
 
 def make_role_cmd(name):
-  async def check(player, message, args):
-    if not hasattr(player.role, name):
+  async def check(message, args):
+    if not message.author.id in players:
+      return await question(message, tr('not_playing'))
+    player = players[message.author.id]
+    if not player.role:
+      return await question(message, tr('not_playing'))
+    elif not hasattr(player.role, name):
       return await question(message, tr('wrong_role').format(cmd_names[name]))
     await getattr(player.role, name)(player, message=message, args=args)
   check.__name__ = name
   command(check)
   check.cmd_types.append('role')
-  check = player_cmd(check)
   globals()[name] = check
 
 ########################## COMMANDS ############################
 
-ROLE_COMMANDS = [ 'Kill', 'Defend', 'See', 'Swap', 'Steal', 'Take', 'Clone', 'Reveal', 'Revive', 'Poison', 'Investigate', 'Vote', 'VoteNoLynch' ]
+ROLE_COMMANDS = [ 'Kill', 'Defend', 'See', 'Swap', 'Steal', 'Take', 'Clone', 'Reveal', 'Revive', 'Poison', 'Investigate', 'Vote', 'VoteNoLynch', 'Unvote' ]
 for cmd_name in ROLE_COMMANDS:
   make_role_cmd(cmd_name)
 
@@ -464,81 +579,6 @@ async def Start(message, args):
 async def StartImmediate(message, args):
   await start_game(message, [get_player(member) for member in await get_available_members()])
 
-async def start_game(message, players):
-  try:
-    current_count = len(players)
-    if not played_roles:
-      globals()['played_roles'] = [ roles[DEFAULT_ROLES[idx]].name for idx in range(default_roles_needed(current_count))]
-    needed_count = needed_players_count(played_roles)
-    if current_count > needed_count:
-      await question(message, tr('start_needless').format(current_count, needed_count))
-    elif current_count < needed_count:
-      await question(message, tr('start_needmore').format(current_count, needed_count))
-    else:
-      await message.channel.send(tr('start').format(join_with_and(
-        [player.extern.mention for player in players]
-      )) + list_roles())
-      globals()['status'] = 'night'
-      globals()['player_count'] = current_count
-      history.clear()
-      og_roles.clear()
-
-      while True:
-        shuffled_roles = shuffle_copy(played_roles)
-        for role in shuffled_roles:
-          role = roles[role]
-          if hasattr(role, 'check_shuffling') and role.check_shuffling(shuffled_roles, player_count):
-            break
-        else:
-          break
-
-      og_excess.clear()
-      excess_roles.clear()
-      for idx in range(len(shuffled_roles) - player_count):
-        excess_roles.append(shuffled_roles[-idx - 1])
-      globals()['og_excess'] = excess_roles[:]
-      globals()['player_list'] = tr('player_list').format(', '.join([p.extern.name for p in players]))
-      prompted_setup = False
-      for idx, player in enumerate(players):
-        await set_role('role', player, roles[shuffled_roles[idx]], True)
-        if getattr(player.role, 'get_player_list', False):
-          await player.extern.send(player_list)
-        if hasattr(player.role, 'new_night'):
-          player.role.new_night()
-        og_roles[player.extern.mention] = player.role.name
-        prompted_setup = prompted_setup or hasattr(player.role, 'prompted_setup')
-      after_shuffle(shuffled_roles)
-
-      if not prompted_setup:
-        await finish_game_setup()
-  except BaseException as e:
-    await end_game()
-    raise e
-
-async def on_setup_answered():
-  for player in players.values():
-    if player.role and hasattr(player.role, 'prompted_setup'):
-      return
-  await finish_game_setup()
-async def set_role(greeting_key, player, role, first_time):
-  player.role = role()
-  await player.extern.send(tr(greeting_key).format(role.name) + role.greeting)
-  if hasattr(player.role, 'on_start'):
-    await player.role.on_start(player, first_time)
-
-async def finish_game_setup():
-  for id, channel in tmp_channels.items():
-    channel_name = id + '_channel'
-    msg = tr(channel_name).format(join_with_and([player.extern.mention for player in channel.players]))
-    if hasattr(channel, 'discussing'):
-      msg += tr('sleep_info').format(cmd_names['Sleep'])
-    msg += '\n' + player_list
-    await channel.extern.send(msg)
-    if channel_name in channel_events:
-      await channel_events[channel_name](channel)
-  await on_used()
-  start_night()
-
 @command
 async def Info(message, args):
   if not played_roles:
@@ -547,13 +587,6 @@ async def Info(message, args):
       msg += tr('default_roles').format(DEFAULT_ROLES)
     return await confirm(message, msg)
   await confirm(message, list_roles() + (game_info() if status else player_needed_msg()))
-
-@player_cmd
-@command
-async def Unvote(me, message, args):
-  if not me.vote:
-    return await question(message, tr('not_voting'))
-  await on_voted(me, None)
 
 @check_public
 @command
@@ -750,7 +783,7 @@ def join_with_and(arr):
   warn("Invalid argument for join_with_and: " + repr(arr))
   return repr(arr)
 
-async def find_player(message, name):
+async def base_find_player(message, name):
   if name.startswith('@'):
     name = name[1:]
   for player in players.values():
@@ -785,6 +818,7 @@ async def announce_winners(winners):
 
 def injection(func):
   globals()[func.__name__] = func
+  return func
 
 def generate_injections():
   def after_shuffle(shuffled_roles): pass
@@ -794,6 +828,7 @@ def generate_injections():
   async def on_no_lynch(): pass
   async def show_history(channel, roles, commands): raise missing_injection_error('show_history')
   async def role_help(message, role): raise missing_injection_error('role_help')
+  async def find_player(message, name): return await base_find_player(message, name)
   def game_info(): return ''
   def start_night(): pass
   async def on_wake_up(): raise missing_injection_error('on_wake_up')
@@ -804,59 +839,6 @@ generate_injections()
 
 def missing_injection_error(name):
   return NotImplementedError("Function `{}` not implemented! Implement it using the @injection decorator".format(name))
-
-########################### EVENTS #############################
-
-async def on_used():
-  if status == 'night':
-    for player in players.values():
-      if player.role:
-        if (hasattr(player.role, 'target') and not player.role.target) or (hasattr(player.role, 'sleep') and not player.role.sleep):
-          return
-    await wake_up()
-    return True
-
-async def on_voted(me, vote):
-  async def close_vote_countdown(seconds):
-    await asyncio.sleep(seconds)
-    clear_vote_countdown()
-    async with lock:
-      await close_vote()
-
-  vote_list[me.vote] -= 1
-  me.vote = vote
-  my_vote_count = vote_list[me.vote] = vote_list[me.vote] + 1 if me.vote in vote_list else 1
-  not_voted = vote_list[None]
-  channel = main_channel()
-  if vote:
-    await channel.send((tr('no_vote_success').format(me.extern.mention) if isinstance(vote, bool) else tr('vote_success').format(me.extern.mention, vote.extern.mention)) + tr('remind_unvote').format(cmd_names['Unvote']))
-    next_most = 0
-    for p, votes in vote_list.items():
-      if p and p != me.vote and p != True and votes > next_most:
-        next_most = votes
-    global vote_countdown_task
-    if not_voted == 0:
-      await close_vote()
-    elif my_vote_count - next_most > not_voted:
-      if vote_countdown_task:
-        if vote_countdown_task.time > LANDSLIDE_VOTE_COUNTDOWN:
-          vote_countdown_task.cancel()
-        else:
-          return
-      await channel.send(tr('landslide_vote_countdown').format(me.vote.extern.mention, LANDSLIDE_VOTE_COUNTDOWN) if me.vote != True else tr('landslide_no_vote_countdown').format(LANDSLIDE_VOTE_COUNTDOWN))
-      vote_countdown_task = asyncio.create_task(close_vote_countdown(LANDSLIDE_VOTE_COUNTDOWN))
-      vote_countdown_task.time = LANDSLIDE_VOTE_COUNTDOWN
-    elif not_voted / player_count <= 1 - SUPERMAJORITY:
-      if not vote_countdown_task:
-        await channel.send(tr('vote_countdown').format(VOTE_COUNTDOWN))
-        vote_countdown_task = asyncio.create_task(close_vote_countdown(VOTE_COUNTDOWN))
-        vote_countdown_task.time = VOTE_COUNTDOWN
-  else:
-    await channel.send(tr('unvote_success').format(me.extern.mention))
-    if vote_countdown_task:
-      vote_countdown_task.cancel()
-      clear_vote_countdown()
-      await channel.send(tr('vote_countdown_cancelled'))
 
 ######################### COMMON ROLES #########################
 
@@ -869,6 +851,25 @@ class Wolf:
       await channel.add(player)
       if not first_time:
         await channel.extern.send(tr('channel_greeting').format(player.extern.mention, channel.extern.name))
+
+class Voter:
+  @single_arg('vote_wronguse')
+  @check_public
+  @check_status('day')
+  async def Vote(self, me, message, args):
+    player = await find_player(message, args)
+    if player:
+      await on_voted(me, player)
+  @check_public
+  @check_status('day')
+  async def VoteNoLynch(self, me, message, args):
+    await on_voted(me, True)
+  @check_public
+  @check_status('day')
+  async def Unvote(self, me, message, args):
+    if not me.vote:
+      return await question(message, tr('not_voting'))
+    await on_voted(me, None)
 
 ############################# MAIN #############################
 
