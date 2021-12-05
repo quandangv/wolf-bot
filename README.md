@@ -1,7 +1,7 @@
 # wolfmod
 Chatbot moderator for Werewolf game
 
-![End of a werewolf game](demo/screenshot.png)
+![End of a werewolf game](demo/endgame.png)
 
 ## installation
 

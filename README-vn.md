@@ -1,7 +1,7 @@
 # wolfmod
 Chatbot tự động quản trò Ma Sói
 
-![Kết thúc một ván Ma Sói](demo/screenshot.png)
+![Kết thúc một ván Ma Sói](demo/endgame-vn.png)
 
 ## cài đặt phần mềm
 
