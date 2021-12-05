@@ -37,7 +37,7 @@ def connect(core):
     return issubclass(roles[role], Villager)
 
   @core.injection
-  def get_role(player):
+  def role_str(player):
     return player.real_role
 
   @core.injection

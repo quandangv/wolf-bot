@@ -19,6 +19,7 @@ greeting = [
     "Hi everyone! You can send `{0}` for instructions, while admins can send `{1}` to start the game",
     "Greetings to the villager! Villagers can send `{0}` to learn more about the commands, while admin villagers can send `{1}` to start the game"
 ]
+remind_poison = ". Send `{}  player` to poison them"
 remind_sleep = "If you don't need to take any other actions remember to send `{}`"
 remind_unvote = [
     "If you want to cancel the vote, send `{}`",
@@ -99,6 +100,7 @@ no_history = "gameplay history can't be found"
 history = "Initial roles:\n{}\nExcess roles:{}\nExecuted commands:\n{}"
 command_item = "- {} commanded `{}`, gets **{}**"
 command_item_empty = "- {} commanded `{}`"
+remind_revive = ". Use `{1}` to revive them"
 
 vote = [
     "Send `{} player` to vote on killing them, or `{}` to vote on abstaining from killing",
@@ -122,6 +124,7 @@ all_sleeping = ", everybody the the group have gone to sleep"
 wait = [ "I'll answer you later", "please wait a moment" ]
 
 start = [ "Starting a game with {}. ", "A game between {} will start now. ", "{}, let's play! ", "The game has started! Tonight wolves will appear among {}. " ]
+start_noplayer = "no one has joined!"
 start_needmore = [ "there are currently **{}** players while we need **{}** players", "we need **{1}** players, there are currently only **{0}** players" ]
 start_needless = [ "there are currently **{}** players, we have only set enough roles for **{}**", "roles in the village are for **{1}** player, but we have **{0}** players" ]
 start_toolittle = "there's not enough roles to play"
@@ -244,22 +247,22 @@ cmd_investigate = ( "investigate", "Detectives can use `{0}  player1, player2` t
 
 onenight_villager = ( "villager", "An average villager with no special power. At least you will get to sleep the whole night", "You don't have anything to do at night. In the morning, you can vote to lynch someone" )
 onenight_wolf = ( "wolf", "Wolves plays against the village. They will win if the lynched person is on the village's side", "You have been added to the wolf group. In the morning, lynch a villager to win" )
-onenight_tanner = ( "tanner", "Một người với mục tiêu duy nhất là bị treo cổ. Nếu làng treo cổ nó, nó sẽ thắng và mọi người đều thua", "Sáng hôm sau, hãy cố gắng thuyết phục làng treo cổ mình", "chán đời" )
-onenight_insomniac = ( "insomniac", "Đây là người ngủ trễ nhất làng. Trước khi ngủ, họ sẽ được xem lại chức năng của mình", "Bạn sẽ được thông báo chức năng cuối cùng của mình trước khi trời sáng", "kẻ mất ngủ" )
-onenight_thief = ( "thief", "Người này sẽ đánh cắp chức năng của một người khác trong làng, thay thế bằng chức năng hiện có của mình", "Hãy dùng lệnh `{}  người-khác` để ăn cắp lá bài của họ", "kẻ trộm" )
-onenight_seer = ( "seer", "Người này được soi chức năng của một người trong làng, hoặc soi {0.SEER_REVEAL} lá bài bên ngoài", "Hãy dùng lệnh `{0}  STT-lá-bài` để xem một lá bài bên ngoài, hoặc dùng lệnh `{1}  người-khác` để soi chức năng của họ" )
-onenight_clone = ( "nhân bản", "Người này sẽ sao chép chức năng của một người khác trong làng", "Dùng lệnh `{}  người-khác` để sao chép chức năng của họ" )
-onenight_troublemaker = ( "phá rối", "Vào ban đêm, kẻ này sẽ tráo đổi chức năng của 2 người trong làng", "Hãy dùng lệnh `{}  người-1, người-2` để tráo chức năng của họ", "kẻ phá rối" )
-onenight_drunk = ( "kẻ say rượu", "Người này không biết chức năng của mình, và sẽ lấy một trong những lá bài bên ngoài để làm chức năng", "Hãy dùng lệnh `{}  STT-lá-bài` để đổi chức năng của mình lấy một lá bài bên ngoài", "say rượu" )
-onenight_minion = ( "phản bội", "Người này thuộc phe sói và biết được sói là ai. Nếu làng treo cổ người này, phe sói sẽ thắng", "Hãy tìm cách treo cổ dân làng hoặc treo cổ chính mình", "kẻ phản bội" )
-onenight_hunter = ( "thợ săn", "Thợ săn luôn mang theo câu súng săn của mình. Nếu bị dân làng treo cổ, họ sẽ dùng súng bắn chết người mình đã bỏ phiếu giết", "Hãy chọn kỹ người để bỏ phiếu giết. Nếu bị dân làng treo cổ, bạn sẽ bắn chết người đó" )
+onenight_tanner = ( "tanner", "A tanner who hates his job so much they just want to die. If lynched by the village, they will be the sole winner of the game", "In the morning, try to convince the village to lynch you" )
+onenight_insomniac = ( "insomniac", "The insomniac go to sleep latest in the village. Before going to bed, they will look again to see their final role", "You will be informed of your final role before dawn" )
+onenight_thief = ( "thief", "This role will steal the role of another player in the village and replace it with their own", "Use `{}  player` to steal their role" )
+onenight_seer = ( "seer", "The role can see the role of a player in the village, or reveal {0.SEER_REVEAL} of the excess roles", "Use `{0}  excess-role-number` to reveal an excess role, or use `{1}  player` to see their role" )
+onenight_clone = ( "clone", "This role can clone the role and powers of another player in the village", "Use `{}  player` to clone their role" )
+onenight_troublemaker = ( "troublemaker", "At night, this player will swap the roles of two other players", "Use `{}  player-1, player-2` to swap their roles" )
+onenight_drunk = ( "drunk", "This player doesn't know their role, they will take one of the excess roles as their own", "Use `{}  excess-role-number` to swap your role with an excess role" )
+onenight_minion = ( "minion", "This player is on the wolf side and gets to know the identities of the wolves. If the village lynch them, the wolves win", "In the morning, try to convince the village to lynch a villager or yourself" )
+onenight_hunter = ( "hunter", "If the hunter get lynched, they will fire their gun and kill the player they voted to lynch", "Choose carefully before voting to lynch. If you are lynched, you will kill that player" )
 
-classic_guard = ( "bảo vệ", "Mỗi đêm bảo vệ sẽ chọn một người để bảo vệ khỏi bị tấn công", "Hãy dùng lệnh `{}  người-chơi` để chọn người mình bảo vệ", "bv" )
-classic_wolf = ( "sói", "Mỗi đêm các sói sẽ bàn bạc với nhau và giết một người", "Hãy dùng lệnh `{}  mục-tiêu` để chọn người mình muốn giết" )
-classic_villager = ( "dân thường", "Một con dân thường không có chức năng. Nhờ vậy, bạn sẽ được yên giấc vào ban đêm", "Ban đêm bạn không phải làm gì cả. Sáng dậy, bạn có thể vote người để treo cổ", "dân làng", "dân" )
-classic_witch = ( "phù thủy", "Người này sẽ có một bình thuốc cứu người và một bình giết người để sử dụng trong đêm. Mỗi bình chỉ được dùng một lần trong game", "Mỗi đêm bạn sẽ được biết có người chết hay không. Dùng lệnh `{1}` để cứu họ, hoặc lệnh `{0} mục-tiêu` để giết, còn không thì bạn phải nhắn `{2}`", "pt" )
-classic_detective = ( "thám tử", "Thám tử sẽ điều tra 2 người mỗi đêm, biết được họ có cùng phe với nhau không", "Mỗi đêm bạn hãy dùng lệnh `{}  người-chơi-1, người-chơi-2` để chọn hai người để điều tra xem họ có cùng phe với nhau không" )
-classic_wolfsheep = ( "sói trắng", "Đây là một con sói, nhưng mang dáng vóc và hành vi của dân làng, giúp nó qua mặt được các chức năng soi và điều tra", "Hãy dùng lệnh `{}  mục-tiêu` để chọn người mình muốn giết" )
-classic_drunk = ( "kẻ say rượu", "Khi chơi chức năng này, trò chơi sẽ được set dư ra 2 lá bài. Đêm đầu tiên, kẻ say rượu sẽ được xem 2 lá bài dư và chọn một trong hai làm chức năng của mình. Nếu một trong 2 chức năng đó là sói, người chơi phải chọn sói", "", "say rượu" )
-classic_knight = ( "hiệp sĩ", "Một lần trong game, vào ban ngày, hiệp sĩ có thể tiết lộ chức năng của mình và rút gươm giết một người. Cả làng sẽ lập tức đi ngủ", "Khi trời sáng, bạn có thể dùng lệnh `{}  mục tiêu` để giết một người và buộc cả làng đi ngủ", "kỵ sĩ" )
-classic_seer = ( "tiên tri", "Mỗi đêm, bạn sẽ được soi một người để xem họ theo phe sói hay người", "Hãy dùng lệnh `{}  người chơi` để soi chức năng của họ" )
+classic_guard = ( "guard", "Every night, the guard will protect one player from attacks", "Use `{}  player` to protect them from attacks" )
+classic_wolf = ( "wolf", "Every night, the wolves to discuss with eachother and kill a player", "Use `{}  target` to choose a player to kill" )
+classic_villager = ( "villager", "A regular villager with no special power. You will get to sleep well at night", "You don't need to do anything at night. When morning comes, you can vote to lynch someone" )
+classic_witch = ( "witch", "This player get a revive potion and a poison potion to use at night. Each potion can only be used once a game", "Every night you get to know if there is a death. Use `{1}` to revive them, or use `{0} target` to kill, if not, use `{2}`" )
+classic_detective = ( "detective", "Detectives can investigate 2 people every night and know if they are on the same side", "Use `{}  player-1, player-2` to investigate if they are on the same side" )
+classic_wolfsheep = ( "wolf in sheep's clothing", "This is a wolf in the shape of a villager, being able to evade seers and investigators", "Use `{}  target` to choose a player to kill", "wolf sheep" )
+classic_drunk = ( "drunk", "When playing this role, the game will be set up with 2 excess roles. At first night, the drunk will look at the excess roles and choose one to play. If one of the roles is wolf, they must choose it", "" )
+classic_knight = ( "knight", "Once a game in the morning, the knight can reveal their role and kill someone with their sword. The village will go to sleep immediately", "In the morning, you can use `{}  target` to kill a player and force the village to sleep" )
+classic_seer = ( "seer", "Every night, you can choose a player to see if they are a wolf or a villager", "Use `{}  player` to see their role" )

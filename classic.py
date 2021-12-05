@@ -140,7 +140,7 @@ def connect(core):
       await question(message, tr('target_dead').format(player.extern.name))
 
   @core.injection
-  def get_role(player):
+  def role_str(player):
     return player.role.name
 
   @core.injection
@@ -312,13 +312,16 @@ def connect(core):
           self.sleep = True
           await checked_on_used()
         else:
-          await me.extern.send(tr('remind_sleep').format(core.cmd_names['Sleep']))
+          msg = '' if self.poisoned else tr('remind_poison').format(core.cmd_names['Poison'])
+          msg += tr('remind_sleep').format(core.cmd_names['Sleep'])
+          await me.extern.send(msg)
 
     async def on_wolves_done(self, me):
       if attack_deaths:
         msg = tr('witch_death')
         if not self.revived and not self.sleep:
-          await me.extern.send(msg + tr('witch_revive').format(*self.commands))
+          await me.extern.send(msg + tr('remind_revive').format(*self.commands))
+          await self.auto_sleep(me)
           return
         await me.extern.send(msg)
       else:

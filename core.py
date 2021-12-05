@@ -43,6 +43,8 @@ PLAYER_PERSISTENT_ATTR = ['extern', 'role', 'vote']
 async def start_game(message, player_list):
   try:
     current_count = len(player_list)
+    if not current_count:
+      return await question(message, tr('start_noplayer'))
     if not played_roles:
       globals()['played_roles'] = [ roles[DEFAULT_ROLES[idx]].name for idx in range(default_roles_needed(current_count))]
     needed_count = needed_players_count(played_roles)
@@ -475,16 +477,20 @@ def check_channel(channel_name):
     return copy_cmd_info(func, c_handler)
   return decorator
 
+def get_role(id):
+  if not id in players:
+    return None
+  player = players[id]
+  return player.role
+
 def make_role_cmd(name):
   async def check(message, args):
-    if not message.author.id in players:
+    role = get_role(message.author.id)
+    if not role:
       return await question(message, tr('not_playing'))
-    player = players[message.author.id]
-    if not player.role:
-      return await question(message, tr('not_playing'))
-    elif not hasattr(player.role, name):
+    elif not hasattr(role, name):
       return await question(message, tr('wrong_role').format(cmd_names[name]))
-    await getattr(player.role, name)(player, message=message, args=args)
+    await getattr(role, name)(players[message.author.id], message=message, args=args)
   check.__name__ = name
   command(check)
   check.cmd_types.append('role')
@@ -507,12 +513,12 @@ async def Help(message, args):
     else:
       await confused(message.channel, args)
   else:
-    player = get_player(message.author)
     command_list = other_commands[:]
-    if player.extern.id in admins:
+    if message.author.id in admins:
       command_list += admin_commands
-    if player.role:
-      command_list = player.role.commands + command_list
+    role = get_role(message.author.id)
+    if role:
+      command_list = role.commands + command_list
     await message.author.send(tr('help_list').format('`, `'.join(command_list)) + tr('help_detail').format(cmd_names['Help']))
 
 @command
@@ -571,12 +577,18 @@ async def RemoveRole(message, args):
 @setup_cmd
 @command
 async def Start(message, args):
-  await start_game(message, players)
+  await start_game(message, players.values())
 
 @admin_cmd
 @setup_cmd
 @command
 async def StartImmediate(message, args):
+  def get_player(extern):
+    id = extern.id
+    if id in players:
+      return players[id]
+    players[id] = player = Player(extern)
+    return player
   await start_game(message, [get_player(member) for member in await get_available_members()])
 
 @command
@@ -719,7 +731,7 @@ async def RevealAll(message, args):
 
 async def low_reveal_all(channel):
   reveal_item = tr('reveal_item')
-  msg = tr('reveal_all').format('\n'.join([ reveal_item.format(player.extern.name, get_role(player)) for player in sort_players(players.values()) if player.role ]))
+  msg = tr('reveal_all').format('\n'.join([ reveal_item.format(player.extern.name, role_str(player)) for player in sort_players(players.values()) if player.role ]))
   if excess_roles:
     msg += '\n' + tr('excess_roles').format(', '.join([name for name in excess_roles]))
   await channel.send(msg)
@@ -766,13 +778,6 @@ async def warn_wrong_channel(message, required_channel, raw_cmd):
     else:
       await question(message, tr('wrong_role').format(cmd))
   await message.author.send(tr('question').format(message.author.mention) + tr(required_channel + '_only').format(cmd))
-
-def get_player(extern):
-  id = extern.id
-  if id in players:
-    return players[id]
-  players[id] = player = Player(extern)
-  return player
 
 def record_history(message, result):
   history.append((message.author.name, message.content, result))
@@ -832,7 +837,7 @@ def generate_injections():
   def game_info(): return ''
   def start_night(): pass
   async def on_wake_up(): raise missing_injection_error('on_wake_up')
-  def get_role(player): raise missing_injection_error('get_role')
+  def role_str(player): raise missing_injection_error('role_str')
   # Don't try this at home
   globals().update(locals())
 generate_injections()

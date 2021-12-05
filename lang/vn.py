@@ -13,7 +13,8 @@ wolf_channel = [ "Xin chào những chú sói nho nhỏ, đàn sói của các b
 channel_greeting = [ "Chào mừng {} đến group **{}**!", "Hello {}! Xin chào đến với group **{}**" ]
 sleep_info = [ "Khi nào bàn luận xong, mỗi bạn hãy nhắn `{}` để quản trò biết nhé", "Chừng nào bàn xong, mọi người đều phải `{}` nha" ]
 greeting = [ "Hé lô mọi người! Mọi người có thể dùng lệnh `{0}` để được giúp đỡ, còn admin thì có thể nhắn `{1}` để bắt đầu chơi ngay", "Xin chào cả làng! Các dân làng có thể nhắn `{0}` để tìm hiểu thêm về các lệnh, còn dân làng admin thì có thể dùng lệnh `{1}` để chơi ngay" ]
-remind_sleep = "Nếu không còn làm gì nữa thì hãy nhắn lệnh `{}` nha"
+remind_poison = ". Dùng lệnh `{}  người chơi` để quăng bình giết"
+remind_sleep = ". Còn nếu không còn làm gì nữa thì hãy nhắn lệnh `{}` nha"
 remind_unvote = "Nếu muốn hủy phiếu, hãy nhắn lệnh `{}`"
 
 wake_up = [ "Ò ó ooo, sáng rồi nè, dậy treo cổ mấy con sói đii. ", "Dậy đi dậy đii, đêm nay làng ta ko ai chết nha. ", "Cả làng dậy đi! " ]
@@ -49,7 +50,7 @@ no_history = "không tìm thấy lịch sử ván trước"
 history = "Chức năng ban đầu:\n{}\nCác lá bài bên ngoài:{}\nCác lệnh thực hiện:\n{}"
 command_item = "- {} gọi `{}` ra **{}**"
 command_item_empty = "- {} gọi `{}`"
-witch_revive = ". Hãy nhắn lệnh `{1}` để cứu họ"
+remind_revive = ". Hãy nhắn lệnh `{1}` để cứu họ"
 
 vote = [ "Dùng lệnh `{} người chơi` để bỏ phiếu treo cổ người đó, hoặc `{}`để không treo ai cả", "Bạn ghét đứa nào thì cứ `{} đứa đó` nha, còn không muốn giết ai thì nhắn `{}`" ]
 help_list = [ "Các lệnh bạn được thực hiện là `{}`.", "Hãy thử một trong các lệnh `{}`" ]
@@ -67,6 +68,7 @@ all_sleeping = ", mọi người đều đã ngủ"
 wait = [ "đợi mình tí nha", "đợi tí mình trả lời" ]
 
 start = [ "Bắt đầu trò chơi với {}. ", "Trò chơi gồm {} sẽ được bắt đầu ngay bây giờ. ", "{} chơi ha! ", "Trò chơi bắt đầu! Đêm nay sói sẽ xuất hiện giữa {}. " ]
+start_noplayer = "chưa có ai tham gia trò chơi cả"
 start_needmore = [ "hiện tại có **{}** người chơi, trong khi mình cần **{}** người lận", "mình cần **{1}** người chơi, mới có **{0}** người à" ]
 start_needless = [ "hiện tại có tới **{}** người chơi, mình mới set đủ chức năng cho **{}** người thôi", "chức năng chỉ đủ cho **{1}** người thôi, giờ làng có đến **{0}** người lận" ]
 start_toolittle = "chưa chơi được, làng có quá ít chức năng"

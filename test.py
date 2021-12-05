@@ -237,6 +237,7 @@ def full_test(lang_name):
     test_game(carl, '!help blabla', '[game] confused(`blabla`) '),
     test_game(anne, '!help_alias help', '[game] confirm(@anne) help_desc(!help)aliases_list(help_alias) '),
     test_game(anne, '!help help_alias', '[game] confirm(@anne) alias(help_alias, help) help_desc(!help)'),
+    test_game(anne, '!start', '[game] question(@anne) start_noplayer '),
 
     test_game(anne, '!addrole', '[game] question(@anne) add_wronguse(!addrole) '),
     test_game(anne, '!vote carl', '[game] question(@anne) not_playing '),
@@ -556,9 +557,9 @@ excess_roles(drunk, villager, villager) ''' ),
     test_dm(bob, '!defend david', '[@bot] question(@bob) ability_used(!defend) '),
     test_wolf(carl, '!kill david', '[wolf ] vote_kill(@carl, david) wolf_need_consensus '),
     test_wolf(harry, '!kill david', '[wolf ] vote_kill(@harry, david) wolf_need_consensus '),
-    test_wolf(frank, '!kill david', '[wolf ] vote_kill(@frank, david) wolf_kill(david) ', '[wolf ] wolf_target_locked ', '[@elsa] witch_death witch_revive(!revive) ' ),
+    test_wolf(frank, '!kill david', '[wolf ] vote_kill(@frank, david) wolf_kill(david) ', '[wolf ] wolf_target_locked ', '[@elsa] witch_death remind_revive(!revive) ', '[@elsa] remind_poison(!poison) remind_sleep(!sleep) ' ),
     test_dm(george, '!investigate frank, carl', '[@bot] investigate_same(frank, carl) '),
-    test_dm(elsa, '!revive', '[@bot] confirm(@elsa) revive_success ', '[@elsa] remind_sleep(!sleep) '),
+    test_dm(elsa, '!revive', '[@bot] confirm(@elsa) revive_success ', '[@elsa] remind_poison(!poison) remind_sleep(!sleep) '),
     test_dm(elsa, '!sleep', '[@bot] confirm(@elsa) good_night ', '[game] wake_up_no_death ', '[game] vote(!vote, !votenolynch) ' ),
   ))
 
@@ -570,14 +571,25 @@ excess_roles(drunk, villager, villager) ''' ),
     test_dm(george, '!investigate elsa, harry', '[@bot] confirm(@george) wait '),
     test_dm(elsa, '!sleep', '[@bot] confirm(@elsa) good_night '),
     test_wolf(frank, '!sleep', '[wolf ] vote_no_kill(@frank) wolf_no_kill ', '[wolf ] wolf_target_locked ', '[@elsa] witch_no_death ', '[@bot] investigate_same(elsa, harry) ', '[game] wake_up_no_death ', '[game] vote(!vote, !votenolynch) ' ),
-    test_game(anne, '!load _test', '[game] confirm(@anne) load_success(_test) '),
   ))
 
   loop.run_until_complete(asyncio.gather(
+    test_game(anne, '!load _test', '[game] confirm(@anne) load_success(_test) '),
     test_dm(bob, '!defend david', '[@bot] question(@bob) ability_used(!defend) '),
     test_wolf(carl, '!kill david', '[wolf ] vote_kill(@carl, david) wolf_need_consensus '),
     test_wolf(harry, '!kill david', '[wolf ] vote_kill(@harry, david) wolf_need_consensus '),
-    test_wolf(frank, '!kill david', '[wolf ] vote_kill(@frank, david) wolf_kill(david) ', '[wolf ] wolf_target_locked ', '[@elsa] witch_death witch_revive(!revive) ' ),
+    test_wolf(frank, '!kill david', '[wolf ] vote_kill(@frank, david) wolf_kill(david) ', '[wolf ] wolf_target_locked ', '[@elsa] witch_death remind_revive(!revive) ', '[@elsa] remind_poison(!poison) remind_sleep(!sleep) ' ),
+    test_wolf(carl, '!kill carl', '[wolf ] question(@carl) kill_already '),
+    test_dm(elsa, '!sleep', '[@bot] confirm(@elsa) good_night '),
+    test_dm(george, '!investigate elsa, bob', '[@bot] investigate_same(elsa, bob) ', '[game] wake_up_death(@david) ', '[game] vote(!vote, !votenolynch) ' ),
+  ))
+
+  loop.run_until_complete(asyncio.gather(
+    test_game(anne, '!load _test', '[game] confirm(@anne) load_success(_test) '),
+    test_dm(bob, '!defend david', '[@bot] question(@bob) ability_used(!defend) '),
+    test_wolf(carl, '!kill david', '[wolf ] vote_kill(@carl, david) wolf_need_consensus '),
+    test_wolf(harry, '!kill david', '[wolf ] vote_kill(@harry, david) wolf_need_consensus '),
+    test_wolf(frank, '!kill david', '[wolf ] vote_kill(@frank, david) wolf_kill(david) ', '[wolf ] wolf_target_locked ', '[@elsa] witch_death remind_revive(!revive) ', '[@elsa] remind_poison(!poison) remind_sleep(!sleep) ' ),
     test_wolf(carl, '!kill carl', '[wolf ] question(@carl) kill_already '),
     test_dm(elsa, '!sleep', '[@bot] confirm(@elsa) good_night '),
     test_dm(george, '!investigate elsa, bob', '[@bot] investigate_same(elsa, bob) ', '[game] wake_up_death(@david) ', '[game] vote(!vote, !votenolynch) ' ),
@@ -688,14 +700,14 @@ excess_roles(villager) ''' ),
     test_wolf(carl, '!kill bob', '[wolf ] vote_kill(@carl, bob) wolf_need_consensus '),
     test_wolf(david, '!kill bob', '[wolf ] vote_kill(@david, bob) wolf_need_consensus '),
     test_wolf(frank, '!kill bob', '[wolf ] vote_kill(@frank, bob) wolf_kill(bob) '),
-    test_dm(bob, '!defend elsa', '[@bot] confirm(@bob) defend_success(elsa) ', '[wolf ] wolf_target_locked ', '[@elsa] witch_death witch_revive(!revive) '),
+    test_dm(bob, '!defend elsa', '[@bot] confirm(@bob) defend_success(elsa) ', '[wolf ] wolf_target_locked ', '[@elsa] witch_death remind_revive(!revive) ', '[@elsa] remind_poison(!poison) remind_sleep(!sleep) '),
     test_dm(elsa, '!sleep', '[@bot] confirm(@elsa) good_night '),
     test_dm(george, '!see elsa', '[@bot] is_human ', '[game] wake_up_death(@bob) ', '[game] vote(!vote, !votenolynch) '),
     test_game(harry, '!kill bob', '[game] question(@harry) target_dead '),
     test_game(harry, '!kill anne', '[game] confirm(@harry) knight_kill(@harry, @anne) ', '[game] go_to_sleep '),
     test_wolf(carl, '!kill elsa', '[wolf ] vote_kill(@carl, elsa) wolf_need_consensus '),
     test_wolf(david, '!kill elsa', '[wolf ] vote_kill(@david, elsa) wolf_need_consensus '),
-    test_wolf(frank, '!kill elsa', '[wolf ] vote_kill(@frank, elsa) wolf_kill(elsa) ', '[wolf ] wolf_target_locked ', '[@elsa] witch_death witch_revive(!revive) '),
+    test_wolf(frank, '!kill elsa', '[wolf ] vote_kill(@frank, elsa) wolf_kill(elsa) ', '[wolf ] wolf_target_locked ', '[@elsa] witch_death remind_revive(!revive) ', '[@elsa] remind_poison(!poison) remind_sleep(!sleep) '),
   ))
 
   core.disconnect()
@@ -763,3 +775,4 @@ excess_roles(wolf, minion, wolf) ''' ),
 full_test('vn')
 reset_core()
 full_test('en')
+print("All test passed!")
