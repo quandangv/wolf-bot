@@ -25,7 +25,7 @@ async def on_ready():
   global guild
   global debug_channel
   print("We have logged in as {0.user}".format(client))
-  debug_channel = client.get_channel(DEBUG_CHANNEL)
+  debug_channel = DEBUG_CHANNEL and client.get_channel(DEBUG_CHANNEL)
   guild = client.get_channel(GAME_CHANNEL).guild
   classic.connect(core)
   core.initialize(ADMINS)
@@ -55,7 +55,8 @@ def core_injection(func):
 
 @core.action
 async def debug(msg):
-  await debug_channel.send(msg)
+  if debug_channel:
+    await debug_channel.send(msg)
 
 @core.action
 def tr(key):

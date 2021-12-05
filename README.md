@@ -1,28 +1,29 @@
 # wolfmod
-Chatbot tự động quản trò Ma Sói
+Chatbot moderator for Werewolf game
 
-![Kết thúc một ván Ma Sói](demo/screenshot.png)
+![End of a werewolf game](demo/screenshot.png)
 
-## cài đặt phần mềm
-Cài [Python](https://www.python.org/downloads) và [discord.py](https://discordpy.readthedocs.io/en/stable/intro.html#installing) phiên bản mới nhất,
-nếu dùng Windows thì nhớ thêm Python vào biến PATH.
+## installation
+
+Install the latest version of [Python](https://www.python.org/downloads) and [pip](https://pip.pypa.io/en/stable/cli/pip_install), if using Windows, remember to add Python to PATH.
+
+Install the prerequisites using `pip install -r requirements.txt`.
 
 ## setup trên Discord
 
-- [Bật chế độ Developer Mode](https://support.discord.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID-) trong User Setting
+- [Enable Developer Mode in Discord](https://support.discord.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID-) from User Setting
 
-- [Tạo một con bot](https://discordpy.readthedocs.io/en/stable/discord.html) ở Developer Portal của Discord
+- [Create a bot](https://discordpy.readthedocs.io/en/stable/discord.html) in the Developer Portal
 
-- [Mời con bot vào server của mình](https://discordpy.readthedocs.io/en/stable/discord.html#inviting-your-bot). Sau đó vào mục Bot và sao chép Token của con bot
+- [Invite your bot to your server](https://discordpy.readthedocs.io/en/stable/discord.html#inviting-your-bot). After that, find and copy your bot's token
 
-## setup con bot
-Cài [Python](https://www.python.org/downloads) phiên bản mới nhất. Đối với máy máy Windows, nhớ kiểm tra đã thêm Python vào biến PATH.
+## setup the chatbot
 
-Sau đó tải hoặc clone repo này, đổi tên `server_conf.example.py` thành `server_conf.py` và điền thông tin vào tất cả các biến:
-- `TOKEN` điền token của con bot vừa copy
-- `GAME_CHANNEL` lấy ID của kênh trò chuyện chính trong game bằng cách click chuột phải và sao chép ID của kênh
-- `DEBUG_CHANNEL` tạo một kênh debug để bot báo lỗi
-- `ADMINS` thêm UserID của chính mình để làm admin
-- `LANGUAGE` điền là vn để dùng tiếng Việt
+After cloning this repo, rename `server_conf.example.py` to `server_conf.py` and fill your info to all the variables in it:
+- `TOKEN` the bot's token you copied
+- `GAME_CHANNEL` take the ID of your game channel by right clicking and copy the channel ID
+- `DEBUG_CHANNEL` the ID of a debug channel to send error messages
+- `ADMINS` put your own user ID to become an admin
+- `LANGUAGE` put `en` for English
 
-Cuối cùng, bạn có thể chạy `python bot.py` để chạy chatbot của mình
+After this, you can run `python bot.py` to run your chatbot.
