@@ -1,15 +1,15 @@
-# wolfmod
+# Wolfmod
 Chatbot moderator for Werewolf game
 
 ![End of a werewolf game](demo/endgame.png)
 
-## installation
+## Installation
 
 Install the latest version of [Python](https://www.python.org/downloads) and [pip](https://pip.pypa.io/en/stable/cli/pip_install), if using Windows, remember to add Python to PATH.
 
 Install the prerequisites using `pip install -r requirements.txt`.
 
-## setup trên Discord
+## Setup on Discord
 
 - [Enable Developer Mode in Discord](https://support.discord.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID-) from User Setting
 
@@ -17,7 +17,7 @@ Install the prerequisites using `pip install -r requirements.txt`.
 
 - [Invite your bot to your server](https://discordpy.readthedocs.io/en/stable/discord.html#inviting-your-bot). After that, find and copy your bot's token
 
-## setup the chatbot
+## Run the chatbot
 
 After cloning this repo, rename `server_conf.example.py` to `server_conf.py` and fill your info to all the variables in it:
 - `TOKEN` the bot's token you copied
